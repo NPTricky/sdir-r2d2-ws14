@@ -1,0 +1,9 @@
+isOverheadSingularity 
+{
+  m_t5 = multiplyMatrix(m_tcp, inverseOf(m_tool));
+  
+  if (m_t5[3][0] == 0 && m_t5[3][1] == 0)
+    return true;
+  else
+    return false;
+}

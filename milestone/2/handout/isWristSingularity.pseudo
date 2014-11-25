@@ -1,0 +1,12 @@
+isWristSingularity
+{ 
+  m_t4 = multiplyMatrix(
+    multiplyMatrix(m_ta1, m_ta2),
+    multiplyMatrix(m_ta3, m_ta4));
+  m_t6 = multiplyMatrix(m_tcp, inverseOf(m_tool));
+  
+  if (isCollinear(m_t4[*][2],m_t6[*][2]))
+    return true;
+  else 
+    return false;
+}
