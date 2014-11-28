@@ -1,4 +1,23 @@
-\documentclass[a4paper,12pt]{article}
+%\documentclass[a4paper,12pt]{article}
+\documentclass[professionalfonts, 
+               xcolor={ usenames, %
+                        dvipsnames,%
+                        svgnames,%
+                        table,%
+                        hyperref%
+                      }
+              ]{beamer}
+
+\mode<presentation>
+{
+  %\usetheme{Dresden}
+  \usetheme{Warsaw}
+  \usecolortheme{seahorse}
+  \useinnertheme{circles}
+  \useoutertheme{smoothbars}
+  \usefonttheme{professionalfonts} % fuer saubere darstellung der mathematischen zeichen
+}
+  
 
 \RequirePackage[l2tabu,orthodox]{nag} % first line (!)
 
@@ -25,13 +44,13 @@
 
 % figures & graphics
 \usepackage{graphicx}
-\usepackage[%
-  usenames,%
-  dvipsnames,%
-  svgnames,%
-  table,%
-  hyperref%
-]{xcolor}
+%\usepackage[%
+%  usenames,%
+%  dvipsnames,%
+%  svgnames,%
+%  table,%
+%  hyperref%
+%]{xcolor}
 \usepackage[%
   margin=10pt,%
   format=hang,%
@@ -41,6 +60,30 @@
 \graphicspath{{content/}{../content/}{../../content/}{../../../content/}{../../../../content/}}
 \DeclareGraphicsExtensions{.pdf,.png,.jpg}
 
+% videos & medien
+\usepackage{media9}%
+\addmediapath{content/}
+\addmediapath{../content/}
+\addmediapath{../../content/}
+\addmediapath{../../../content/}
+\addmediapath{../../../../content/}
+
+\newcommand{\includemovie}[3]{%
+  \includemedia[%
+  width=#1,height=#2,%
+  activate=pagevisible,%
+  deactivate=pageclose,%
+  addresource=#3,%
+  flashvars={%
+    src=#3 % same path as in addresource!
+    &autoPlay=true % default: false; if =true, automatically starts playback after activation (see option ‘activation)’
+    &loop=false % if loop=true, media is played in a loop
+    &controlBarAutoHideTimeout=true %  time span before auto-hide
+    &muted=true
+  }%
+  ]{}{StrobeMediaPlayback.swf}%
+}
+
 % tables
 \usepackage{booktabs}
 
@@ -48,9 +91,21 @@
 \usepackage{listings}
 \input{sdir-style}
 
-\begin{document}
 
-\part{Singularities}
+\title[Singularity, Velocity Profiles and Trajectory Interpolation]{Singularity, Velocity Profiles and \\ Trajectory Interpolation}
+
+\author{Tim Jagla, Andr\'e Keuns, Anne Reich}
+\institute[FIN] {Otto-von-Guericke-Universität Magdeburg}
+\date{\today} 
+%\logo{\pgfimage[width=2cm,height=2cm]{}}
+
+\begin{document}
+\begin{frame}
+\titlepage
+\end{frame}
+  
+\section{Singularities}
+\begin{frame}{Singularities}
 \begin{itemize}
 \item unpredictable robot motion
 \item infinitely solutions
@@ -60,23 +115,32 @@
   \item overhead singularity
   \end{itemize}
 \end{itemize}
+\end{frame}
 
-\section{recap}
-
-\begin{figure}[h]
-  \includegraphics[scale=0.6]{2/cad-robot.png}
-\end{figure}
-
-\begin{align*}
-\text{Joints: Axis 1} = A1, \text{Axis 2} = A2, ...\\
-\theta1 = \text{angle from $A1$}\\
-T_{3}^{4} = \text{transformation matrix from $A3$ to $A4$}\\
-(T_{4}^{5})^{-1} = \text{transformation matrix from $A5$ to $A4$}\\
-T_{0}^{4} = \text{transformation matrix from $A4$ in world coordinate system}\\
-T_{0}^{4} = T_{0}^{1} \cdot T_{1}^{2} \cdot T_{2}^{3} \cdot T_{3}^{4}
-\end{align*}
+\subsection{recap}
+\begin{frame}
+\begin{columns}
+  \column[c]{.50\textwidth}
+  \begin{figure}[h]
+  \includegraphics[scale=0.65]{2/cad-robot.png}
+  \end{figure}
+  \column[c]{.50\textwidth}
+  \begin{align*}
+  \text{Joints: Axis 1} = A1, \text{Axis 2} = A2, ...\\
+  \theta1 = \text{angle from $A1$}\\
+  T_{0}^{4} = \text{transformation matrix from $A4$ } \\
+  \text{in world coordinate system}\\
+  T_{0}^{4} = T_{0}^{1} \cdot T_{1}^{2} \cdot T_{2}^{3} \cdot T_{3}^{4}
+  \end{align*}
+\end{columns}
+\end{frame}
 
 \subsection{Wrist singularity}
+\begin{frame}
+  \centering\includemedia[width=0.8\textwidth,height=0.8\textheight,activate=pagevisible,deactivate=pageclose, addresource=2/robot_singularities_1.mp4,flashvars={src=2/robot_singularities_1.mp4&autoPlay=true&loop=false&controlBarAutoHideTimeout=true&muted=true}]{}{StrobeMediaPlayback.swf}
+\end{frame}
+
+\begin{frame}
 \begin{itemize}
 \item Appearance:
   \begin{itemize}
@@ -93,10 +157,18 @@ T_{0}^{4} = T_{0}^{1} \cdot T_{1}^{2} \cdot T_{2}^{3} \cdot T_{3}^{4}
     \end{itemize}
   \end{itemize}
 \end{itemize}
+\end{frame}
 
+\begin{frame}[fragile]
 \lstinputlisting[language=pseudo,style=global,caption={pseudocode for detection of a wrist singularity},label=lst:wristsingularity]{isWristSingularity.pseudo}
+\end{frame}
 
 \subsection{Overhead singularity}
+\begin{frame}
+  \centering\includemedia[width=0.8\textwidth,height=0.8\textheight,activate=pagevisible,deactivate=pageclose, addresource=2/concat_singularities_2.mp4,flashvars={src=2/concat_singularities_2.mp4&autoPlay=true&loop=false&controlBarAutoHideTimeout=true&muted=true}]{}{StrobeMediaPlayback.swf}
+\end{frame}
+
+\begin{frame}
 \begin{itemize}
 \item Appearance:
   \begin{itemize}
@@ -115,45 +187,68 @@ T_{0}^{4} = T_{0}^{1} \cdot T_{1}^{2} \cdot T_{2}^{3} \cdot T_{3}^{4}
   if $p_1 = p_2 = 0$ then \emph{overhead singularity}
   \end{itemize}
 \end{itemize}  
+\end{frame}
 
+\begin{frame}[fragile]
 \lstinputlisting[language=pseudo,style=global,caption={pseudocode for detection of an overhead singularity},label=lst:overheadsingularity]{isOverheadSingularity.pseudo}
-
+\end{frame}
 
 \subsection{solution of the entire singularity problem}
-
+\begin{frame}[fragile]
 \lstinputlisting[language=pseudo,style=global,caption={pseudocode for check  the singularity},label=lst:overheadsingularity]{singularitySolution.pseudo}
+\end{frame}
 
-\part{Motion Planning}
-The motion planning is divided in the velocity profiles and the trajectory interpolation
+%\part{Motion Planning}
+%The motion planning is divided in the velocity profiles and the trajectory interpolation
 
-\section{Velocity Profiles }
-
-\begin{figure}[h]
-\centering
-\includegraphics[scale=0.3]{2/vp-ptp-motion.png}
-\caption{}
-\label{fig:vp-ptp-motion}
-\end{figure}
+\section{Velocity Profiles}
+\begin{frame}{Velocity Profiles}
+  \begin{columns}
+    \column[c]{.4\textwidth}
+    \begin{figure}[h]
+      \includegraphics[width=\columnwidth]{2/vp-ptp-motion.png}
+      %\caption{}
+      \label{fig:vp-ptp-motion}
+    \end{figure}
+    \column[c]{.2\textwidth}
+    \renewcommand{\arraystretch}{3.5}
+    \begin{tabular}{c}
+      Asynchronous \\ 
+      Synchronous \\ 
+      Full Synchronous\\ 
+    \end{tabular} 
+    \column[c]{.4\textwidth}
+    \begin{figure}[h]
+      \includegraphics[width=\columnwidth]{2/vp-ptp-motion_challenge.png}
+      %\caption{}
+      \label{fig:vp-ptp-motion_challenge}
+    \end{figure}
+  \end{columns}
+\end{frame}
 
 \subsection{Asynchronous PTP}
-
+%handout
+\begin{frame}<presentation:0|handout:1>
 \begin{itemize}
 \item for each joint i their current state, target state and their acceleration maximum $\hat{a}_{m,i}$ are given
 \item the total motion time $t_{e,i}$ are the output of velocity profile calculation
 \item the waypoints $X_{i}[n_{i}]$ are the output motion planning
 \end{itemize}
-
+\end{frame}
 \subsubsection{Step 1}
+\begin{frame}<presentation:0|handout:1>
 determine maximum amplitude for velocity ramp
-
 \begin{itemize}
 \item check whether the distance $\hat{x}_{e,i}$ is sufficient to let the velocity grow up to $\hat{v}_{m,i}$ or not
 \item if we run into the velocity triangle situation we must limit $\hat{v}_{m,i}$ down to $v_{m,i}$
 \end{itemize}
+\end{frame}
 
-\begin{equation}
-v_{m,i} = min(\hat{v}_{m,i},\sqrt{\hat{x}_{e,i} \cdot \hat{a}_{m,i}}) \label{eq:asynvmi}
-\end{equation}
+\begin{frame}
+\begin{eqnarray}
+\hat{x}_{e,i} & = & \sqrt{{\Delta\hat{x}_{e,x}}^{2} + {\Delta\hat{x}_{e,y}}^{2} + {\Delta\hat{x}_{e,z}}^{2} } \\
+v_{m,i } & = & min(\hat{v}_{m,i},\sqrt{\hat{x}_{e,i} \cdot \hat{a}_{m,i}})  \label{eq:asynvmi}
+\end{eqnarray}
 
 \begin{align*}
 v_{m} & \text{ is the velocity ramp maximum} \\
@@ -161,11 +256,12 @@ v_{m} & \text{ is the velocity ramp maximum} \\
 \hat{x}_{e} & \text{ is the predetermined distance to move} \\
 \hat{a}_{m} & \text{ is the predetermined acceleration maximum} 
 \end{align*}
+\end{frame}
 
 \subsubsection{Step 2}
+\text{compute the acceleration duration $t_{a,i}$, the deceleration start time $t_{d,i}$ and the total motion time $t_{e,i}$}
 
-compute the acceleration duration $t_{a,i}$, the deceleration start time $t_{d,i}$ and the total motion time $t_{e,i}$
-
+\begin{frame}
 \begin{eqnarray}
 t_{a,i} & = & \frac{v_{m,i}}{\hat{a}_{m,i}} \\
 t_{e,i} & = & \frac{\hat{x}_{e,i}}{v_{m,i}} + t_{a,i} \\
@@ -177,18 +273,24 @@ t_{a} & \text{ is the acceleration length} \\
 t_{e} & \text{ is the total motion time} \\
 t_{d} & \text{ is the deceleration start time}
 \end{align*}
-
+\end{frame}
+  
 \subsection{Synchronous PTP}
+\begin{frame}
 the calculation is the same as the asynchronous PTP
 exept that all motion durations coincide to $t_{e,max}$
 
 \begin{equation*}
 t_{e,1} = t_{e,1} = ... = t_{e,N} = t_{e,max}
 \end{equation*}
+\end{frame}
 
 \subsubsection{Step 1}
+\begin{frame}<presentation:0|handout:1>
 the first step is the same as step 1 and 2 in the asynchronous PTP calculation. we determine the maximum velocity ramp and  calculate the time of acceleration
+\end{frame}
 
+\begin{frame}
 \begin{eqnarray*}
 \tilde{v}_{m,i} & = & min(\hat{v}_{m,i},\sqrt{\hat{x}_{e,i} \cdot \hat{a}_{m,i}}) \\
 \tilde{t}_{a,i} & = & \frac{v_{m,i}}{\hat{a}_{m,i}}\\
@@ -199,7 +301,9 @@ t_{e,i} & = & \frac{\hat{x}_{e,i}}{v_{m,i}} + t_{a,i}
 \tilde{v}_{m} & \text{ is the interim velocity ramp maximum}\\
 \tilde{t}_{a} & \text{ is the interim acceleration length}\\
 \end{align*}                 
+\end{frame}
 
+\begin{frame}
 the total movement time $t_{e,max}$ is the maximum value of all movements
 \begin{equation}
 t_{e,max} = max(t_{e,1},t_{e,2},...,t_{e,N})
@@ -209,22 +313,26 @@ t_{e,max} = max(t_{e,1},t_{e,2},...,t_{e,N})
 t_{e,N} & \text{ is the total motion time } \\
 t_{e,max} & \text{ is the maximum value of the total motion time}      
 \end{align*}
-
+\end{frame}
+  
 \subsubsection{Step 2}
+\begin{frame}
 calculation of the maximum velocities of each axis $v_{m,i}$
 
 \begin{equation*}
-t_{e,max} = \frac{\hat{x}_{e,i}}{v_{m,i}}+\frac{\hat{v}_{m,i}}{\hat{a}_{m,i}}
+t_{e,max} = \frac{\hat{x}_{e,i}}{\hat{v}_{m,i}}+\frac{\hat{v}_{m,i}}{\hat{a}_{m,i}}
 \end{equation*}
 
-over conversion of the formula we get the formula for velocity of each axis
+%over conversion of the formula we get the formula for velocity of each axis
 %over the p-q-formula
 
 \begin{equation}
 v_{m,i} = \frac{t_{e,max} \cdot \hat{a}_{m,i}}{2}-\sqrt{\frac{t_{e,max}^2 \cdot \hat{a}_{m,i}^2}{4}-\hat{a}_{m,i}\cdot \hat{x}_{e,i}}
 \end{equation}
-
+\end{frame}
+  
 \subsubsection{Step 3}
+\begin{frame}
 calculation of the acceleration duration $t_{a,i}$
 
 \begin{equation}
@@ -240,21 +348,22 @@ t_{a} & \text{ is the acceleration length} \\
 t_{e} & \text{ is the total motion time} \\
 t_{d} & \text{ is the deceleration start time}
 \end{align*}
-
+\end{frame}
 
 \section{Trajectory Interpolation}
-
+\subsection{Types of Interpolation}
+\begin{frame}
 the interpolation can divide in three classes.
 \begin{itemize}
 \item the \emph{linear interpolation} is very simple, they describes the direct movement from point \emph{A} to point \emph{B}:
 \item the \emph{circular interpolation} is a little bit tricky, they describes the a circular movement form point \emph{A} to point \emph{B} over a point \emph{C}.
 \item the \emph{spline interpolation} is very complex, they divides the trajectory into individual parts, each part is describes by a higher-order polynomial.
 \end{itemize}
+\end{frame}
 
-\subsection{linear interpolation}
-
+\subsection{linear interpolation in ptp}
 \subsubsection{Step 1}
-
+\begin{frame}
 determine the count of waypoints
 
 \begin{eqnarray}
@@ -267,10 +376,11 @@ n_{a} & \text{ is the number of time slices for acceleration phase} \\
 n_{e} & \text{ is the number of time slices for moment phase} \\
 h & \text{ is the period time (samplingrate)}
 \end{align*}
-
+\end{frame}
 
 \subsubsection{Step 2}
-calculation of the waypoints (angles) of each axes
+\begin{frame}
+calculation of the waypoints of each axes
 
 \begin{equation}
 X_{i}[n_{i}] = 
@@ -285,12 +395,102 @@ v_{m,i} \cdot (t_{e,i} - t_{a,i}) - \frac{\hat{a}_{m,i}}{2} \cdot (t_{e,i} - h \
 X_{i}[n_{i}] & \text{ is the angle at a time } n_{i} \\
 n_{i} & \text{ is the time discrete step index}   
 \end{align*}
+\end{frame}
 
-via the angle of the axes at a given time, we can determine the position of the robot at this time
+%via the angle of the axes at a given time, we can determine the position of the robot at this time
+
+\subsection{linear interpolation in cartesian space}
+\begin{frame}
+\begin{columns}
+  \column[c]{.50\textwidth}
+  \begin{equation*}
+  x_A = \left( \begin{array}{c} P_{x,A}\\ P_{y,A}\\ P_{z,A}\\ \hline \alpha_{x,A}\\ \beta_{y,A}\\ \gamma_{z,A} \end{array}\right) = \left( \begin{array}{c} P_{A}\\\hline\Theta_{A} \end{array}\right)
+  \end{equation*}
+  \column[c]{.50\textwidth}
+  \begin{equation*}
+  x_B = \left( \begin{array}{c} P_{x,B}\\ P_{y,B}\\ P_{z,B}\\ \hline \alpha_{x,B}\\ \beta_{y,B}\\ \gamma_{z,B} \end{array}\right) = \left( \begin{array}{c} P_{B}\\\hline\Theta_{B} \end{array}\right)
+  \end{equation*}
+\end{columns}
+\begin{align*}
+P & \text{ is the position in of a point in the world coordinate system} \\
+\Theta & \text{ is the orientation of a point in the word coordinate system}   
+\end{align*}
+\end{frame}
+
+\subsubsection{Step 1}
+\begin{frame}
+calculation of the path length $\hat{x}_e$ and the angle difference $\hat{x}_{\theta}$
+\begin{eqnarray*}
+\hat{x}_e & = & \left|P_{B} - P_{A}\right|\\
+          & = & \sqrt{(P_{x,B} - P_{x,A})^2 + (P_{y,B} - P_{y,A})^2 + (P_{z,B} - P_{z,A})^2 }\\
+\\
+\hat{x}_\theta & = & \left|\Theta_{B} - \Theta_{A}\right|\\
+               & = & \sqrt{(\Theta_{x,B} - \Theta_{x,A})^2 + (\Theta_{y,B} - \Theta_{y,A})^2 + (\Theta_{z,B} - \Theta_{z,A})^2 }
+\end{eqnarray*}
+\end{frame}
+
+\subsubsection{Step 2}
+\begin{frame}
+calculation the duration of the motion for the path length $t_{e}$ and the angle difference $t_{\theta}$
+\begin{eqnarray*}
+t_{e} = \frac{\hat{x}_{e}}{\hat{v}_{e}}+\frac{\hat{v}_{e}}{\hat{a}_{e}} \\
+\\
+t_{\theta} = \frac{\hat{x}_{\theta}}{\hat{v}_{\theta}}+\frac{\hat{v}_{\theta}}{\hat{a}_{\theta}}
+\end{eqnarray*}
+the speed and the acceleration is set by the operator
+\end{frame}
+
+\subsubsection{Step 3}
+\begin{frame}
+Synchronisation of the motion
+\begin{eqnarray*}
+t_{max} = max\left(t_{e}, t_{\theta}\right)\\
+\end{eqnarray*}
+\begin{itemize}
+\item $t_{\theta} \le t_{e}$\\
+\begin{eqnarray*}
+v & = & \frac{t_{max} \cdot \hat{a}_{e}}{2}-\sqrt{\frac{t_{max}^2 \cdot \hat{a}_{e}^2}{4}-\hat{a}_{e}\cdot \hat{x}_{e}} \\
+t_{a} & = & \frac{v}{\hat{a}_{e}}
+\end{eqnarray*}
+\item $t_{e} \leq t_{\theta}$\\
+\begin{eqnarray*}
+v & = & \frac{t_{max} \cdot \hat{a}_{\theta}}{2}-\sqrt{\frac{t_{max}^2 \cdot \hat{a}_{\theta}^2}{4}-\hat{a}_{\theta}\cdot \hat{x}_{\theta}} \\
+t_{a} & = & \frac{v }{\hat{a}_{\theta}}
+\end{eqnarray*}
+\end{itemize}
+\end{frame}
+
+\subsubsection{Step 4}
+\begin{frame}
+the position $x(t)$ to time $t$
+\begin{eqnarray*}
+x(t) & = & x_{a} + \frac{x_{e}(t)}{\hat{x}_{e}} \cdot \left(x_{b} - x_{a} \right)\\
+x_{e}(t) & = & 
+\begin{dcases}
+\frac{1}{2} \hat{a}_{e} \cdot t & t  \leq t_{a} \\
+v \cdot t - \frac{1}{2} \cdot \frac{v^2}{\hat{a}_{e}} & t_{a} \le t \leq t_{max} - t_{a} \\
+v \cdot (t_{max} - t_{a}) - \frac{\hat{a}_{e}}{2} \cdot (t_{max} - t)^2 & t_{max} - t_{a} \le t \leq t_{max}\\
+\end{dcases}
+\end{eqnarray*}
+\end{frame}
+
+\begin{frame}
+the orientation $\Theta(t)$ to time $t$
+\begin{eqnarray*}
+\Theta(t) & = & \Theta_{a} + \frac{x_{\Theta}(t)}{\hat{x}_{\Theta}} \cdot \left(\Theta_{b} - \Theta_{a} \right)\\
+x_{\Theta}(t) & = & 
+\begin{dcases}
+\frac{1}{2} \hat{a}_{\Theta} \cdot t & t  \leq t_{a} \\
+v \cdot t - \frac{1}{2} \cdot \frac{v^2}{\hat{a}_{\Theta}} & t_{a} \le t \leq t_{max} - t_{a} \\
+v \cdot (t_{max} - t_{a}) - \frac{\hat{a}_{\Theta}}{2} \cdot (t_{max} - t)^2 & t_{max} - t_{a} \le t \leq t_{max}
+\end{dcases}
+\end{eqnarray*}
+\end{frame}
 
 \section{Example for Synchronous PTP} 
 
 \subsection{Given Values }
+\begin{frame}
 we have a 3 arm robot with 3 links and 3 joints and following properties\\
 
 \begin{eqnarray*}
@@ -298,7 +498,6 @@ h & = & 10 ~ms \\
 \hat{v}_{m} & = & 200 ~^\circ/s \\
 \hat{a}_{m} & = & 100 ~^\circ/s^2
 \end{eqnarray*}
-
 
 \begin{center}
 \begin{tabular}{ccccc}
@@ -310,8 +509,10 @@ $\alpha_{t_{e},i}$ & $ 64^\circ$ & $11^\circ$ & $46^\circ$ & $  5^\circ$ \\
 \bottomrule
 \end{tabular}
 \end{center}
+\end{frame}
 
-\subsection{Determine the interim velocity and the total movement time \footnotesize{(\emph{Step 1})}}
+\subsection{Determine the interim velocity and the total movement time}
+\begin{frame}
 in the first step, we calculation for each axis the distance of movement, the interim velocity, the movement time of each axis and the total movement time
 
 \subsubsection*{the distance of movement }
@@ -329,8 +530,10 @@ $\hat{X}_{e,i}$ & $ 64^\circ$ & $ -9^\circ$ & $16^\circ$ & $25^\circ$ \\
 \bottomrule 
 \end{tabular}
 \end{center}
+\end{frame}
 
 \subsubsection*{the interim velocity}
+\begin{frame}
 the interim velocity $\tilde{v}_{m,i}$ of each axis is 
 \begin{equation*}
 \tilde{v}{m,i} = min\left(\hat{v}_{m,i},\sqrt{|\hat{x}_{e,i}| \cdot \hat{a}_{m,i}} \right) 
@@ -346,9 +549,10 @@ $\tilde{v}_{m,i}$ & $80^\circ/s$ & $30^\circ/s$ & $40^\circ/s$ & $50^\circ/s$ \\
 \bottomrule
 \end{tabular}               
 \end{center}  
+\end{frame}
 
 \subsubsection*{the movement time of each axis}
-
+\begin{frame}
 before we determine the movement time of each axis, we need the interim acceleration time of each axis
 
 \begin{eqnarray}
@@ -366,8 +570,10 @@ $t_{e|i}$ & 1.6s & 0.6s & 0.8s & 1.0s \\
 \bottomrule 
 \end{tabular}
 \end{center} 
+\end{frame}
 
 \subsubsection*{determine the total movement time}
+\begin{frame}
 \begin{equation*}
 t_{e,max} = max(t_{e,1},t_{e,1},...,t_{e,N})
 \end{equation*}
@@ -377,7 +583,7 @@ the biggest value of the movement time of all axis is the total movement time.
 t_{e,max} = 1.6s
 \end{equation*}    
 
-\subsection{Calculation of the velocity  \footnotesize{(\emph{Step 2})})}
+\subsection{Calculation of the velocity }
 after the interim velocity and the total movement time, we can calculate the velocity value for each axis and the times for acceleration and deceleration
 
 \subsubsection*{the velocity}
@@ -394,9 +600,10 @@ $v_{m|i}$  & $80.0^\circ/s$   & $5.8^\circ/s$   & $10.7^\circ/s$  & $17.5^\circ/
 \bottomrule 
 \end{tabular}
 \end{center}
+\end{frame}
 
-\subsection{Determine the acceleration and the deceleration time \footnotesize{(\emph{Step 3})}}
-
+\subsection{Determine the acceleration and the deceleration time}
+\begin{frame}
 \begin{equation*}
 t_{a,i} = \frac{\hat{v}_{m,i}}{\hat{a}_{m,i}}
 \end{equation*}
@@ -414,9 +621,10 @@ $t_{d|i}$ & 0.800s & 1.542s & 1.430s & 1.425s \\
 \bottomrule
 \end{tabular}
 \end{center}
+\end{frame}
 
 \subsection{Determine the count of waypoints}
-
+\begin{frame}
 \begin{eqnarray}
 n_{a,i} & = & \frac{t_{a,i}}{h} \\
 n_{e,max} & = & \frac{t_{e,max}}{h}
@@ -437,9 +645,10 @@ $n_{a|i}$ & 80 & 5.8 & 17 & 17.5 \\
 \bottomrule
 \end{tabular}
 \end{center}
+\end{frame}
 
 \subsection{Calculation of the Waypoints}
-
+\begin{frame}
 \begin{equation*}
 X_{i}[n_{i}] = 
 \begin{dcases}
@@ -448,9 +657,10 @@ v_{m,i} \cdot h \cdot n_{i} - \frac{1}{2} \cdot \frac{v_{m,i}^2}{\hat{a}_{m,i}} 
 v_{m,i} \cdot (t_{e,i} - t_{a,i}) - \frac{\hat{a}_{m,i}}{2} \cdot (t_{e,i} - h \cdot n_{i})^2   & n_{e,i} - n_{a,i} < n_{i} \leq n_{e,i}
 \end{dcases}
 \end{equation*}
-
 we calculation the waypoints (angles) at a time $n_i = 4$, $n_i = 80$ and $n_i = 156s$.
+\end{frame}
 
+\begin{frame}
 in the acceleration phase of all axes $n_i = 4$:
 
 \begin{center}
@@ -479,7 +689,9 @@ $X_{i}[n_{i}]$ & 80 & 5.8 & 17 & 17.5 \\
 \bottomrule
 \end{tabular}
 \end{center}
+\end{frame}
 
+\begin{frame}
 in the movement phase without acceleration or deceleration $n_i = 80$
 
 \begin{center}
@@ -513,7 +725,9 @@ $\alpha_{t_{n}}$ & $15.5^\circ$ & $38.0^\circ$ & $-7.5^\circ$ \\
 \bottomrule
 \end{tabular}
 \end{center}
+\end{frame}
 
+\begin{frame}
 in the deceleration phase $n_i = 156$
 
 \begin{center}
@@ -546,5 +760,6 @@ $\alpha_{t_{n}}$ & $63.9^\circ$ & $11.2^\circ$ & $45.2^\circ$ & $4.8^\circ$ \\
 \bottomrule
 \end{tabular}
 \end{center} 
+\end{frame}
 
 \end{document}
