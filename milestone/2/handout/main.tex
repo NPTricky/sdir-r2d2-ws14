@@ -352,7 +352,7 @@ t_{d} & \text{ is the deceleration start time}
 
 \section{Trajectory Interpolation}
 \subsection{Types of Interpolation}
-\begin{frame}
+\begin{frame}{Trajectory Interpolation}
 the interpolation can divide in three classes.
 \begin{itemize}
 \item the \emph{linear interpolation} is very simple, they describes the direct movement from point \emph{A} to point \emph{B}:
@@ -361,100 +361,128 @@ the interpolation can divide in three classes.
 \end{itemize}
 \end{frame}
 
-\subsection{linear interpolation in ptp}
+\subsection{Linear Interpolation PTP}
+%\subsubsection{Step 1}
+%\begin{frame}
+%determine the count of waypoints
+%
+%\begin{eqnarray}
+%n_{a,i} & = & \frac{t_{a,i}}{h} \\
+%n_{e,i} & = & \frac{t_{e,i}}{h}
+%\end{eqnarray}
+
+%\begin{align*} 
+%n_{a} & \text{ is the number of time slices for acceleration phase} \\
+%n_{e} & \text{ is the number of time slices for moment phase} \\
+%h & \text{ is the period time (samplingrate)}
+%\end{align*}
+%\end{frame}
+
 \subsubsection{Step 1}
 \begin{frame}
-determine the count of waypoints
+calculation of the distance covered of each axes \\
 
-\begin{eqnarray}
-n_{a,i} & = & \frac{t_{a,i}}{h} \\
-n_{e,i} & = & \frac{t_{e,i}}{h}
-\end{eqnarray}
+\begin{figure}[h]
+  \includegraphics[width=\columnwidth]{2/one-axis-acceleration-profile.png}
+  %\caption{}
+  \label{fig:ti-movement-cases}
+\end{figure}
+
+\begin{itemize}
+\item case 1: \emph{acceleration phase} $t \leq t_{a}$
+\item case 2: \emph{constant movement phase} $t_{a} \le t \leq t_{e} - t_{a}$
+\item case 3: \emph{deceleration phase} $t_{e} - t_{a} \le t \leq t_{e}$
+\item case 4: \emph{stood phase} $t_{e} \le t$
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+\begin{equation}
+X_{i}(t) = 
+\begin{dcases}
+\frac{1}{2} \hat{a}_{m,i} \cdot t^2  & t \leq t_{a,i} \\
+v_{m,i} \cdot t - \frac{1}{2} \cdot \frac{v_{m,i}^2}{\hat{a}_{m,i}} & t_{a,i} \le t \leq t_{e,i} - t_{a,i} \\
+v_{m,i} \cdot (t_{e,i} - t_{a,i}) - \frac{\hat{a}_{m,i}}{2} \cdot (t_{e,i} - t)^2 & t_{e,i} - t_{a,i} \le t \leq t_{e,i}\\
+\hat{x}_{e,i} & t_{e,i} < t\\
+\end{dcases}
+\end{equation}
 
 \begin{align*}
-n_{a} & \text{ is the number of time slices for acceleration phase} \\
-n_{e} & \text{ is the number of time slices for moment phase} \\
-h & \text{ is the period time (samplingrate)}
+X_{i}(t) & \text{ distance covered at time $t$ } \\
 \end{align*}
 \end{frame}
 
 \subsubsection{Step 2}
 \begin{frame}
-calculation of the waypoints of each axes
+determine position / orientation to time $t$
 
 \begin{equation}
-X_{i}[n_{i}] = 
-\begin{dcases}
-\frac{1}{2} \hat{a}_{m,i} \cdot h^2 \cdot n_{i}^2 & 1 \leq n_{i} \leq n_{a,i} \\
-v_{m,i} \cdot h \cdot n_{i} - \frac{1}{2} \cdot \frac{v_{m,i}^2}{\hat{a}_{m,i}} & n_{a,i} < n_{i} \leq n_{e,i} - n_{a,i} \\
-v_{m,i} \cdot (t_{e,i} - t_{a,i}) - \frac{\hat{a}_{m,i}}{2} \cdot (t_{e,i} - h \cdot n_{i})^2   & n_{e,i} - n_{a,i} < n_{i} \leq n_{e,i}
-\end{dcases}
+\vec{x}_{i}(t) = \vec{x}_{i}(0) + \frac{X_{i}(t)}{\hat{x}_{e,i}} \cdot \Bigl(\vec{x}_{i}(t_{e}) - \vec{x}_{i}(0) \Bigr)
 \end{equation}
 
 \begin{align*}
-X_{i}[n_{i}] & \text{ is the angle at a time } n_{i} \\
-n_{i} & \text{ is the time discrete step index}   
+\vec{x}_{i}(0)     & \text{ is the beginning position/orientation of a point} \\
+\vec{x}_{i}(t_{e}) & \text{ is the end position/orientation of a point} \\
 \end{align*}
 \end{frame}
 
-%via the angle of the axes at a given time, we can determine the position of the robot at this time
-
-\subsection{linear interpolation in cartesian space}
+\subsection{Linear Interpolation CP}
 \begin{frame}
 \begin{columns}
   \column[c]{.50\textwidth}
   \begin{equation*}
-  x_A = \left( \begin{array}{c} P_{x,A}\\ P_{y,A}\\ P_{z,A}\\ \hline \alpha_{x,A}\\ \beta_{y,A}\\ \gamma_{z,A} \end{array}\right) = \left( \begin{array}{c} P_{A}\\\hline\Theta_{A} \end{array}\right)
+  \vec{x}_A = \left( \begin{array}{c} P_{x,A}\\ P_{y,A}\\ P_{z,A}\\ \hline \alpha_{x,A}\\ \beta_{y,A}\\ \gamma_{z,A} \end{array}\right) = \left( \begin{array}{c} P_{A}\\\hline\Theta_{A} \end{array}\right)
   \end{equation*}
   \column[c]{.50\textwidth}
   \begin{equation*}
-  x_B = \left( \begin{array}{c} P_{x,B}\\ P_{y,B}\\ P_{z,B}\\ \hline \alpha_{x,B}\\ \beta_{y,B}\\ \gamma_{z,B} \end{array}\right) = \left( \begin{array}{c} P_{B}\\\hline\Theta_{B} \end{array}\right)
+  \vec{x}_B = \left( \begin{array}{c} P_{x,B}\\ P_{y,B}\\ P_{z,B}\\ \hline \alpha_{x,B}\\ \beta_{y,B}\\ \gamma_{z,B} \end{array}\right) = \left( \begin{array}{c} P_{B}\\\hline\Theta_{B} \end{array}\right)
   \end{equation*}
 \end{columns}
 \begin{align*}
-P & \text{ is the position in of a point in the world coordinate system} \\
+P & \text{ is the position of a point in the world coordinate system} \\
 \Theta & \text{ is the orientation of a point in the word coordinate system}   
 \end{align*}
 \end{frame}
 
 \subsubsection{Step 1}
 \begin{frame}
-calculation of the path length $\hat{x}_e$ and the angle difference $\hat{x}_{\theta}$
+calculation of the path length $\hat{x}_{e,P}$ and the angle difference $\hat{x}_{e,\theta}$
 \begin{eqnarray*}
-\hat{x}_e & = & \left|P_{B} - P_{A}\right|\\
+\hat{x}_{e,P} & = & \left|P_{B} - P_{A}\right|\\
           & = & \sqrt{(P_{x,B} - P_{x,A})^2 + (P_{y,B} - P_{y,A})^2 + (P_{z,B} - P_{z,A})^2 }\\
 \\
-\hat{x}_\theta & = & \left|\Theta_{B} - \Theta_{A}\right|\\
+\hat{x}_{e,\theta} & = & \left|\Theta_{B} - \Theta_{A}\right|\\
                & = & \sqrt{(\Theta_{x,B} - \Theta_{x,A})^2 + (\Theta_{y,B} - \Theta_{y,A})^2 + (\Theta_{z,B} - \Theta_{z,A})^2 }
 \end{eqnarray*}
 \end{frame}
 
 \subsubsection{Step 2}
 \begin{frame}
-calculation the duration of the motion for the path length $t_{e}$ and the angle difference $t_{\theta}$
+calculation the duration of the motion for the path length $t_{e,P}$ and the angle difference $t_{e,\theta}$
 \begin{eqnarray*}
-t_{e} = \frac{\hat{x}_{e}}{\hat{v}_{e}}+\frac{\hat{v}_{e}}{\hat{a}_{e}} \\
+t_{e,P} = \frac{\hat{x}_{e,P}}{\hat{v}_{P}}+\frac{\hat{v}_{P}}{\hat{a}_{P}} \\
 \\
-t_{\theta} = \frac{\hat{x}_{\theta}}{\hat{v}_{\theta}}+\frac{\hat{v}_{\theta}}{\hat{a}_{\theta}}
+t_{e,\theta} = \frac{\hat{x}_{e,\theta}}{\hat{v}_{\theta}}+\frac{\hat{v}_{\theta}}{\hat{a}_{\theta}}
 \end{eqnarray*}
-the speed and the acceleration is set by the operator
+the speed $\hat{v}$ and the acceleration $\hat{a}$ is set by the operator
 \end{frame}
 
 \subsubsection{Step 3}
 \begin{frame}
 Synchronisation of the motion
 \begin{eqnarray*}
-t_{max} = max\left(t_{e}, t_{\theta}\right)\\
+t_{e, max} = max\left(t_{e,P}, t_{e,\theta}\right)
 \end{eqnarray*}
 \begin{itemize}
-\item $t_{\theta} \le t_{e}$\\
+\item $t_{e,\theta} \le t_{e,P}$:
 \begin{eqnarray*}
-v & = & \frac{t_{max} \cdot \hat{a}_{e}}{2}-\sqrt{\frac{t_{max}^2 \cdot \hat{a}_{e}^2}{4}-\hat{a}_{e}\cdot \hat{x}_{e}} \\
+v & = & \frac{t_{e,max} \cdot \hat{a}_{e}}{2}-\sqrt{\frac{t_{e,max}^2 \cdot \hat{a}_{e}^2}{4}-\hat{a}_{e}\cdot \hat{x}_{e}} \\
 t_{a} & = & \frac{v}{\hat{a}_{e}}
 \end{eqnarray*}
-\item $t_{e} \leq t_{\theta}$\\
+\item $t_{e,P} \leq t_{e,\theta}$:
 \begin{eqnarray*}
-v & = & \frac{t_{max} \cdot \hat{a}_{\theta}}{2}-\sqrt{\frac{t_{max}^2 \cdot \hat{a}_{\theta}^2}{4}-\hat{a}_{\theta}\cdot \hat{x}_{\theta}} \\
+v & = & \frac{t_{e,max} \cdot \hat{a}_{\theta}}{2}-\sqrt{\frac{t_{e,max}^2 \cdot \hat{a}_{\theta}^2}{4}-\hat{a}_{\theta}\cdot \hat{x}_{\theta}} \\
 t_{a} & = & \frac{v }{\hat{a}_{\theta}}
 \end{eqnarray*}
 \end{itemize}
@@ -462,28 +490,13 @@ t_{a} & = & \frac{v }{\hat{a}_{\theta}}
 
 \subsubsection{Step 4}
 \begin{frame}
-the position $x(t)$ to time $t$
+the position $P(t)$ to time $t$
 \begin{eqnarray*}
-x(t) & = & x_{a} + \frac{x_{e}(t)}{\hat{x}_{e}} \cdot \left(x_{b} - x_{a} \right)\\
-x_{e}(t) & = & 
-\begin{dcases}
-\frac{1}{2} \hat{a}_{e} \cdot t & t  \leq t_{a} \\
-v \cdot t - \frac{1}{2} \cdot \frac{v^2}{\hat{a}_{e}} & t_{a} \le t \leq t_{max} - t_{a} \\
-v \cdot (t_{max} - t_{a}) - \frac{\hat{a}_{e}}{2} \cdot (t_{max} - t)^2 & t_{max} - t_{a} \le t \leq t_{max}\\
-\end{dcases}
+P(t) & = & P_{A} + \frac{X_{P}(t)}{\hat{x}_{e,P}} \cdot \left(P_{B} - P_{A} \right)\\
 \end{eqnarray*}
-\end{frame}
-
-\begin{frame}
 the orientation $\Theta(t)$ to time $t$
 \begin{eqnarray*}
-\Theta(t) & = & \Theta_{a} + \frac{x_{\Theta}(t)}{\hat{x}_{\Theta}} \cdot \left(\Theta_{b} - \Theta_{a} \right)\\
-x_{\Theta}(t) & = & 
-\begin{dcases}
-\frac{1}{2} \hat{a}_{\Theta} \cdot t & t  \leq t_{a} \\
-v \cdot t - \frac{1}{2} \cdot \frac{v^2}{\hat{a}_{\Theta}} & t_{a} \le t \leq t_{max} - t_{a} \\
-v \cdot (t_{max} - t_{a}) - \frac{\hat{a}_{\Theta}}{2} \cdot (t_{max} - t)^2 & t_{max} - t_{a} \le t \leq t_{max}
-\end{dcases}
+\Theta(t) & = & \Theta_{A} + \frac{X_{\Theta}(t)}{\hat{x}_{e,\Theta}} \cdot \left(\Theta_{B} - \Theta_{A} \right)\\
 \end{eqnarray*}
 \end{frame}
 
