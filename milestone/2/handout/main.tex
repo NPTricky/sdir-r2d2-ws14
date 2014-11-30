@@ -108,7 +108,7 @@
 \begin{frame}{Singularities}
 \begin{itemize}
 \item unpredictable robot motion
-\item infinitely solutions
+\item infinite solutions
 \item two types of singularity
   \begin{itemize}
   \item wrist singularity
@@ -125,13 +125,13 @@
   \includegraphics[scale=0.65]{2/cad-robot.png}
   \end{figure}
   \column[c]{.50\textwidth}
-  \begin{align*}
+%  \begin{align*}
   \text{Joints: Axis 1} = A1, \text{Axis 2} = A2, ...\\
   \theta1 = \text{angle from $A1$}\\
-  T_{0}^{4} = \text{transformation matrix from $A4$ } \\
-  \text{in world coordinate system}\\
+  T_{0}^{4} = \text{transformation matrix } \\
+  \text{from $A4$ in world coordinate system}\\
   T_{0}^{4} = T_{0}^{1} \cdot T_{1}^{2} \cdot T_{2}^{3} \cdot T_{3}^{4}
-  \end{align*}
+%  \end{align*}
 \end{columns}
 \end{frame}
 
@@ -259,9 +259,8 @@ v_{m} & \text{ is the velocity ramp maximum} \\
 \end{frame}
 
 \subsubsection{Step 2}
-\text{compute the acceleration duration $t_{a,i}$, the deceleration start time $t_{d,i}$ and the total motion time $t_{e,i}$}
-
 \begin{frame}
+compute the acceleration duration $t_{a,i}$, the deceleration start time $t_{d,i}$ and the total motion time $t_{e,i}$
 \begin{eqnarray}
 t_{a,i} & = & \frac{v_{m,i}}{\hat{a}_{m,i}} \\
 t_{e,i} & = & \frac{\hat{x}_{e,i}}{v_{m,i}} + t_{a,i} \\
@@ -498,6 +497,18 @@ the orientation $\Theta(t)$ to time $t$
 \begin{eqnarray*}
 \Theta(t) & = & \Theta_{A} + \frac{X_{\Theta}(t)}{\hat{x}_{e,\Theta}} \cdot \left(\Theta_{B} - \Theta_{A} \right)\\
 \end{eqnarray*}
+\end{frame}
+
+
+\subsection{Determine the Configuration form the inverse Kinematic}
+\begin{frame}
+one way is, we determine the configuration on hand of the minimum angle form an axis. e.g. from angle 4 \\
+
+
+an another way is the determination of the configuration under consideration of each angle from a configuration.\\
+for a better result, we given every angle a weighting for the calculation.\\
+for energy efficiency movement we determine the weighting for each angle on hand the power of the engine of any angle\\
+
 \end{frame}
 
 \section{Example for Synchronous PTP} 
