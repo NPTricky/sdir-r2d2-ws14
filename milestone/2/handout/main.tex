@@ -137,13 +137,13 @@
   \caption{cad-robot}
   \end{figure}
   \column[c]{.50\textwidth}
-%  \begin{align*}
-  \text{Joints: Axis 1} = A1, \text{Axis 2} = A2, ...\\
-  \theta1 = \text{angle from $A1$}\\
-  T_{0}^{4} = \text{transformation matrix } \\
-  \text{from $A4$ in world coordinate system}\\
-  T_{0}^{4} = T_{0}^{1} \cdot T_{1}^{2} \cdot T_{2}^{3} \cdot T_{3}^{4}
-%  \end{align*}
+  \begin{align*}
+    \text{Joints:} &~ \text{Axis 1} = A1, \text{Axis 2} = A2, ...\\
+    \theta1 = &~ \text{angle from $A1$}\\
+    T_{0}^{4} = &~ \text{transformation matrix from $A4$}\\
+    &~ \text{in world coordinate system}\\
+    T_{0}^{4} = &~ T_{0}^{1} \cdot T_{1}^{2} \cdot T_{2}^{3} \cdot T_{3}^{4}
+  \end{align*}
 \end{columns}
 \end{frame}
 
@@ -528,7 +528,7 @@ for energy efficiency movement we determine the weighting for each angle on hand
 we have a 3 arm robot with 3 links and 3 joints and following properties\\
 
 \begin{align*}
-h & = & 10 ~ms \\
+h & = 10 ~ms \\
 \hat{v}_{m} & = 200 ~^\circ/s \\
 \hat{a}_{m} & = 100 ~^\circ/s^2
 \end{align*}
