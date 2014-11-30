@@ -29,7 +29,7 @@
 % encoding & decoding
 \usepackage[T1]{fontenc}            
 \usepackage[utf8]{inputenc}
-\usepackage[english,ngerman]{babel}
+\usepackage[english]{babel}
 
 % math
 \usepackage{isomath}
@@ -134,7 +134,7 @@
   \column[c]{.50\textwidth}
   \begin{figure}[h]
   \includegraphics[scale=0.65]{2/cad-robot.png}
-  \caption{cad-robot}
+  \caption{[5]}
   \end{figure}
   \column[c]{.50\textwidth}
   \begin{align*}
@@ -149,7 +149,11 @@
 
 \subsection{Wrist singularity}
 \begin{frame}
-\includemovie{0.8\textwidth}{0.8\textheight}{2/singularities_video_wrist.mp4}
+  \begin{figure}
+    \centering
+    \includemovie{0.8\textwidth}{0.8\textheight}{2/singularities_video_wrist.mp4}
+    \caption{[6]}
+  \end{figure}
 \end{frame}
 
 \begin{frame}
@@ -177,7 +181,11 @@
 
 \subsection{Overhead singularity}
 \begin{frame}
-\includemovie{0.8\textwidth}{0.8\textheight}{2/singularities_video_overhead.mp4}
+  \begin{figure}
+    \centering
+    \includemovie{0.8\textwidth}{0.8\textheight}{2/singularities_video_overhead.mp4}
+    \caption{[6]}
+  \end{figure}
 \end{frame}
 
 \begin{frame}
@@ -215,6 +223,36 @@
 
 \section{Velocity Profiles}
 \begin{frame}{Velocity Profiles}
+\begin{figure}[h]
+  \includegraphics[height=0.8\textheight]{2/velocity-profile.png}
+  \label{fig:velocity-profile}
+\end{figure}
+\end{frame}
+
+\begin{frame}
+  \begin{figure}[h]
+    \includegraphics[width=\textwidth]{2/acceleration-profile.png}
+    \label{fig:acceleration-profile}
+  \end{figure}
+\end{frame}
+
+\begin{frame}
+  \begin{columns}
+    \column[c]{.50\textwidth}
+    \begin{figure}[h]
+      \includegraphics[height=0.8\textheight]{2/velocity-triangle.png}
+      \label{fig:velocity-triangle}
+    \end{figure}
+    \column[c]{.50\textwidth}
+    \begin{itemize}
+      \item determine maximum amplitude for velocity ramp
+      \item check whether the distance $\hat{x}_{e,i}$ is sufficient to let the velocity grow up to $\hat{v}_{m,i}$ or not
+      \item if we run into the velocity triangle situation we must limit $\hat{v}_{m,i}$ down to $v_{m,i}$
+    \end{itemize}
+  \end{columns}
+\end{frame}
+
+\begin{frame}
   \begin{columns}
 	\column[c]{.2\textwidth}
 	\renewcommand{\arraystretch}{3.5}
@@ -245,15 +283,8 @@
 \item the waypoints $X_{i}[n_{i}]$ are the output motion planning
 \end{itemize}
 \end{frame}
-\subsubsection{Step 1}
-\begin{frame}<presentation:0|handout:1>
-determine maximum amplitude for velocity ramp
-\begin{itemize}
-\item check whether the distance $\hat{x}_{e,i}$ is sufficient to let the velocity grow up to $\hat{v}_{m,i}$ or not
-\item if we run into the velocity triangle situation we must limit $\hat{v}_{m,i}$ down to $v_{m,i}$
-\end{itemize}
-\end{frame}
 
+\subsubsection{Step 1}
 \begin{frame}
 \begin{align*}
 \hat{x}_{e,i} & = \sqrt{{\Delta\hat{x}_{e,x}}^{2} + {\Delta\hat{x}_{e,y}}^{2} + {\Delta\hat{x}_{e,z}}^{2} } \\
@@ -394,16 +425,16 @@ the interpolation can divide in three classes.
 \end{itemize}
 
 \begin{figure}[h]
-  \includegraphics[width=\columnwidth]{2/one-axis-acceleration-profile.png}
-  \caption{one-axis-acceleration-profile}
+  \includegraphics[width=0.75\textwidth]{2/velocity-profile-cases.png}
+  \caption{cases of an axis velocity profile}
   \label{fig:ti-movement-cases}
 \end{figure}
 
 \begin{itemize}
-\item case 1: \emph{acceleration phase} $t \leq t_{a}$
-\item case 2: \emph{constant movement phase} $t_{a} \le t \leq t_{e} - t_{a}$
-\item case 3: \emph{deceleration phase} $t_{e} - t_{a} \le t \leq t_{e}$
-\item case 4: \emph{stood phase} $t_{e} \le t$
+\item \textcolor{ForestGreen}{case 1}: \emph{acceleration phase} $t \leq t_{a}$
+\item \textcolor{Dandelion}{case 2}: \emph{constant movement phase} $t_{a} < t \leq t_{e} - t_{a}$
+\item \textcolor{red}{case 3}: \emph{deceleration phase} $t_{e} - t_{a} < t \leq t_{e}$
+\item \textcolor{blue}{case 4}: \emph{stood phase} $t_{e} < t$
 \end{itemize}
 
 \end{frame}
@@ -413,8 +444,8 @@ the interpolation can divide in three classes.
 X_{i}(t) = 
 \begin{dcases}
 \frac{1}{2} \hat{a}_{m,i} \cdot t^2  & t \leq t_{a,i} \\
-v_{m,i} \cdot t - \frac{1}{2} \cdot \frac{v_{m,i}^2}{\hat{a}_{m,i}} & t_{a,i} \le t \leq t_{e,i} - t_{a,i} \\
-v_{m,i} \cdot (t_{e,i} - t_{a,i}) - \frac{\hat{a}_{m,i}}{2} \cdot (t_{e,i} - t)^2 & t_{e,i} - t_{a,i} \le t \leq t_{e,i}\\
+v_{m,i} \cdot t - \frac{1}{2} \cdot \frac{v_{m,i}^2}{\hat{a}_{m,i}} & t_{a,i} < t \leq t_{e,i} - t_{a,i} \\
+v_{m,i} \cdot (t_{e,i} - t_{a,i}) - \frac{\hat{a}_{m,i}}{2} \cdot (t_{e,i} - t)^2 & t_{e,i} - t_{a,i} < t \leq t_{e,i}\\
 \hat{x}_{e,i} & t_{e,i} < t\\
 \end{dcases}
 \end{equation*}
@@ -486,7 +517,7 @@ Synchronisation of the motion
 t_{e, max} = max\left(t_{e,P}, t_{e,\theta}\right)
 \end{equation*}
 \begin{itemize}
-\item $t_{e,\theta} \le t_{e,P}$:
+\item $t_{e,\theta} < t_{e,P}$:
 \begin{align*}
 v & = \frac{t_{e,max} \cdot \hat{a}_{e}}{2}-\sqrt{\frac{t_{e,max}^2 \cdot \hat{a}_{e}^2}{4}-\hat{a}_{e}\cdot \hat{x}_{e}} \\
 t_{a} & = \frac{v}{\hat{a}_{e}}
@@ -514,23 +545,32 @@ the orientation $\Theta(t)$ to time $t$
 
 \subsection{Determine the Configuration form the inverse Kinematic}
 \begin{frame}
-one way is, we determine the configuration on hand of the minimum angle form an axis. e.g. from angle 4 \\
+\begin{itemize}
+\item one way is, we determine the configuration on hand of the minimum angle form an axis. e.g. from angle 4 \\
+\end{itemize}
 
+\lstinputlisting[language=pseudo,style=global,caption={pseudocode for determine the configuration from the inverse kinematic, variant 1}, ,label=lst:selectConfiguration_variant_1]{selectConfiguration_variant1.pseudo}
+\end{frame}
 
-an another way is the determination of the configuration under consideration of each angle from a configuration.\\
-for a better result, we given every angle a weighting for the calculation.\\
-for energy efficiency movement we determine the weighting for each angle on hand the power of the engine of any angle\\
+\begin{frame}
+\begin{itemize}
+  \item an another way is the determination of the configuration under consideration of each angle from a configuration over a middle value function \\
+\end{itemize}
+%for a better result, we given every angle a weighting for the calculation.\\
+%for energy efficiency movement we determine the weighting for each angle on hand %the power of the engine of any angle\\
 
+\lstinputlisting[language=pseudo,style=global,caption={pseudocode for determine the configuration from the inverse kinematic, variant 2},label=lst:selectConfiguration_variant_1]{selectConfiguration_variant2.pseudo}
 \end{frame}
 
 \section{Example for Synchronous PTP} 
 
 \subsection{Given Values }
 \begin{frame}
-we have a 3 arm robot with 3 links and 3 joints and following properties\\
+\begin{itemize}
+\item we have a 3 DOF robot with 3 links and 3 joints and following properties
+\end{itemize}
 
 \begin{align*}
-h & = 10 ~ms \\
 \hat{v}_{m} & = 200 ~^\circ/s \\
 \hat{a}_{m} & = 100 ~^\circ/s^2
 \end{align*}
@@ -540,8 +580,8 @@ h & = 10 ~ms \\
 \toprule
 i & 0 & 1 & 2 & 3 \\
 \midrule
-$\alpha_{t_{0},i}$ & $  0^\circ$ & $20^\circ$ & $30^\circ$ & $-20^\circ$ \\ 
-$\alpha_{t_{e},i}$ & $ 64^\circ$ & $11^\circ$ & $46^\circ$ & $  5^\circ$ \\
+$\Theta_{t_{0},i}$ & $  0^\circ$ & $20^\circ$ & $30^\circ$ & $-20^\circ$ \\ 
+$\Theta_{t_{e},i}$ & $ 64^\circ$ & $11^\circ$ & $46^\circ$ & $  5^\circ$ \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -551,18 +591,18 @@ $\alpha_{t_{e},i}$ & $ 64^\circ$ & $11^\circ$ & $46^\circ$ & $  5^\circ$ \\
 \begin{frame}
 in the first step, we calculation for each axis the distance of movement, the interim velocity, the movement time of each axis and the total movement time
 
-\subsubsection*{the distance of movement }
-\begin{equation*}
-\hat{X}_{e,i} = {\alpha_{t_{e}|i} - \alpha_{t_{0}|i}}
-\end{equation*}
+\begin{align*}
+\hat{x}_{e,i} & = \sqrt{{\Delta\hat{x}_{e,x}}^{2} + {\Delta\hat{x}_{e,y}}^{2} + {\Delta\hat{x}_{e,z}}^{2} }
+\end{align*}
 
+\subsubsection*{the distance of movement }
 the result are following    
 \begin{center}
 \begin{tabular}{ccccc}
 \toprule
 i & 0 & 1 & 2 & 3 \\
 \midrule
-$\hat{X}_{e,i}$ & $ 64^\circ$ & $ -9^\circ$ & $16^\circ$ & $25^\circ$ \\
+$\hat{x}_{e,i}$ & $ 64^\circ$ & $ 9^\circ$ & $16^\circ$ & $25^\circ$ \\
 \bottomrule 
 \end{tabular}
 \end{center}
@@ -572,7 +612,7 @@ $\hat{X}_{e,i}$ & $ 64^\circ$ & $ -9^\circ$ & $16^\circ$ & $25^\circ$ \\
 \begin{frame}
 the interim velocity $\tilde{v}_{m,i}$ of each axis is 
 \begin{equation*}
-\tilde{v}{m,i} = min\left(\hat{v}_{m,i},\sqrt{|\hat{x}_{e,i}| \cdot \hat{a}_{m,i}} \right) 
+\tilde{v}_{m,i} = min\left(\hat{v}_{m,i},\sqrt{,\hat{x}_{e,i}, \cdot \hat{a}_{m,i}} \right) 
 \end{equation*}
 
 the values of the calculation are for each axis are
@@ -601,8 +641,8 @@ t_{e,i} & = \frac{\hat{x}_{e,i}}{v_{m,i}} + t_{a,i} \\
 \toprule
 i & 0 & 1 & 2 & 3 \\
 \midrule
-$\tilde{t}_{a|i}$ & 0.8s & 0.3s & 0.4s & 0.5s \\ 
-$t_{e|i}$ & 1.6s & 0.6s & 0.8s & 1.0s \\
+$\tilde{t}_{a,i}$ & 0.8s & 0.3s & 0.4s & 0.5s \\ 
+$t_{e,i}$ & 1.6s & 0.6s & 0.8s & 1.0s \\
 \bottomrule 
 \end{tabular}
 \end{center} 
@@ -620,7 +660,8 @@ t_{e,max} = 1.6s
 \end{equation*}    
 
 \subsection{Calculation of the velocity }
-after the interim velocity and the total movement time, we can calculate the velocity value for each axis and the times for acceleration and deceleration
+calculate of the velocity value for each axis
+%after the interim velocity and the total movement time, we can calculate the %velocity value for each axis and the times for acceleration and deceleration
 
 \subsubsection*{the velocity}
 \begin{equation*}
@@ -632,7 +673,7 @@ v_{m,i} = \frac{t_{e,max} \cdot \hat{a}_{m,i}}{2}-\sqrt{\frac{t_{e,max}^2 \cdot 
 \toprule
 i & 0 & 1 & 2 & 3 \\
 \midrule
-$v_{m|i}$  & $80.0^\circ/s$   & $5.8^\circ/s$   & $10.7^\circ/s$  & $17.5^\circ/s$ \\
+$v_{m,i}$  & $80.0^\circ/s$   & $5.8^\circ/s$   & $10.7^\circ/s$  & $17.5^\circ/s$ \\
 \bottomrule 
 \end{tabular}
 \end{center}
@@ -640,6 +681,7 @@ $v_{m|i}$  & $80.0^\circ/s$   & $5.8^\circ/s$   & $10.7^\circ/s$  & $17.5^\circ/
 
 \subsection{Determine the acceleration and the deceleration time}
 \begin{frame}
+determine the acceleration and the deceleration time
 \begin{equation*}
 t_{a,i} = \frac{\hat{v}_{m,i}}{\hat{a}_{m,i}}
 \end{equation*}
@@ -652,68 +694,52 @@ t_{d,j} = t_{e,max}-t_{a,i}
 \toprule
 i & 0 & 1 & 2 & 3 \\
 \midrule
-$t_{a|i}$ & 0.800s & 0.058s & 0.170s & 0.175s \\ 
-$t_{d|i}$ & 0.800s & 1.542s & 1.430s & 1.425s \\
+$t_{a,i}$ & 0.800s & 0.058s & 0.170s & 0.175s \\ 
+$t_{d,i}$ & 0.800s & 1.542s & 1.430s & 1.425s \\
 \bottomrule
 \end{tabular}
 \end{center}
 \end{frame}
 
-\subsection{Determine the count of waypoints}
+\subsection{Calculation of the orientation}
 \begin{frame}
-\begin{align}
-n_{a,i} & = \frac{t_{a,i}}{h} \\
-n_{e,max} & = \frac{t_{e,max}}{h}
-\end{align}
-
-the count of time slices for the movement phase is 
+\begin{itemize}
+\item distance covered
 \begin{equation*}
-n_{e,max} = 160
-\end{equation*}
-
-the count of time slices for the acceleration phase of each axis are
-\begin{center}
-\begin{tabular}{ccccc}
-\toprule
-i & 0 & 1 & 2 & 3 \\
-\midrule
-$n_{a|i}$ & 80 & 5.8 & 17 & 17.5 \\
-\bottomrule
-\end{tabular}
-\end{center}
-\end{frame}
-
-\subsection{Calculation of the Waypoints}
-\begin{frame}
-\begin{equation*}
-X_{i}[n_{i}] = 
+X_{i}(t) = 
 \begin{dcases}
-\frac{1}{2} \hat{a}_{m,i} \cdot h^2 \cdot n_{i}^2 & 1 \leq n_{i} \leq n_{a,i} \\ 
-v_{m,i} \cdot h \cdot n_{i} - \frac{1}{2} \cdot \frac{v_{m,i}^2}{\hat{a}_{m,i}} & n_{a,i} < n_{i} \leq n_{e,i} - n_{a,i} \\
-v_{m,i} \cdot (t_{e,i} - t_{a,i}) - \frac{\hat{a}_{m,i}}{2} \cdot (t_{e,i} - h \cdot n_{i})^2   & n_{e,i} - n_{a,i} < n_{i} \leq n_{e,i}
+\frac{1}{2} \hat{a}_{m,i} \cdot t^2  & t \leq t_{a,i} \\
+v_{m,i} \cdot t - \frac{1}{2} \cdot \frac{v_{m,i}^2}{\hat{a}_{m,i}} & t_{a,i} < t \leq t_{e,i} - t_{a,i} \\
+v_{m,i} \cdot (t_{e,i} - t_{a,i}) - \frac{\hat{a}_{m,i}}{2} \cdot (t_{e,i} - t)^2 & t_{e,i} - t_{a,i} < t \leq t_{e,i}\\
+\hat{x}_{e,i} & t_{e,i} < t\\
 \end{dcases}
 \end{equation*}
-we calculation the waypoints (angles) at a time $n_i = 4$, $n_i = 80$ and $n_i = 156s$.
+\item orientation
+\begin{equation*}
+\Theta_{i}(t) = \Theta_{t_0,i} + \frac{X_{i}(t)}{\hat{x}_{e,i}} \cdot (\Theta_{t_e,i} - \Theta_{t_0,i} )
+\end{equation*}
+\end{itemize}
 \end{frame}
 
 \begin{frame}
-in the acceleration phase of all axes $n_i = 4$:
+in the \emph{acceleration phase} of all axes $t = 0.05s$:
 
 \begin{center}
 \begin{tabular}{ccccc}
 \toprule
 i & 0 & 1 & 2 & 3 \\
 \midrule
-$n_{a,i}$ & 80 & 5.8 & 17 & 17.5 \\ 
-$1 \leq n_{i} \leq n_{a,i}$ & true & true & true & true \\
+$t \leq t_{a,i}$ & true & true & true & true \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-we can see that we are for each axis in the acceleration phase. for the acceleration phase, we take the following formula
+each axis is in the acceleration phase
+
+%we can see that we are for each axis in the acceleration phase. for the %acceleration phase, we take the following formula
 
 \begin{equation*}
-X_{i}[n_{i}] = \frac{1}{2} \hat{a}_{m,i} \cdot h^2 \cdot n_{i}^2
+X_{i}(t) = \frac{1}{2} \hat{a}_{m,i} \cdot t^2
 \end{equation*}
 
 \begin{center}
@@ -721,23 +747,22 @@ X_{i}[n_{i}] = \frac{1}{2} \hat{a}_{m,i} \cdot h^2 \cdot n_{i}^2
 \toprule
 i & 0 & 1 & 2 & 3 \\
 \midrule
-$X_{i}[n_{i}]$ & 80 & 5.8 & 17 & 17.5 \\
+$X_{i}(t)$      & 0.125 & 0.125  & 0.125  & 0.125 \\
+$\Theta_{i}(t)$ & 0.125 & 19.875 & 30.125 & -19.875\\
 \bottomrule
 \end{tabular}
 \end{center}
 \end{frame}
 
 \begin{frame}
-in the movement phase without acceleration or deceleration $n_i = 80$
+in the \emph{constant movement phase} without acceleration or deceleration $t = 0.80s$
 
 \begin{center}
 \begin{tabular}{ccccc}
 \toprule
 i & 0 & 1 & 2 & 3 \\
 \midrule
-$n_{a,i}$ & 80 & 5.8 & 17 & 17.5 \\ 
-$ n_{e,i} - n_{a,i}$ & 80 & 154.2 & 143 & 142.5 \\
-$ n_{a,i} < n_{i} \leq n_{e,i} - n_{a,i}$ & false & true & true & true \\
+$t_{a,i} < t \leq t_{e,i} - t_{a,i}$ & false & true & true & true \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -748,7 +773,7 @@ axis 0, for this axis is it the end of the acceleration phase.
 for this phase, we take the following formula
 
 \begin{equation*}
-X_{i}[n_{i}] = v_{m,i} \cdot h \cdot n_{i} - \frac{1}{2} \cdot \frac{v_{m,i}^2}{\hat{a}_{m,i}} 
+X_{i}(t) = v_{m,i} \cdot t - \frac{1}{2} \cdot \frac{v_{m,i}^2}{\hat{a}_{m,i}}
 \end{equation*}
 
 \begin{center}
@@ -756,34 +781,31 @@ X_{i}[n_{i}] = v_{m,i} \cdot h \cdot n_{i} - \frac{1}{2} \cdot \frac{v_{m,i}^2}{
 \toprule
 i & 1 & 2 & 3 \\
 \midrule
-$X_{i}[n_{i}]$ & $4.5^\circ$ & $8.0^\circ$ & $12.5^\circ$ \\ 
-$\alpha_{t_{n}}$ & $15.5^\circ$ & $38.0^\circ$ & $-7.5^\circ$ \\
+$X_{i}(t)$      & $4.5^\circ$  & $8.0^\circ$  & $12.5^\circ$ \\ 
+$\Theta_{i}(t)$ & $15.5^\circ$ & $38.0^\circ$ & $-7.5^\circ$ \\
 \bottomrule
 \end{tabular}
 \end{center}
 \end{frame}
 
 \begin{frame}
-in the deceleration phase $n_i = 156$
+in the \emph{deceleration phase} $t = 1.56s$
 
 \begin{center}
 \begin{tabular}{ccccc}
 \toprule
 i & 0 & 1 & 2 & 3 \\
 \midrule
-$n_{a,i}$ & 80 & 5.8 & 17 & 17.5 \\ 
-$n_{e,i} - n_{a,i}$ & 80 & 154.2 & 143 & 142.5 \\
-$n_{e,i} - n_{a,i} < n_{i} \leq n_{e,i}$ & true  & true & true & true \\
+$t_{e,i} - t_{a,i} < t \leq t_{e,i}$ & true  & true & true & true \\
 \bottomrule 
 \end{tabular}
 \end{center}
 
-we can see that we are for each axis in the deceleration phase
-
+we can see that we are for each axis in the deceleration phase\\
 for the deceleration phase, we take the following formula
 
 \begin{equation*}
-X_{i}[n_{i}] = v_{m,i} \cdot (t_{e,i} - t_{a,i}) - \frac{\hat{a}_{m,i}}{2} \cdot (t_{e,i} - h \cdot n_{i})^2 
+X_{i}(t)=v_{m,i} \cdot (t_{e,i} - t_{a,i}) - \frac{\hat{a}_{m,i}}{2} \cdot (t_{e,i} - t)^2  
 \end{equation*}
 
 \begin{center}
@@ -791,11 +813,61 @@ X_{i}[n_{i}] = v_{m,i} \cdot (t_{e,i} - t_{a,i}) - \frac{\hat{a}_{m,i}}{2} \cdot
 \toprule
 i & 0 & 1 & 2 & 3 \\
 \midrule
-$X_{i}[n_{i}]$ & $63.9^\circ$ & $8.8^\circ$ & $15.2^\circ$ & $24.8^\circ$ \\
-$\alpha_{t_{n}}$ & $63.9^\circ$ & $11.2^\circ$ & $45.2^\circ$ & $4.8^\circ$ \\
+$X_{i}(t)$      & $63.9^\circ$ & $8.8^\circ$ & $15.2^\circ$ & $24.8^\circ$ \\
+$\Theta_{i}(t)$ & $63.9^\circ$ & $11.2^\circ$ & $45.2^\circ$ & $4.8^\circ$ \\
 \bottomrule
 \end{tabular}
 \end{center} 
+\end{frame}
+
+\begin{frame}
+  in the \emph{stood phase} $t = 1.8s$
+  
+  \begin{center}
+    \begin{tabular}{ccccc}
+      \toprule
+      i & 0 & 1 & 2 & 3 \\
+      \midrule
+      $t_{e,i} < t$ & true  & true & true & true \\
+      \bottomrule 
+    \end{tabular}
+  \end{center}
+  
+  all axis are in the stood phase\\
+  for the stood phase, we take the following formula
+  
+  \begin{equation*}
+  X_{i}(t)= \hat{x}_{e,i}
+  \end{equation*}
+  
+  \begin{center}
+    \begin{tabular}{ccccc}
+      \toprule
+      i & 0 & 1 & 2 & 3 \\
+      \midrule
+      $X_{i}(t)$      & $64.0^\circ$ & $9.0^\circ$ & $16.0^\circ$ & $25.0^\circ$ \\
+      $\Theta_{i}(t)$ & $64.0^\circ$ & $11^\circ$ & $46.0^\circ$ & $5.0^\circ$ \\
+      \bottomrule
+    \end{tabular}
+  \end{center} 
+\end{frame}
+
+\section{}
+\begin{frame}{Sources}
+\begin{itemize}
+  \item[1] \url{http://wwwhomes.uni-bielefeld.de/ggoetze/Robotik/robotikWS0607.pdf} (25.11.2014)
+  \item[2] \url{http://coro.etsmtl.ca/blog/?p=107} (25.11.2014)
+  \item[3] \url{http://www.easy-rob.com/uploads/media/LectureRobotics.pdf} (28.11.2014)
+  \item[4] \url{ http://www.kuka-robotics.com/germany/en/products/software/educational_framework/arm_tutorials/PS_Content_Arm1.htm}
+  \item[5] \url{http://robotics.stackexchange.com/questions/284/which-type-of-actuator-will-be-suitable-for-a-very-strong-robot-arm} (25.11.2014)
+  \item[6] \url{https://www.youtube.com/watch?v=zlGCurgsqg8} (25.11.2014)
+  \item[7] Grundlagen der Robotik – Prof Dr. Klaus Wüst – Skriptum
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}
+\Huge{\centerline{Thank you for your attention}}
 \end{frame}
 
 \end{document}
