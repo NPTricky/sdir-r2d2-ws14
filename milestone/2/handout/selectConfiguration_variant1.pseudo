@@ -1,0 +1,15 @@
+selectConfiguration
+{
+  currentMinimumAngle = MAX_POSSIBLE_ANGLE;
+  
+  foreach (configuration in inverseKinematics)
+  {
+    /* configuration[4] is the fourth angle */
+    if (configuration[4] < currentMinimumAngle)
+    {
+      currentMinimumAngle = configuration[4];
+      selectedConfiguration = configuration;
+    }
+  }
+  return selectedConfiguration;
+}
