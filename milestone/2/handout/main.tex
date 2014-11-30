@@ -188,7 +188,7 @@
   \end{itemize}
 \item Mathematics:
   \begin{itemize}
-  \item $T_{0}^{5} = T_{0}^{TCP} \cdot (T_{0}^{Tool})^{-1}$ ~\footnotesize\textit{(wrist)} 
+  \item $T_{0}^{WP} = T_{0}^{TCP} \cdot (T_{0}^{Tool})^{-1}$} 
   \item           
   $\begin{pmatrix}
   a_1 & a_2 & a_3 & p_1 \\
@@ -255,10 +255,10 @@ determine maximum amplitude for velocity ramp
 \end{frame}
 
 \begin{frame}
-\begin{align}
+\begin{align*}
 \hat{x}_{e,i} & = \sqrt{{\Delta\hat{x}_{e,x}}^{2} + {\Delta\hat{x}_{e,y}}^{2} + {\Delta\hat{x}_{e,z}}^{2} } \\
 v_{m,i } & = min(\hat{v}_{m,i},\sqrt{\hat{x}_{e,i} \cdot \hat{a}_{m,i}})  \label{eq:asynvmi}
-\end{align}
+\end{align*}
 
 \begin{align*}
 v_{m} & \text{ is the velocity ramp maximum} \\
@@ -271,11 +271,11 @@ v_{m} & \text{ is the velocity ramp maximum} \\
 \subsubsection{Step 2}
 \begin{frame}
 compute the acceleration duration $t_{a,i}$, the deceleration start time $t_{d,i}$ and the total motion time $t_{e,i}$
-\begin{align}
+\begin{align*}
 t_{a,i} & = \frac{v_{m,i}}{\hat{a}_{m,i}} \\
 t_{e,i} & = \frac{\hat{x}_{e,i}}{v_{m,i}} + t_{a,i} \\
 t_{d,i} & = t_{e,i} - t_{a,i}
-\end{align}
+\end{align*}
 
 \begin{align*}
 t_{a} & \text{ is the acceleration length} \\
@@ -314,9 +314,9 @@ t_{e,i} & = \frac{\hat{x}_{e,i}}{v_{m,i}} + t_{a,i}
 
 \begin{frame}
 the total movement time $t_{e,max}$ is the maximum value of all movements
-\begin{equation}
+\begin{equation*}
 t_{e,max} = max(t_{e,1},t_{e,2},...,t_{e,N})
-\end{equation}
+\end{equation*}
 
 \begin{align*}
 t_{e,N} & \text{ is the total motion time } \\
@@ -335,18 +335,18 @@ t_{e,max} = \frac{\hat{x}_{e,i}}{\hat{v}_{m,i}}+\frac{\hat{v}_{m,i}}{\hat{a}_{m,
 %over conversion of the formula we get the formula for velocity of each axis
 %over the p-q-formula
 
-\begin{equation}
+\begin{equation*}
 v_{m,i} = \frac{t_{e,max} \cdot \hat{a}_{m,i}}{2}-\sqrt{\frac{t_{e,max}^2 \cdot \hat{a}_{m,i}^2}{4}-\hat{a}_{m,i}\cdot \hat{x}_{e,i}}
-\end{equation}
+\end{equation*}
 \end{frame}
   
 \subsubsection{Step 3}
 \begin{frame}
 calculation of the acceleration duration $t_{a,i}$
 
-\begin{equation}
+\begin{equation*}
 t_{a,i} = \frac{\hat{v}_{m,i}}{\hat{a}_{m,i}}
-\end{equation}
+\end{equation*}
 
 \begin{equation}
 t_{d,max} = t_{e,max}-t_{a,i}
@@ -364,7 +364,7 @@ t_{d} & \text{ is the deceleration start time}
 \begin{frame}{Trajectory Interpolation}
 the interpolation can divide in three classes.
 \begin{itemize}
-\item the \emph{linear interpolation} is very simple, they describes the direct movement from point \emph{A} to point \emph{B}:
+\item the \emph{linear interpolation} is very simple, they describes the direct movement from point \emph{A} to point \emph{B}.
 \item the \emph{circular interpolation} is a little bit tricky, they describes the a circular movement form point \emph{A} to point \emph{B} over a point \emph{C}.
 \item the \emph{spline interpolation} is very complex, they divides the trajectory into individual parts, each part is describes by a higher-order polynomial.
 \end{itemize}
@@ -389,7 +389,9 @@ the interpolation can divide in three classes.
 
 \subsubsection{Step 1}
 \begin{frame}
-calculation of the distance covered of each axes \\
+\begin{itemize}
+  \item calculation of the distance covered of each axes
+\end{itemize}
 
 \begin{figure}[h]
   \includegraphics[width=\columnwidth]{2/one-axis-acceleration-profile.png}
@@ -407,7 +409,7 @@ calculation of the distance covered of each axes \\
 \end{frame}
 
 \begin{frame}
-\begin{equation}
+\begin{equation*}
 X_{i}(t) = 
 \begin{dcases}
 \frac{1}{2} \hat{a}_{m,i} \cdot t^2  & t \leq t_{a,i} \\
@@ -415,7 +417,7 @@ v_{m,i} \cdot t - \frac{1}{2} \cdot \frac{v_{m,i}^2}{\hat{a}_{m,i}} & t_{a,i} \l
 v_{m,i} \cdot (t_{e,i} - t_{a,i}) - \frac{\hat{a}_{m,i}}{2} \cdot (t_{e,i} - t)^2 & t_{e,i} - t_{a,i} \le t \leq t_{e,i}\\
 \hat{x}_{e,i} & t_{e,i} < t\\
 \end{dcases}
-\end{equation}
+\end{equation*}
 
 \begin{align*}
 X_{i}(t) & \text{ distance covered at time $t$ } \\
@@ -426,9 +428,9 @@ X_{i}(t) & \text{ distance covered at time $t$ } \\
 \begin{frame}
 determine position / orientation to time $t$
 
-\begin{equation}
+\begin{equation*}
 \vec{x}_{i}(t) = \vec{x}_{i}(0) + \frac{X_{i}(t)}{\hat{x}_{e,i}} \cdot \Bigl(\vec{x}_{i}(t_{e}) - \vec{x}_{i}(0) \Bigr)
-\end{equation}
+\end{equation*}
 
 \begin{align*}
 \vec{x}_{i}(0)     & \text{ is the beginning position/orientation of a point} \\
@@ -480,9 +482,9 @@ the speed $\hat{v}$ and the acceleration $\hat{a}$ is set by the operator
 \subsubsection{Step 3}
 \begin{frame}
 Synchronisation of the motion
-\begin{equation}
+\begin{equation*}
 t_{e, max} = max\left(t_{e,P}, t_{e,\theta}\right)
-\end{equation}
+\end{equation*}
 \begin{itemize}
 \item $t_{e,\theta} \le t_{e,P}$:
 \begin{align*}
@@ -589,10 +591,10 @@ $\tilde{v}_{m,i}$ & $80^\circ/s$ & $30^\circ/s$ & $40^\circ/s$ & $50^\circ/s$ \\
 \begin{frame}
 before we determine the movement time of each axis, we need the interim acceleration time of each axis
 
-\begin{align}
+\begin{align*}
 \tilde{t}_{a,i} & = \frac{v_{m,i}}{\hat{a}_{m,i}} \\
 t_{e,i} & = \frac{\hat{x}_{e,i}}{v_{m,i}} + t_{a,i} \\
-\end{align}
+\end{align*}
 
 \begin{center}
 \begin{tabular}{ccccc}
