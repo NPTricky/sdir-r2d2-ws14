@@ -5,13 +5,15 @@ singularitySolution
     - choose theta_1
     - for theta_2 - 5 use inverse kinematic
   }
-  else if (isWristSingularity)
+
+  if (isWristSingularity)
   {
       - theta_5 = 0;
       - calculate median of next step and previous step of theta_4
       - set theta_4 and calculate theta_6 and so on 
   }
-  else
+
+  if(!isOverheadSingularity && !isWristSingularity)
   {
       use inverse kinematic
   }
