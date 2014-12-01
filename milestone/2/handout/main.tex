@@ -429,7 +429,7 @@ the interpolation can divide in three classes.
     \item \textcolor{ForestGreen}{case 1}: \emph{acceleration phase} $t \leq t_{a}$
     \item \textcolor{Dandelion}{case 2}: \emph{constant movement phase} $t_{a} < t \leq t_{d}$
     \item \textcolor{red}{case 3}: \emph{deceleration phase} $t_{d} < t \leq t_{e}$
-    \item \textcolor{blue}{case 4}: \emph{standstill phase} $t_{e} < t$
+    \item \textcolor{blue}{case 4}: \emph{steady phase} $t_{e} < t$
   \end{itemize}
 \end{frame}
 
@@ -515,12 +515,12 @@ Synchronisation of the motion
 t_{e, max} = max\left(t_{e,P}, t_{e,\theta}\right)
 \end{equation*}
 \begin{itemize}
-\item $t_{e, max} = t_{e,P}$:
+\item $t_{e, max} = t_{e,P}$
 \begin{align*}
 v & = \frac{t_{e,max} \cdot \hat{a}_{e}}{2}-\sqrt{\frac{t_{e,max}^2 \cdot \hat{a}_{e}^2}{4}-\hat{a}_{e}\cdot \hat{x}_{e}} \\
 t_{a} & = \frac{v}{\hat{a}_{e}}
 \end{align*}
-\item $t_{e, max} = t_{e,\theta}$:
+\item $t_{e, max} = t_{e,\theta}$
 \begin{align*}
 v & = \frac{t_{e,max} \cdot \hat{a}_{\theta}}{2}-\sqrt{\frac{t_{e,max}^2 \cdot \hat{a}_{\theta}^2}{4}-\hat{a}_{\theta}\cdot \hat{x}_{\theta}} \\
 t_{a} & = \frac{v }{\hat{a}_{\theta}}
@@ -587,7 +587,7 @@ $\Theta_{t_{e},i}$ & $ 64^\circ$ & $11^\circ$ & $  5^\circ$ \\
 
 \subsection{Determine the interim velocity and the total movement time}
 \begin{frame}
-in the first step, we calculation for each axis the distance of movement, the interim velocity, the movement time of each axis and the total movement time
+in the first step, we calculate for each axis the distance of movement, the interim velocity, the movement time of each axis and the total movement time
 
 \begin{align*}
 \hat{x}_{e,i} & = \sqrt{{\Delta\hat{x}_{e,x}}^{2} + {\Delta\hat{x}_{e,y}}^{2} + {\Delta\hat{x}_{e,z}}^{2} }
@@ -819,7 +819,7 @@ $\Theta_{i}(t)$ & $63.9^\circ$ & $11.2^\circ$ & $4.8^\circ$ \\
 \end{frame}
 
 \begin{frame}
-  in the \emph{standstill phase} $t = 1.8s$
+  in the \emph{steady phase} $t = 1.8s$
   
   \begin{center}
     \begin{tabular}{cccc}
@@ -831,8 +831,8 @@ $\Theta_{i}(t)$ & $63.9^\circ$ & $11.2^\circ$ & $4.8^\circ$ \\
     \end{tabular}
   \end{center}
   
-  all axis are in the standstill phase\\
-  for the standstill phase, we take the following formula
+  all axis are in the steady phase\\
+  for the steady phase, we take the following formula
   
   \begin{equation*}
   X_{i}(t)= \hat{x}_{e,i}
