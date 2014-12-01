@@ -397,7 +397,7 @@ the interpolation can divide in three classes.
 \begin{itemize}
 \item the \emph{linear interpolation} is very simple, they describes the direct movement from point \emph{A} to point \emph{B}.
 \item the \emph{circular interpolation} is a little bit tricky, they describes the a circular movement form point \emph{A} to point \emph{B} over a point \emph{C}.
-\item the \emph{spline interpolation} is very complex, they divides the trajectory into individual parts, each part is describes by a higher-order polynomial.
+\item the \emph{spline interpolation} is very complex, they split the trajectory into individual parts, each part is describes by a higher-order polynomial.
 \end{itemize}
 \end{frame}
 
@@ -418,34 +418,32 @@ the interpolation can divide in three classes.
 %\end{align*}
 %\end{frame}
 
+\begin{frame}
+  \begin{figure}[h]
+    \includegraphics[width=0.75\textwidth]{2/velocity-profile-cases.png}
+    \caption{cases of an axis velocity profile}
+    \label{fig:ti-movement-cases}
+  \end{figure}
+  
+  \begin{itemize}
+    \item \textcolor{ForestGreen}{case 1}: \emph{acceleration phase} $t \leq t_{a}$
+    \item \textcolor{Dandelion}{case 2}: \emph{constant movement phase} $t_{a} < t \leq t_{d}$
+    \item \textcolor{red}{case 3}: \emph{deceleration phase} $t_{d} < t \leq t_{e}$
+    \item \textcolor{blue}{case 4}: \emph{standstill phase} $t_{e} < t$
+  \end{itemize}
+\end{frame}
+
 \subsubsection{Step 1}
 \begin{frame}
 \begin{itemize}
   \item calculation of the distance covered of each axes
 \end{itemize}
-
-\begin{figure}[h]
-  \includegraphics[width=0.75\textwidth]{2/velocity-profile-cases.png}
-  \caption{cases of an axis velocity profile}
-  \label{fig:ti-movement-cases}
-\end{figure}
-
-\begin{itemize}
-\item \textcolor{ForestGreen}{case 1}: \emph{acceleration phase} $t \leq t_{a}$
-\item \textcolor{Dandelion}{case 2}: \emph{constant movement phase} $t_{a} < t \leq t_{e} - t_{a}$
-\item \textcolor{red}{case 3}: \emph{deceleration phase} $t_{e} - t_{a} < t \leq t_{e}$
-\item \textcolor{blue}{case 4}: \emph{stood phase} $t_{e} < t$
-\end{itemize}
-
-\end{frame}
-
-\begin{frame}
 \begin{equation*}
 X_{i}(t) = 
 \begin{dcases}
 \frac{1}{2} \hat{a}_{m,i} \cdot t^2  & t \leq t_{a,i} \\
-v_{m,i} \cdot t - \frac{1}{2} \cdot \frac{v_{m,i}^2}{\hat{a}_{m,i}} & t_{a,i} < t \leq t_{e,i} - t_{a,i} \\
-v_{m,i} \cdot (t_{e,i} - t_{a,i}) - \frac{\hat{a}_{m,i}}{2} \cdot (t_{e,i} - t)^2 & t_{e,i} - t_{a,i} < t \leq t_{e,i}\\
+v_{m,i} \cdot t - \frac{1}{2} \cdot \frac{v_{m,i}^2}{\hat{a}_{m,i}} & t_{a,i} < t \leq t_{d,i} \\
+v_{m,i} \cdot t_{d,i} - \frac{\hat{a}_{m,i}}{2} \cdot (t_{e,i} - t)^2 & t_{d,i} < t \leq t_{e,i}\\
 \hat{x}_{e,i} & t_{e,i} < t\\
 \end{dcases}
 \end{equation*}
@@ -517,12 +515,12 @@ Synchronisation of the motion
 t_{e, max} = max\left(t_{e,P}, t_{e,\theta}\right)
 \end{equation*}
 \begin{itemize}
-\item $t_{e,\theta} < t_{e,P}$:
+\item $t_{e, max} = t_{e,P}$:
 \begin{align*}
 v & = \frac{t_{e,max} \cdot \hat{a}_{e}}{2}-\sqrt{\frac{t_{e,max}^2 \cdot \hat{a}_{e}^2}{4}-\hat{a}_{e}\cdot \hat{x}_{e}} \\
 t_{a} & = \frac{v}{\hat{a}_{e}}
 \end{align*}
-\item $t_{e,P} \leq t_{e,\theta}$:
+\item $t_{e, max} = t_{e,\theta}$:
 \begin{align*}
 v & = \frac{t_{e,max} \cdot \hat{a}_{\theta}}{2}-\sqrt{\frac{t_{e,max}^2 \cdot \hat{a}_{\theta}^2}{4}-\hat{a}_{\theta}\cdot \hat{x}_{\theta}} \\
 t_{a} & = \frac{v }{\hat{a}_{\theta}}
@@ -686,7 +684,7 @@ determine the acceleration and the deceleration time
 t_{a,i} = \frac{\hat{v}_{m,i}}{\hat{a}_{m,i}}
 \end{equation*}
 \begin{equation*}
-t_{d,j} = t_{e,max}-t_{a,i}
+t_{d,i} = t_{e,max} - t_{a,i}
 \end{equation*}    
 
 \begin{center}
@@ -709,8 +707,8 @@ $t_{d,i}$ & 0.800s & 1.542s & 1.430s & 1.425s \\
 X_{i}(t) = 
 \begin{dcases}
 \frac{1}{2} \hat{a}_{m,i} \cdot t^2  & t \leq t_{a,i} \\
-v_{m,i} \cdot t - \frac{1}{2} \cdot \frac{v_{m,i}^2}{\hat{a}_{m,i}} & t_{a,i} < t \leq t_{e,i} - t_{a,i} \\
-v_{m,i} \cdot (t_{e,i} - t_{a,i}) - \frac{\hat{a}_{m,i}}{2} \cdot (t_{e,i} - t)^2 & t_{e,i} - t_{a,i} < t \leq t_{e,i}\\
+v_{m,i} \cdot t - \frac{1}{2} \cdot \frac{v_{m,i}^2}{\hat{a}_{m,i}} & t_{a,i} < t \leq t_{d,i} \\
+v_{m,i} \cdot t_{d,i} \frac{\hat{a}_{m,i}}{2} \cdot (t_{e,i} - t)^2 & t_{d,i} < t \leq t_{e,i}\\
 \hat{x}_{e,i} & t_{e,i} < t\\
 \end{dcases}
 \end{equation*}
@@ -762,7 +760,7 @@ in the \emph{constant movement phase} without acceleration or deceleration $t = 
 \toprule
 i & 0 & 1 & 2 & 3 \\
 \midrule
-$t_{a,i} < t \leq t_{e,i} - t_{a,i}$ & false & true & true & true \\
+$t_{a,i} < t \leq t_{d,i}$ & false & true & true & true \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -796,7 +794,7 @@ in the \emph{deceleration phase} $t = 1.56s$
 \toprule
 i & 0 & 1 & 2 & 3 \\
 \midrule
-$t_{e,i} - t_{a,i} < t \leq t_{e,i}$ & true  & true & true & true \\
+$t_{d,i} < t \leq t_{e,i}$ & true  & true & true & true \\
 \bottomrule 
 \end{tabular}
 \end{center}
@@ -805,7 +803,7 @@ we can see that we are for each axis in the deceleration phase\\
 for the deceleration phase, we take the following formula
 
 \begin{equation*}
-X_{i}(t)=v_{m,i} \cdot (t_{e,i} - t_{a,i}) - \frac{\hat{a}_{m,i}}{2} \cdot (t_{e,i} - t)^2  
+X_{i}(t)=v_{m,i} \cdot t_{d,i} - \frac{\hat{a}_{m,i}}{2} \cdot (t_{e,i} - t)^2  
 \end{equation*}
 
 \begin{center}
@@ -821,7 +819,7 @@ $\Theta_{i}(t)$ & $63.9^\circ$ & $11.2^\circ$ & $45.2^\circ$ & $4.8^\circ$ \\
 \end{frame}
 
 \begin{frame}
-  in the \emph{stood phase} $t = 1.8s$
+  in the \emph{standstill phase} $t = 1.8s$
   
   \begin{center}
     \begin{tabular}{ccccc}
@@ -833,8 +831,8 @@ $\Theta_{i}(t)$ & $63.9^\circ$ & $11.2^\circ$ & $45.2^\circ$ & $4.8^\circ$ \\
     \end{tabular}
   \end{center}
   
-  all axis are in the stood phase\\
-  for the stood phase, we take the following formula
+  all axis are in the standstill phase\\
+  for the standstill phase, we take the following formula
   
   \begin{equation*}
   X_{i}(t)= \hat{x}_{e,i}
