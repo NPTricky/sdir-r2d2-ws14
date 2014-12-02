@@ -215,7 +215,9 @@
 
 \subsection{solution of the entire singularity problem}
 \begin{frame}[fragile]
+\scalebox{0.7}{
 \lstinputlisting[language=pseudo,style=global,caption={pseudocode for check  the singularity},label=lst:singularitysolution]{singularitySolution.pseudo}
+}
 \end{frame}
 
 %\part{Motion Planning}
@@ -316,12 +318,10 @@ A & \text{ is the area}
 \subsection{Velocity Calculation}
 \begin{frame}
 	\begin{align*}
-	\hat{x}_{e,i} & = \sqrt{{\Delta\hat{x}_{e,x}}^{2} + {\Delta\hat{x}_{e,y}}^{2} + {\Delta\hat{x}_{e,z}}^{2} } \\
 	v_{m,i } & = \hat{v}_{m,i} \text{ ...?}
 	\end{align*}
 	
 	\begin{align*}
-	\hat{x}_{e} & \text{ is the predetermined distance to move} \\
 	v_{m} & \text{ is the velocity ramp maximum} \\
 	\hat{v}_{m} & \text{ is the predetermined velocity ramp maximum}
 	\end{align*}
@@ -348,18 +348,42 @@ A & \text{ is the area}
   \end{columns}
 \end{frame}
 
+\subsection{Triangle Case - Derivation}
+\begin{frame}
+already known in triangle case
+\begin{align}
+x_{e} & = v_{m} \cdot (t_{e} - t_{a}) \label{eq:xe} \\
+t_{e} & = 2 \cdot t_{a} \label{eq:te} \\
+t_{a} & = \frac{v_{m}}{a_{m}} \label{eq:ta}
+\end{align}
+we can derive
+\begin{align*}
+x_{e} & = v_{m} \cdot (2 t_{a} - t_{a}) \text{ due to } (\ref{eq:xe}) \text{ and } (\ref{eq:te}) \\
+& = v_{m} \cdot t_{a} \\
+& = v_{m} \cdot \frac{v_{m}}{a_{m}}\text{ due to } (\ref{eq:ta}) \\
+v_{m,limit} & = \sqrt{a_{m} \cdot x_{e}}
+\end{align*}
+
+\end{frame}
+
 \subsection{Asynchronous PTP}
 %handout
-\begin{frame}<presentation:0|handout:1>
+\begin{frame}
 \begin{itemize}
-\item for each joint i their current state, target state and their acceleration maximum $\hat{a}_{m,i}$ are given
-\item the total motion time $t_{e,i}$ are the output of velocity profile calculation
-\item the waypoints $X_{i}[n_{i}]$ are the output motion planning
+\item for each joint $i$ their current state, target state and their acceleration maximum $\hat{a}_{m,i}$ are given
+\item output of velocity profile calculation
+\begin{itemize}
+	\item total motion time $t_{e,i}$
+	\item acceleration stop time $t_{a}$
+	\item deceleration start time $t_{d}$
+	\item velocity ramp maximum $v_{m}$
+\end{itemize}
 \end{itemize}
 \end{frame}
 
 \subsubsection{Step 1}
 \begin{frame}
+
 \begin{align*}
 \hat{x}_{e,i} & = \sqrt{{\Delta\hat{x}_{e,x}}^{2} + {\Delta\hat{x}_{e,y}}^{2} + {\Delta\hat{x}_{e,z}}^{2} } \\
 v_{m,i } & = min(\hat{v}_{m,i},\sqrt{\hat{x}_{e,i} \cdot \hat{a}_{m,i}})  \label{eq:asynvmi}
@@ -371,6 +395,85 @@ v_{m} & \text{ is the velocity ramp maximum} \\
 \hat{x}_{e} & \text{ is the predetermined distance to move} \\
 \hat{a}_{m} & \text{ is the predetermined acceleration maximum} 
 \end{align*}
+
+the predetermined distance to move $\hat{x}_{e}$ is a problem in itself
+\end{frame}
+
+\subsubsection{distance measure in c-space}
+\begin{frame}
+calculation of $\hat{x}_{e}$ in c-space [8]
+
+notation
+
+\begin{align*}
+\mathbb{R}^{n} & \text{ is a n-dimensional cartesian space} \\
+SO(3) & \text{ is a set of 3-D orientations} \\
+& \text{ (special orthogonal group)} \\
+SE(3) & \text{ is a set of 3-D translations and rotations} \\
+& \text{ (special euclidean group)} \\
+\sim & \text{ denotes topological equivalence}
+\end{align*}
+
+\begin{equation}
+SE(3) \sim SO(3) \cdot \mathbb{R}^{n} \label{eq:seso}
+\end{equation}
+
+\end{frame}
+
+
+\begin{frame}
+	
+\begin{itemize}
+\item c-space is a 6-D space (manifold) embedded in a 12-D cartesian space
+\end{itemize}
+
+\begin{align*}
+q & \text{ is the representation of a joint in c-space} \\
+q & = (x,y,z,\alpha,\beta,\gamma) \\
+q & = (x,y,z,r_{11},r_{12},\dotsc,r_{33}) \text{ is an alternative form} \\
+r_{11},r_{12},\dotsc,r_{33} & \text{ are the elements of rotation matrix } R \\
+R & = \begin{pmatrix}
+r_{11} & r_{12} & r_{13} \\
+r_{21} & r_{22} & r_{23} \\
+r_{31} & r_{32} & r_{33}
+\end{pmatrix} \text{ with} \\ \\
+1 & = r_{i1}^2+r_{i2}^2+r_{i3}^2 \\
+0 & = r_{i1}r_{j1} + r_{i2}r_{j2} + r_{i3}r_{j3} \\
+1 & = det(R)
+\end{align*}
+
+\end{frame}
+
+\begin{frame}
+	
+\begin{itemize}
+	\item a metric or distance function $distance$ in c-space is a map
+\end{itemize}
+
+\begin{equation*}
+dist: (q_1,q_2) \in \mathbb{C}^2 \longrightarrow dist(q_1,q_2) \geq 0
+\end{equation*}
+
+\begin{align*}
+dist(q_1,q_2) & = 0 \iff q_1 = q_2 \\
+dist(q_1,q_2) & = dist(q_2,q_1) \\
+dist(q_1,q_2) & \leq dist(q_1,q_3) + dist(q_3,q_2)
+\end{align*}
+
+\end{frame}
+
+\begin{frame}
+example
+\begin{itemize}
+\item joint $\mathbf{A}$
+\item point $x$ of $\mathbf{A}$
+\item $x(q)$ location of point $x$ in the workspace when $\mathbf{A}$ is at configuration $q$
+\item a distance $dist$ in $\mathbb{C}$ is defined by \begin{equation*}
+dist(q,q') = max_{x \in \mathbf{A}} \lVert x(q) - x(q') \rVert
+\end{equation*}
+where $\lVert x(q) - x(q') \rVert$ denotes the euclidean distance between point $x(q)$ and $x(q')$ in the workspace
+\item $dist(q,q')$ gives us the desired $\hat{x}_{e}$
+\end{itemize}	
 \end{frame}
 
 \subsubsection{Step 2}
@@ -438,8 +541,6 @@ t_{e,max} = \frac{\hat{x}_{e,i}}{\hat{v}_{m,i}}+\frac{\hat{v}_{m,i}}{\hat{a}_{m,
 \end{equation*}
 
 we solve the quadratic equation for $v_{m,i}$ by the $p$-$q$-formula
-%over conversion of the formula we get the formula for velocity of each axis
-%over the p-q-formula
 
 \begin{equation*}
 v_{m,i} = \frac{t_{e,max} \cdot \hat{a}_{m,i}}{2}-\sqrt{\frac{t_{e,max}^2 \cdot \hat{a}_{m,i}^2}{4}-\hat{a}_{m,i}\cdot \hat{x}_{e,i}}
@@ -935,6 +1036,7 @@ $\Theta_{i}(t)$ & $63.9^\circ$ & $11.2^\circ$ & $4.8^\circ$ \\
   \item[5] \url{http://robotics.stackexchange.com/questions/284/which-type-of-actuator-will-be-suitable-for-a-very-strong-robot-arm} (25.11.2014)
   \item[6] \url{https://www.youtube.com/watch?v=zlGCurgsqg8} (25.11.2014)
   \item[7] Grundlagen der Robotik – Prof Dr. Klaus Wüst – Skriptum
+  \item[8] Configuration Space - Assistant Prof. Kris Hauser - Skriptum
 \end{itemize}
 \end{frame}
 
