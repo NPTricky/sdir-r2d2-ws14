@@ -4,9 +4,9 @@ selectConfiguration
   
   foreach (configuration in inverseKinematics)
   {
-    if (middleValue(configuration) < currentMinimumAngle)
+    if (averageValue(configuration) < currentMinimumAngle)
     {
-      currentMinimumAngle = middleValue(configuration);
+      currentMinimumAngle = averageValue(configuration);
       selectedConfiguration = configuration;
     }
   }
