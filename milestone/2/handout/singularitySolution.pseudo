@@ -1,19 +1,29 @@
 singularitySolution
 {
-  if (isOverheadSingularity)
+  if (isOverheadSingularity && isWristSingularity)
   { 
-    - choose theta_1
-    - for theta_2 - 5 use inverse kinematic
+    - calculate median of next step and previous step of theta_1
+    - set theta_1
+    - for theta_2 - 3 use inverse kinematic
+    - theta_5 = 0;
+    - calculate median of next step and previous step of theta_4
+    - set theta_4 
+    - for theta_6 use inverse kinematic
   }
-
-  if (isWristSingularity)
+  else if (isOverheadSingularity)
   {
-      - theta_5 = 0;
-      - calculate median of next step and previous step of theta_4
-      - set theta_4 and calculate theta_6 and so on 
+    - calculate median of next step and previous step of theta_1
+    - set theta_1
+    - for theta_2 - 3 use inverse kinematic
   }
-
-  if(!isOverheadSingularity && !isWristSingularity)
+  else if (isWristSingularity)
+  {
+    - theta_5 = 0;
+    - calculate median of next step and previous step of theta_4
+    - set theta_4 
+    - for theta_6 use inverse kinematic
+  }
+  else 
   {
       use inverse kinematic
   }
