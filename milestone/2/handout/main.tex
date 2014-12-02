@@ -255,7 +255,7 @@ A & \text{ is the area}
 		\label{fig:acceleration-profile}
 	\end{figure}
 		\begin{align*} %
-		t_{a} & \text{ is the acceleration length} \\
+		t_{a} & \text{ is the acceleration stop time} \\
 		t_{d} & \text{ is the deceleration start time} \\
 		t_{e} & \text{ is the total motion time}
 		\end{align*}
@@ -289,6 +289,19 @@ A & \text{ is the area}
 			\label{fig:vp-ptp-motion_challenge}
 		\end{figure}
 	\end{columns}
+\end{frame}
+
+\begin{frame}
+	\begin{itemize}
+		\item for each joint $i$ their current state, target state and their acceleration maximum $\hat{a}_{m,i}$ are given
+		\item output of ptp motion calculation
+		\begin{itemize}
+			\item total motion time $t_{e,i}$
+			\item acceleration stop time $t_{a}$
+			\item deceleration start time $t_{d}$
+			\item velocity ramp maximum $v_{m}$
+		\end{itemize}
+	\end{itemize}
 \end{frame}
 
 \subsection{Velocity Ramp \& Distance}
@@ -367,25 +380,12 @@ v_{m,limit} & = \sqrt{a_{m} \cdot x_{e}}
 \end{frame}
 
 \subsection{Asynchronous PTP}
-%handout
-\begin{frame}
-\begin{itemize}
-\item for each joint $i$ their current state, target state and their acceleration maximum $\hat{a}_{m,i}$ are given
-\item output of velocity profile calculation
-\begin{itemize}
-	\item total motion time $t_{e,i}$
-	\item acceleration stop time $t_{a}$
-	\item deceleration start time $t_{d}$
-	\item velocity ramp maximum $v_{m}$
-\end{itemize}
-\end{itemize}
-\end{frame}
 
 \subsubsection{Step 1}
 \begin{frame}
 
 \begin{align*}
-\hat{x}_{e,i} & = \sqrt{{\Delta\hat{x}_{e,x}}^{2} + {\Delta\hat{x}_{e,y}}^{2} + {\Delta\hat{x}_{e,z}}^{2} } \\
+\hat{x}_{e,i} & = \text{ ?} \\
 v_{m,i } & = min(\hat{v}_{m,i},\sqrt{\hat{x}_{e,i} \cdot \hat{a}_{m,i}})  \label{eq:asynvmi}
 \end{align*}
 
@@ -399,7 +399,7 @@ v_{m} & \text{ is the velocity ramp maximum} \\
 the predetermined distance to move $\hat{x}_{e}$ is a problem in itself
 \end{frame}
 
-\subsubsection{distance measure in c-space}
+\subsection{Distance Measure in C-Space}
 \begin{frame}
 calculation of $\hat{x}_{e}$ in c-space [8]
 
@@ -462,6 +462,7 @@ dist(q_1,q_2) & \leq dist(q_1,q_3) + dist(q_3,q_2)
 
 \end{frame}
 
+\subsection{Distance Measure in C-Space - Example}
 \begin{frame}
 example
 \begin{itemize}
@@ -476,6 +477,7 @@ where $\lVert x(q) - x(q') \rVert$ denotes the euclidean distance between point 
 \end{itemize}	
 \end{frame}
 
+\subsection{Asynchronous PTP - Time Calculation}
 \subsubsection{Step 2}
 \begin{frame}
 compute the acceleration duration $t_{a,i}$, the deceleration start time $t_{d,i}$ and the total motion time $t_{e,i}$
@@ -486,7 +488,7 @@ t_{d,i} & = t_{e,i} - t_{a,i}
 \end{align*}
 
 \begin{align*}
-t_{a} & \text{ is the acceleration length} \\
+t_{a} & \text{ is the acceleration stop time} \\
 t_{e} & \text{ is the total motion time} \\
 t_{d} & \text{ is the deceleration start time}
 \end{align*}
@@ -516,7 +518,7 @@ t_{e,i} & = \frac{\hat{x}_{e,i}}{v_{m,i}} + t_{a,i}
 
 \begin{align*}
 \tilde{v}_{m} & \text{ is the interim velocity ramp maximum}\\
-\tilde{t}_{a} & \text{ is the interim acceleration length}\\
+\tilde{t}_{a} & \text{ is the interim acceleration stop time}\\
 \end{align*}                 
 \end{frame}
 
@@ -560,7 +562,7 @@ t_{d,max} = t_{e,max}-t_{a,i}
 \end{equation}      
 
 \begin{align*}
-t_{a} & \text{ is the acceleration length} \\
+t_{a} & \text{ is the acceleration stop time} \\
 t_{e} & \text{ is the total motion time} \\
 t_{d} & \text{ is the deceleration start time}
 \end{align*}
