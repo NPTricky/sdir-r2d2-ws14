@@ -138,7 +138,7 @@
   \end{figure}
   \column[c]{.50\textwidth}
   \begin{align*}
-    \text{Joints:} &~ \text{Axis 1} = A1, \text{Axis 2} = A2, ...\\
+    \text{Joints:} &~ \text{Joint 1} = A1, \text{Joint 2} = A2, ...\\
     \theta1 = &~ \text{angle from $A1$}\\
     T_{0}^{4} = &~ \text{transformation matrix from $A4$}\\
     &~ \text{in world coordinate system}\\
@@ -222,20 +222,112 @@
 %The motion planning is divided in the velocity profiles and the trajectory interpolation
 
 \section{Velocity Profiles}
+
 \begin{frame}{Velocity Profiles}
+calculation for each joint $i=[1..N]$
+	\begin{itemize}
+		\item velocities
+		\item points in time
+	\end{itemize}
+
+\end{frame}
+
+\subsection{Velocity Ramp}
+\begin{frame}
 \begin{figure}[h]
-  \includegraphics[height=0.8\textheight]{2/velocity-profile.png}
+  \includegraphics[width=0.75\textwidth]{2/velocity-ramp-simple.png}
+  \caption{velocity ramp}
   \label{fig:velocity-profile}
 \end{figure}
+\begin{align*}
+x_{e} & = A_{1} + A_{2} + A_{3} \\
+x_{e} & \text{ is the total motion distance} \\
+A & \text{ is the area}
+\end{align*}
 \end{frame}
 
 \begin{frame}
-  \begin{figure}[h]
-    \includegraphics[width=\textwidth]{2/acceleration-profile.png}
-    \label{fig:acceleration-profile}
-  \end{figure}
+	\begin{figure}[h]
+		\includegraphics[width=0.6\textwidth]{2/acceleration-profile.png}
+		\caption{relation of velocity ramp and acceleration profile}
+		\label{fig:acceleration-profile}
+	\end{figure}
+		\begin{align*} %
+		t_{a} & \text{ is the acceleration length} \\
+		t_{d} & \text{ is the deceleration start time} \\
+		t_{e} & \text{ is the total motion time}
+		\end{align*}
+		\begin{align*}
+		a_{m} & = \lvert -a_{m} \rvert \\
+		t_{a} & = \frac{v_{m}}{a_{m}}
+		\end{align*}
 \end{frame}
 
+
+\subsection{PTP Motion Overview}
+\begin{frame}
+	\begin{columns}
+		\column[c]{.2\textwidth}
+		\renewcommand{\arraystretch}{3.5}
+		\begin{tabular}{c}
+			Async. \\ 
+			Sync. \\ 
+			Full Sync.
+		\end{tabular} 
+		\column[c]{.4\textwidth}
+		Common Case
+		\begin{figure}[h]
+			\includegraphics[width=\columnwidth]{2/vp-ptp-motion.png}
+			\label{fig:vp-ptp-motion}
+		\end{figure}
+		\column[c]{.4\textwidth}
+		Worst Case
+		\begin{figure}[h]
+			\includegraphics[width=\columnwidth]{2/vp-ptp-motion_challenge.png}
+			\label{fig:vp-ptp-motion_challenge}
+		\end{figure}
+	\end{columns}
+\end{frame}
+
+\subsection{Velocity Ramp \& Distance}
+\begin{frame}
+	\begin{figure}[h]
+		\includegraphics[height=0.75\textheight]{2/velocity-ramp-distance.png}
+		\caption{relation of velocity ramp and distance}
+		\label{fig:velocity-profile}
+	\end{figure}
+\end{frame}
+
+
+\subsection{Velocity Ramp \& Timestamps}
+\begin{frame}
+	\begin{figure}[h]
+		\includegraphics[width=0.75\textwidth]{2/velocity-ramp.png}
+		\caption{velocity ramp with timestamps and exemplary units}
+		\label{fig:velocity-profile}
+	\end{figure}
+	\begin{align*}
+	x_{e} & = A_{1} + A_{2} + A_{3} \\
+	& = \frac{v_{m}}{2} \cdot (t_{d} - t_{a} + t_{e}) \\
+	x_{e} & = v_{m} \cdot (t_{e} - t_{a}) \text{ due to symmetry of } t_{d} = t_{e} - t_{a}
+	\end{align*}
+\end{frame}
+
+\subsection{Velocity Calculation}
+\begin{frame}
+	\begin{align*}
+	\hat{x}_{e,i} & = \sqrt{{\Delta\hat{x}_{e,x}}^{2} + {\Delta\hat{x}_{e,y}}^{2} + {\Delta\hat{x}_{e,z}}^{2} } \\
+	v_{m,i } & = \hat{v}_{m,i} \text{ ...?}
+	\end{align*}
+	
+	\begin{align*}
+	\hat{x}_{e} & \text{ is the predetermined distance to move} \\
+	v_{m} & \text{ is the velocity ramp maximum} \\
+	\hat{v}_{m} & \text{ is the predetermined velocity ramp maximum}
+	\end{align*}
+\end{frame}
+
+\subsection{Triangle Case}
 \begin{frame}
   \begin{columns}
     \column[c]{.50\textwidth}
@@ -247,30 +339,12 @@
     \begin{itemize}
       \item determine maximum amplitude for velocity ramp
       \item check whether the distance $\hat{x}_{e,i}$ is sufficient to let the velocity grow up to $\hat{v}_{m,i}$ or not
-      \item if we run into the velocity triangle situation we must limit $\hat{v}_{m,i}$ down to $v_{m,i}$
+      \item if we run into the velocity triangle situation we must limit $\hat{v}_{m,i}$ down to $v_{m,limit,i}$
     \end{itemize}
-  \end{columns}
-\end{frame}
-
-\begin{frame}
-  \begin{columns}
-	\column[c]{.2\textwidth}
-	\renewcommand{\arraystretch}{3.5}
-	\begin{tabular}{c}
-		Async. \\ 
-		Sync. \\ 
-		Full Sync.
-	\end{tabular} 
-    \column[c]{.4\textwidth}
-    \begin{figure}[h]
-      \includegraphics[width=\columnwidth]{2/vp-ptp-motion.png}
-      \label{fig:vp-ptp-motion}
-    \end{figure}
-    \column[c]{.4\textwidth}
-    \begin{figure}[h]
-      \includegraphics[width=\columnwidth]{2/vp-ptp-motion_challenge.png}
-      \label{fig:vp-ptp-motion_challenge}
-    \end{figure}
+    
+    \begin{equation*}
+    v_{m,limit,i} = \sqrt{\hat{x}_{e,i} \cdot \hat{a}_{m,i}}
+    \end{equation*}
   \end{columns}
 \end{frame}
 
@@ -316,7 +390,7 @@ t_{d} & \text{ is the deceleration start time}
 \end{frame}
   
 \subsection{Synchronous PTP}
-\begin{frame}
+\begin{frame}{Synchronous PTP}
 the calculation is the same as the asynchronous PTP
 exept that all motion durations coincide to $t_{e,max}$
 
@@ -350,19 +424,20 @@ t_{e,max} = max(t_{e,1},t_{e,2},...,t_{e,N})
 \end{equation*}
 
 \begin{align*}
-t_{e,N} & \text{ is the total motion time } \\
+t_{e} & \text{ is the total motion time } \\
 t_{e,max} & \text{ is the maximum value of the total motion time}      
 \end{align*}
 \end{frame}
   
 \subsubsection{Step 2}
 \begin{frame}
-calculation of the maximum velocities of each axis $v_{m,i}$
+calculation of the maximum velocities of each axis $v_{m,i}$ with $t_{e,i} = t_{e,max}$ already given
 
 \begin{equation*}
 t_{e,max} = \frac{\hat{x}_{e,i}}{\hat{v}_{m,i}}+\frac{\hat{v}_{m,i}}{\hat{a}_{m,i}}
 \end{equation*}
 
+we solve the quadratic equation for $v_{m,i}$ by the $p$-$q$-formula
 %over conversion of the formula we get the formula for velocity of each axis
 %over the p-q-formula
 
@@ -376,7 +451,7 @@ v_{m,i} = \frac{t_{e,max} \cdot \hat{a}_{m,i}}{2}-\sqrt{\frac{t_{e,max}^2 \cdot 
 calculation of the acceleration duration $t_{a,i}$
 
 \begin{equation*}
-t_{a,i} = \frac{\hat{v}_{m,i}}{\hat{a}_{m,i}}
+t_{a,i} = \frac{v_{m,i}}{\hat{a}_{m,i}}
 \end{equation*}
 
 \begin{equation}
