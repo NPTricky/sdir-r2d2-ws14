@@ -239,7 +239,7 @@ calculation for each joint $i=[1..N]$
 \begin{figure}[h]
   \includegraphics[width=0.75\textwidth]{2/velocity-ramp-simple.png}
   \caption{velocity ramp}
-  \label{fig:velocity-profile}
+  \label{fig:velocity-ramp-simple}
 \end{figure}
 \begin{align*}
 x_{e} & = A_{1} + A_{2} + A_{3} \\
@@ -399,7 +399,7 @@ v_{m} & \text{ is the velocity ramp maximum} \\
 the predetermined distance to move $\hat{x}_{e}$ is a problem in itself
 \end{frame}
 
-\subsection{Distance Measure in C-Space}
+\subsection{Distance Measure in C-Space - Notation}
 \begin{frame}
 calculation of $\hat{x}_{e}$ in c-space [8]
 
@@ -414,24 +414,30 @@ SE(3) & \text{ is a set of 3-D translations and rotations} \\
 \sim & \text{ denotes topological equivalence}
 \end{align*}
 
-\begin{equation}
-SE(3) \sim SO(3) \cdot \mathbb{R}^{n} \label{eq:seso}
-\end{equation}
-
 \end{frame}
 
-
+\subsection{Distance Measure in C-Space - Definition}
 \begin{frame}
 	
 \begin{itemize}
-\item c-space is a 6-D space (manifold) embedded in a 12-D cartesian space
+\item c-space is a 6-D space (manifold) embedded in a 12-D cartesian space. it is denoted by
 \end{itemize}
+
+\begin{equation*}
+	SE(3) \sim SO(3) \cdot \mathbb{R}^{n} \label{eq:seso}
+\end{equation*}
 
 \begin{align*}
 q & \text{ is the representation of a joint in c-space} \\
 q & = (x,y,z,\alpha,\beta,\gamma) \\
 q & = (x,y,z,r_{11},r_{12},\dotsc,r_{33}) \text{ is an alternative form} \\
 r_{11},r_{12},\dotsc,r_{33} & \text{ are the elements of rotation matrix } R \\
+\end{align*}
+
+\end{frame}
+
+\begin{frame}
+\begin{align*}
 R & = \begin{pmatrix}
 r_{11} & r_{12} & r_{13} \\
 r_{21} & r_{22} & r_{23} \\
@@ -441,9 +447,9 @@ r_{31} & r_{32} & r_{33}
 0 & = r_{i1}r_{j1} + r_{i2}r_{j2} + r_{i3}r_{j3} \\
 1 & = det(R)
 \end{align*}
-
 \end{frame}
 
+\subsection{Distance Measure in C-Space}
 \begin{frame}
 	
 \begin{itemize}
@@ -538,15 +544,17 @@ t_{e,max} & \text{ is the maximum value of the total motion time}
 \begin{frame}
 calculation of the maximum velocities of each axis $v_{m,i}$ with $t_{e,i} = t_{e,max}$ already given
 
-\begin{equation*}
-t_{e,max} = \frac{\hat{x}_{e,i}}{\hat{v}_{m,i}}+\frac{\hat{v}_{m,i}}{\hat{a}_{m,i}}
-\end{equation*}
+\begin{align*}
+t_{e,max} & = \frac{\hat{x}_{e,i}}{\hat{v}_{m,i}}+\frac{\hat{v}_{m,i}}{\hat{a}_{m,i}} \\
+\text{careful: } \frac{\hat{x}_{e,i}}{\hat{v}_{m,i}} & = 0 \iff \text{ in triangle situation}
+\end{align*}
 
 we solve the quadratic equation for $v_{m,i}$ by the $p$-$q$-formula
 
 \begin{equation*}
 v_{m,i} = \frac{t_{e,max} \cdot \hat{a}_{m,i}}{2}-\sqrt{\frac{t_{e,max}^2 \cdot \hat{a}_{m,i}^2}{4}-\hat{a}_{m,i}\cdot \hat{x}_{e,i}}
 \end{equation*}
+
 \end{frame}
   
 \subsubsection{Step 3}
@@ -735,7 +743,7 @@ the orientation $\Theta(t)$ to time $t$
 %for a better result, we given every angle a weighting for the calculation.\\
 %for energy efficiency movement we determine the weighting for each angle on hand %the power of the engine of any angle\\
 
-\lstinputlisting[language=pseudo,style=global,caption={pseudocode for determine the configuration from the inverse kinematic, variant 2},label=lst:selectConfiguration_variant_1]{selectConfiguration_variant2.pseudo}
+\lstinputlisting[language=pseudo,style=global,caption={pseudocode for determine the configuration from the inverse kinematic, variant 2},label=lst:selectConfiguration_variant_2]{selectConfiguration_variant2.pseudo}
 \end{frame}
 
 \section{Example for Synchronous PTP} 
@@ -1044,7 +1052,7 @@ $\Theta_{i}(t)$ & $63.9^\circ$ & $11.2^\circ$ & $4.8^\circ$ \\
 
 
 \begin{frame}
-\Huge{\centerline{Thank you for your attention}}
+\Huge{\centering{Thank you for your attention}}
 \end{frame}
 
 \end{document}
