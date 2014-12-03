@@ -385,14 +385,15 @@ v_{m,limit} & = \sqrt{a_{m} \cdot x_{e}}
 \begin{frame}
 
 \begin{align*}
-\hat{x}_{e,i} & = \text{ ?} \\
+\hat{x}_{e,i} & = dist(Q,Q') \text{ ?} \\
 v_{m,i } & = min(\hat{v}_{m,i},\sqrt{\hat{x}_{e,i} \cdot \hat{a}_{m,i}})  \label{eq:asynvmi}
 \end{align*}
 
 \begin{align*}
+\hat{x}_{e} & \text{ is the predetermined distance to move} \\
+Q & \text{ is the representation of a point in c-space} \\
 v_{m} & \text{ is the velocity ramp maximum} \\
 \hat{v}_{m} & \text{ is the predetermined velocity ramp maximum} \\
-\hat{x}_{e} & \text{ is the predetermined distance to move} \\
 \hat{a}_{m} & \text{ is the predetermined acceleration maximum} 
 \end{align*}
 
@@ -424,13 +425,21 @@ SE(3) & \text{ is a set of 3-D translations and rotations} \\
 \end{itemize}
 
 \begin{equation*}
-	SE(3) \sim SO(3) \cdot \mathbb{R}^{n} \label{eq:seso}
+	SE(3) \sim SO(3) \times \mathbb{R}^{3} \label{eq:seso}
 \end{equation*}
 
+\begin{columns}
+\column[c]{.50\textwidth}
+\begin{equation*}
+Q = \left( \begin{array}{c} x \\ y \\ z \\ \alpha \\ \beta \\ \gamma \end{array} \right)
+\end{equation*}
+\column[c]{.50\textwidth}
+\begin{equation*}
+Q = \left( \begin{array}{c} x \\ y \\ z \\ r_{11} \\ r_{12} \\ \vdots \\ r_{33} \end{array} \right)
+\end{equation*}
+\end{columns}
+
 \begin{align*}
-q & \text{ is the representation of a joint in c-space} \\
-q & = (x,y,z,\alpha,\beta,\gamma) \\
-q & = (x,y,z,r_{11},r_{12},\dotsc,r_{33}) \text{ is an alternative form} \\
 r_{11},r_{12},\dotsc,r_{33} & \text{ are the elements of rotation matrix } R \\
 \end{align*}
 
@@ -443,9 +452,10 @@ r_{11} & r_{12} & r_{13} \\
 r_{21} & r_{22} & r_{23} \\
 r_{31} & r_{32} & r_{33}
 \end{pmatrix} \text{ with} \\ \\
-1 & = r_{i1}^2+r_{i2}^2+r_{i3}^2 \\
-0 & = r_{i1}r_{j1} + r_{i2}r_{j2} + r_{i3}r_{j3} \\
-1 & = det(R)
+i \text{ and } j & \text{ denote two different points} \\
+r_{i1}^2+r_{i2}^2+r_{i3}^2 & = 1 \\
+r_{i1}r_{j1} + r_{i2}r_{j2} + r_{i3}r_{j3} & = 0 \\
+det(R) & = 1
 \end{align*}
 \end{frame}
 
@@ -453,17 +463,17 @@ r_{31} & r_{32} & r_{33}
 \begin{frame}
 	
 \begin{itemize}
-	\item a metric or distance function $distance$ in c-space is a map
+	\item a metric or distance function $dist$ in c-space is a map
 \end{itemize}
 
 \begin{equation*}
-dist: (q_1,q_2) \in \mathbb{C}^2 \longrightarrow dist(q_1,q_2) \geq 0
+dist: (Q_1,Q_2) \in \mathbb{C}^2 \longrightarrow dist(Q_1,Q_2) \geq 0
 \end{equation*}
 
 \begin{align*}
-dist(q_1,q_2) & = 0 \iff q_1 = q_2 \\
-dist(q_1,q_2) & = dist(q_2,q_1) \\
-dist(q_1,q_2) & \leq dist(q_1,q_3) + dist(q_3,q_2)
+dist(Q_1,Q_2) & = 0 \iff Q_1 = Q_2 \\
+dist(Q_1,Q_2) & = dist(Q_2,Q_1) \\
+dist(Q_1,Q_2) & \leq dist(Q_1,Q_3) + dist(Q_3,Q_2)
 \end{align*}
 
 \end{frame}
@@ -473,14 +483,14 @@ dist(q_1,q_2) & \leq dist(q_1,q_3) + dist(q_3,q_2)
 example
 \begin{itemize}
 \item joint $\mathbf{A}$
-\item point $x$ of $\mathbf{A}$
-\item $x(q)$ location of point $x$ in the workspace when $\mathbf{A}$ is at configuration $q$
+\item point $P$ of $\mathbf{A}$
+\item $P(Q)$ location of point $P$ in the workspace when $\mathbf{A}$ is at configuration space $Q$
 \item a distance $dist$ in $\mathbb{C}$ is defined by \begin{equation*}
-dist(q,q') = max_{x \in \mathbf{A}} \lVert x(q) - x(q') \rVert
+dist(Q,Q') = max_{P \in \mathbf{A}} ( \lVert P(Q) - P(Q') \rVert )
 \end{equation*}
-where $\lVert x(q) - x(q') \rVert$ denotes the euclidean distance between point $x(q)$ and $x(q')$ in the workspace
-\item $dist(q,q')$ gives us the desired $\hat{x}_{e}$
-\end{itemize}	
+where $\lVert P(Q) - P(Q') \rVert$ denotes the euclidean distance between point $P(Q)$ and $P(Q')$ in the workspace
+\item $dist(Q,Q')$ gives us the desired $\hat{x}_{e}$
+\end{itemize}
 \end{frame}
 
 \subsection{Asynchronous PTP - Time Calculation}
