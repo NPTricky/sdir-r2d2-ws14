@@ -412,7 +412,8 @@ SO(3) & \text{ is a set of 3-D orientations} \\
 & \text{ (special orthogonal group)} \\
 SE(3) & \text{ is a set of 3-D translations and rotations} \\
 & \text{ (special euclidean group)} \\
-\sim & \text{ denotes topological equivalence}
+Q & \text{ is the representation of a point in c-space} \\
+\times & \text{ denotes the cartesian product}
 \end{align*}
 
 \end{frame}
@@ -425,15 +426,17 @@ SE(3) & \text{ is a set of 3-D translations and rotations} \\
 \end{itemize}
 
 \begin{equation*}
-	SE(3) \sim SO(3) \times \mathbb{R}^{3} \label{eq:seso}
+	SE(3) = \mathbb{R}^{3} \times SO(3) \label{eq:seso}
 \end{equation*}
 
 \begin{columns}
-\column[c]{.50\textwidth}
+\column[c]{.45\textwidth}
 \begin{equation*}
 Q = \left( \begin{array}{c} x \\ y \\ z \\ \alpha \\ \beta \\ \gamma \end{array} \right)
 \end{equation*}
-\column[c]{.50\textwidth}
+\column[c]{.1\textwidth}
+or
+\column[c]{.45\textwidth}
 \begin{equation*}
 Q = \left( \begin{array}{c} x \\ y \\ z \\ r_{11} \\ r_{12} \\ \vdots \\ r_{33} \end{array} \right)
 \end{equation*}
@@ -452,10 +455,9 @@ r_{11} & r_{12} & r_{13} \\
 r_{21} & r_{22} & r_{23} \\
 r_{31} & r_{32} & r_{33}
 \end{pmatrix} \text{ with} \\ \\
-i \text{ and } j & \text{ denote two different points} \\
 r_{i1}^2+r_{i2}^2+r_{i3}^2 & = 1 \\
-r_{i1}r_{j1} + r_{i2}r_{j2} + r_{i3}r_{j3} & = 0 \\
-det(R) & = 1
+r_{i1}r_{j1} + r_{i2}r_{2j} + r_{i3}r_{j3} & = 0 \\
+det(R) & = +1
 \end{align*}
 \end{frame}
 
