@@ -1,0 +1,62 @@
+<Environment>
+
+	<!-- background color -->
+	<bkgndcolor>0.3 0.7 0.8</bkgndcolor>
+	<!-- initial camera translation -->
+	<camtrans>3.651294 2.305269 3.285357</camtrans>
+	<!-- initial camera rotation -->
+	<camrotationaxis>-0.309912 -0.836596 0.451734 163.438545</camrotationaxis>
+
+	<camfocal>5.525855</camfocal>
+
+	<!-- KUKA KR30l robot -->
+	<Robot file="../MyRobot/kuka-kr30l16.dae" name="Kuka_kr30">
+		<diffuseColor>0 0 1</diffuseColor>
+		<translation>0 0 0</translation>
+	</Robot>
+
+
+	<!-- table -->
+	<KinBody file="../MyModels/table.kinbody.xml" name="table">
+		<translation>1.5 0 0.75</translation>
+		<rotationaxis>0 0 1 90</rotationaxis>
+	</KinBody>
+	
+
+	<!-- floor -->
+	<KinBody name="floor">
+		<Body type="static">
+			<Geom type="box">
+				<extents>5 5 0.005</extents>
+				<translation>0 0 -0.005</translation>
+				<diffuseColor>0.6 0.6 0.6</diffuseColor>
+				<ambientColor>0.6 0.6 0.6</ambientColor>
+			</Geom>
+			<Geom type="box">
+				<extents>5 0.01 0.4</extents>
+				<translation>0 -5 0.4</translation>
+				<diffuseColor>0.6 0.6 0.6</diffuseColor>
+				<ambientColor>0.6 0.6 0.6</ambientColor>
+			</Geom>
+			<Geom type="box">
+				<extents>5 0.01 0.4</extents>
+				<translation>0 5 0.4</translation>
+				<diffuseColor>0.6 0.6 0.6</diffuseColor>
+				<ambientColor>0.6 0.6 0.6</ambientColor>
+			</Geom>
+			<Geom type="box">
+				<extents>0.01 5 0.4</extents>
+				<translation>5 0 0.4</translation>
+				<diffuseColor>0.6 0.6 0.6</diffuseColor>
+				<ambientColor>0.6 0.6 0.6</ambientColor>
+			</Geom>
+			<Geom type="box">
+				<extents>0.01 5 0.4</extents>
+				<translation>-5 0 0.4</translation>
+				<diffuseColor>0.6 0.6 0.6</diffuseColor>
+				<ambientColor>0.6 0.6 0.6</ambientColor>
+			</Geom>
+
+		</Body>
+	</KinBody>
+</Environment>
