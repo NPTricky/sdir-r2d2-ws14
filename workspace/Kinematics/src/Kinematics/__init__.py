@@ -5,26 +5,26 @@ import numpy as np
 import sys
 import socket
 
+SERVER_IP = '127.0.0.1'
+SERVER_PORT = 54321
 
 # handles the data transfer between openrave (server) and the GUI (client)
 def dataTransfer():
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind(('localhost', 54321))
-    s.listen(1)
-    
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    s.bind((SERVER_IP,SERVER_PORT))
+
     try:
         while True:
-            komm, addr = s.accept()     
-            while True:
-                data = komm.recv(2048)
-                if not data:
-                    komm.close()
-                    break
-                # parse received data and get the string that should be sent back to the GUI
-                send = handleData(data)
-                
-                # send new informations to the GUI for updating purposes
-                komm.sendto(send, addr)
+            recv_data, addr = s.recvfrom(2048)
+            if not recv_data:
+                break
+            
+            # parse received data and get the string that should be sent back to the GUI
+            send = handleData(recv_data)
+            
+            # send new informations to the GUI for updating purposes
+            s.sendto(send,addr)
     finally:
         s.close()
 

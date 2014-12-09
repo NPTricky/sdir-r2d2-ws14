@@ -2,6 +2,9 @@ import sys
 import socket
 from PyQt4 import QtGui, QtCore
 
+SERVER_IP = '127.0.0.1'
+SERVER_PORT = 54321
+
 class GUI(QtGui.QWidget):
     def __init__(self):     
         super(GUI, self).__init__()
@@ -270,9 +273,8 @@ class GUI(QtGui.QWidget):
 
     # handles the data transfer between the GUI (client) and openrave (server)
     def dataTransfer(self, msg):
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(('localhost', 54321))
-        s.send(msg)
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.sendto(msg,(SERVER_IP,SERVER_PORT))
         recv_data, addr = s.recvfrom(2048)
         
         self.handleData(recv_data)
