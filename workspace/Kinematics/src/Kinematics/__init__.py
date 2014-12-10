@@ -1,4 +1,5 @@
 from openravepy import *
+from openravepy.misc import InitOpenRAVELogging
 import Kinematics as kin
 import MotionFunctions as mf
 import numpy as np
@@ -89,11 +90,16 @@ def handleData(data):
     
     
 if __name__ == "__main__":
+    RaveSetDebugLevel(DebugLevel.Verbose)
+    InitOpenRAVELogging()
+    
     # setting up the operave environment
     env = Environment() # create openrave environment
     env.SetViewer('qtcoin') # attach viewer (optional)
     env.Load('../../MyData/MyEnvironment/MyEnv.xml') # load a simple scene
     robot = env.GetRobots()[0] # get the first robot
+    kin.forward(robot)
+    
     dataTransfer()
     
     
