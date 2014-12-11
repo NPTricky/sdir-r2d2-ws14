@@ -28,7 +28,7 @@ def forward(robot):
     
     DH = _DH_KUKA_KR30L16
     rows, cols = DH.shape
-    # apply the denavit–hartenberg parameters for homogeneous transformation
+    # apply the denavit-hartenberg parameters for homogeneous transformation
     for i in range(0, rows-1):
         A = A * homogeneous_transformation(DH[i,0], DH[i,1], DH[i,2], DH[i,3])
     
