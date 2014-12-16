@@ -21,7 +21,15 @@ _DH_KUKA_KR30L16_MODBOTS = np.matrix([[-np.pi/2, 0.815,  0.35, np.pi/2],
                                       [ np.pi/2,     0,     0,       0],
                                       [   np.pi,-0.158,     0,       0]])
 
-_DH_KUKA_KR30L16 = _DH_KUKA_KR30L16_OPENRAVE
+# team modbots (alpha, d, a, theta)
+_DH_KUKA_KR30L16_R2D2 = np.matrix([[-np.pi/2, 0.815,  0.35,       0],
+                                      [       0,     0,   1.2,-np.pi/2],
+                                      [ np.pi/2,     0, 0.145,       0],
+                                      [-np.pi/2,-1.545,     0,       0],
+                                      [ np.pi/2,     0,     0,       0],
+                                      [   np.pi,-0.158,     0,       0]])
+
+_DH_KUKA_KR30L16 = _DH_KUKA_KR30L16_R2D2
 
 def get_alpha(i):
     return _DH_KUKA_KR30L16[i,0]
@@ -68,6 +76,8 @@ def forward(robot):
     #A = A * robot.GetManipulators()[0].GetEndEffector().GetTransform()
     #A = A * _TOOL
     
+    extract_euler_angles_from(A)
+    
     return A
 
 """ Homogeneous transformation from joint i to i+1
@@ -76,6 +86,15 @@ def forward(robot):
 """
 def homogeneous_transformation_from(i):
     return homogeneous_transformation(get_alpha(i), get_d(i), get_a(i), get_theta(i))
+
+def extract_euler_angles_from(matrix):
+    beta = math.atan2(-matrix[2,0], math.sqrt(math.pow(matrix[0,0], 2) + math.pow(matrix[1,0], 2))) 
+    beta = beta / pi * 180         
+    alpha = math.atan2(matrix[1,0]/math.cos(beta), matrix[0,0]/math.cos(beta))
+    alpha = alpha / pi * 180   
+    gamma = math.atan2(matrix[2,1]/math.cos(beta), matrix[2,2]/math.cos(beta))
+    gamma = gamma / pi * 180   
+    print "Alpha: "+str(alpha)+", Beta: "+str(beta)+", Gamma: "+str(gamma)
 
 """ Homogeneous transformation by given parameters.
 
