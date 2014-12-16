@@ -13,15 +13,10 @@ def dataTransfer():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.bind((SERVER_IP,SERVER_PORT))
-    s.settimeout(5)
 
     try:
-        while env.GetViewer():
-            try:
-                recv_data, addr = s.recvfrom(2048)
-            except:
-                continue
-                    
+        while True:
+            recv_data, addr = s.recvfrom(2048)
             if not recv_data:
                 break
             
