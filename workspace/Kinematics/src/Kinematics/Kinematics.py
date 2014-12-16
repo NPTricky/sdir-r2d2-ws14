@@ -14,20 +14,12 @@ _DH_KUKA_KR30L16_OPENRAVE = np.matrix([[  -np.pi,     0,     0,       0],
                                        [ np.pi/2,     0,     0,       0]])
 
 # team modbots (alpha, d, a, theta)
-_DH_KUKA_KR30L16_MODBOTS = np.matrix([[-np.pi/2, 0.815,  0.35, np.pi/2],
-                                      [       0,     0,   1.2,-np.pi/2],
-                                      [ np.pi/2,     0, 0.145,       0],
-                                      [-np.pi/2,-1.545,     0,       0],
-                                      [ np.pi/2,     0,     0,       0],
-                                      [   np.pi,-0.158,     0,       0]])
-
-# team modbots (alpha, d, a, theta)
 _DH_KUKA_KR30L16_R2D2 = np.matrix([[-np.pi/2, 0.815,  0.35,       0],
-                                      [       0,     0,   1.2,-np.pi/2],
-                                      [ np.pi/2,     0, 0.145,       0],
-                                      [-np.pi/2,-1.545,     0,       0],
-                                      [ np.pi/2,     0,     0,       0],
-                                      [   np.pi,-0.158,     0,       0]])
+                                   [       0,     0,   1.2,-np.pi/2],
+                                   [ np.pi/2,     0, 0.145,       0],
+                                   [-np.pi/2,-1.545,     0,       0],
+                                   [ np.pi/2,     0,     0,       0],
+                                   [   np.pi,-0.158,     0, np.pi/2]])
 
 _DH_KUKA_KR30L16 = _DH_KUKA_KR30L16_R2D2
 
@@ -163,6 +155,17 @@ def inverse(robot,T):
     theta_22 = alpha_h_1 - alpha_h_2
     
     # calculate position of wrist point in coordinate system 3 for theta_21 and theta_22
+    
+    #pos_wp_31
+    #print "Pos WP 31:\n"+str(pos_wp_31)
+    #pos_wp_32
+    #print "Pos WP 32:\n"+str(pos_wp_32)
+    
+    #theta_31
+    #print "Theta 31:\n"+str(theta_31)
+    #theta_32
+    #print "Theta 32:\n"+str(theta_32)
+    
     return
 
 
