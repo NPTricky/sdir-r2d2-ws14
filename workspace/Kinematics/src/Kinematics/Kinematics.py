@@ -6,20 +6,20 @@ import math
 _DEBUG_DRAW = []
 
 # openrave (alpha, d, a, theta)
-_DH_KUKA_KR30L16_OPENRAVE = np.matrix([[  -np.pi,     0,     0,       0],
-                                       [-np.pi/2,-0.815,  0.35,       0],
-                                       [       0,     0,  -1.2,-np.pi/2],
-                                       [ np.pi/2,     0,-0.145,       0],
-                                       [-np.pi/2,-1.545,     0,       0],
-                                       [ np.pi/2,     0,     0,       0]])
+_DH_KUKA_KR30L16_OPENRAVE = np.matrix([[  -mp.pi,     0,     0,       0],
+                                       [-mp.pi/2,-0.815,  0.35,       0],
+                                       [       0,     0,  -1.2,-mp.pi/2],
+                                       [ mp.pi/2,     0,-0.145,       0],
+                                       [-mp.pi/2,-1.545,     0,       0],
+                                       [ mp.pi/2,     0,     0,       0]])
 
-# team modbots (alpha, d, a, theta)
-_DH_KUKA_KR30L16_R2D2 = np.matrix([[-np.pi/2, 0.815,  0.35,       0],
-                                   [       0,     0,   1.2,-np.pi/2],
-                                   [ np.pi/2,     0, 0.145,       0],
-                                   [-np.pi/2,-1.545,     0,       0],
-                                   [ np.pi/2,     0,     0,       0],
-                                   [   np.pi,-0.158,     0, np.pi/2]])
+# team r2d2 (alpha, d, a, theta)
+_DH_KUKA_KR30L16_R2D2 = np.matrix([[-mp.pi/2, 0.815,  0.35,       0],
+                                   [       0,     0,   1.2,-mp.pi/2],
+                                   [ mp.pi/2,     0, 0.145,       0],
+                                   [-mp.pi/2,-1.545,     0,       0],
+                                   [ mp.pi/2,     0,     0,       0],
+                                   [   mp.pi,-0.158,     0, mp.pi/2]])
 
 _DH_KUKA_KR30L16 = _DH_KUKA_KR30L16_R2D2
 
@@ -79,15 +79,6 @@ def forward(robot):
 def homogeneous_transformation_from(i):
     return homogeneous_transformation(get_alpha(i), get_d(i), get_a(i), get_theta(i))
 
-def extract_euler_angles_from(matrix):
-    beta = math.atan2(-matrix[2,0], math.sqrt(math.pow(matrix[0,0], 2) + math.pow(matrix[1,0], 2))) 
-    beta = beta / pi * 180         
-    alpha = math.atan2(matrix[1,0]/math.cos(beta), matrix[0,0]/math.cos(beta))
-    alpha = alpha / pi * 180   
-    gamma = math.atan2(matrix[2,1]/math.cos(beta), matrix[2,2]/math.cos(beta))
-    gamma = gamma / pi * 180   
-    print "Alpha: "+str(alpha)+", Beta: "+str(beta)+", Gamma: "+str(gamma)
-
 """ Homogeneous transformation by given parameters.
 
 @type alpha: angle in radiant
@@ -109,6 +100,17 @@ def homogeneous_transformation(alpha, d, a, theta):
                       [st, ct*ca,-ct*sa, a*st],
                       [ 0,    sa,    ca,    d],
                       [ 0,     0,     0,    1]])
+
+"""
+@type matrix: transformation matrix
+@param matrix: instance of the transformation matrix
+@return: prints the values to console
+"""
+def extract_euler_angles_from(matrix):
+    beta = math.atan2(-matrix[2,0], math.sqrt(math.pow(matrix[0,0], 2) + math.pow(matrix[1,0], 2)))    
+    alpha = math.atan2(matrix[1,0]/math.cos(beta), matrix[0,0]/math.cos(beta))
+    gamma = math.atan2(matrix[2,1]/math.cos(beta), matrix[2,2]/math.cos(beta))
+    print "Alpha: "+str(np.rad2deg(alpha))+", Beta: "+str(np.rad2deg(beta))+", Gamma: "+str(np.rad2deg(gamma))
 
 """
 @type robot: model of the robot
