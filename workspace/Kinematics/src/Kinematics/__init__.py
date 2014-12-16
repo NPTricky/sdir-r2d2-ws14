@@ -48,8 +48,10 @@ def handleData(data):
         axis_arr = robot.GetDOFValues()
         # convert to string
         axis_values = str(axis_arr[0])+";"+str(axis_arr[1])+";"+str(axis_arr[2])+";"+str(axis_arr[3])+";"+str(axis_arr[4])+";"+str(axis_arr[5])+'#'
+        
         # adding dummy values for orientation and position (you need to compute the values)
         cart_values = "0;0;0;0;0;0"
+        
         return prefix+axis_values+cart_values
     
     # check if the robot should be moved 
@@ -74,8 +76,10 @@ def handleData(data):
         axis_arr = robot.GetDOFValues()
         # convert to string
         axis_values = str(axis_arr[0])+";"+str(axis_arr[1])+";"+str(axis_arr[2])+";"+str(axis_arr[3])+";"+str(axis_arr[4])+";"+str(axis_arr[5])+'#'
+        
         # adding dummy values for orientation and position (you need to compute the values)
         cart_values = "0;0;0;0;0;0"     
+        
         return prefix+axis_values+cart_values
     
     # check if inverse kinematics should be calculated
@@ -88,17 +92,40 @@ def handleData(data):
         # send the (multiple) solutions to the GUI
         # prefix for parsing
         prefix = "INK#"
+        
         # adding dummy values (you need to replace them with the solutions)
         ik_values = "0;0;0;0;0;0"
+        
         return prefix+ik_values
     
     
 if __name__ == "__main__":
+    np.set_printoptions(precision=4)
+    np.set_printoptions(suppress=True)
+    
+    RaveSetDebugLevel(DebugLevel.Verbose)
+    misc.InitOpenRAVELogging()
+    
     # setting up the operave environment
     env = Environment() # create openrave environment
     env.SetViewer('qtcoin') # attach viewer (optional)
     env.Load('../../MyData/MyEnvironment/MyEnv.xml') # load a simple scene
     robot = env.GetRobots()[0] # get the first robot
+
+    print "DH (OpenRave):\n"+str(planningutils.GetDHParameters(robot))
+    
+    m = robot.GetManipulators()[0]
+    print "End Effector (OpenRave):\n"+str(m.GetEndEffectorTransform())
+    
+    #H = []
+    #H.append(misc.DrawAxes(robot.GetEnv(), m.GetEndEffectorTransform(), 0.5, 2))
+    #H.append(misc.DrawAxes(robot.GetEnv(), m.GetBase().GetTransform(), 0.5, 2))
+
+    T = kin.forward(robot)
+    print "End Effector:\n"+str(T)
+    I = kin.inverse(robot, T)
+    #print I
+    
     dataTransfer()
     
     
