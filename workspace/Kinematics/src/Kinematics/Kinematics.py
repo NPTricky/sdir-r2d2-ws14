@@ -68,8 +68,6 @@ def forward(robot):
     #A = A * robot.GetManipulators()[0].GetEndEffector().GetTransform()
     #A = A * _TOOL
     
-    extract_euler_angles_from(A)
-    
     return A
 
 """ Homogeneous transformation from joint i to i+1
@@ -110,7 +108,7 @@ def extract_euler_angles_from(matrix):
     beta = math.atan2(-matrix[2,0], math.sqrt(math.pow(matrix[0,0], 2) + math.pow(matrix[1,0], 2)))    
     alpha = math.atan2(matrix[1,0]/math.cos(beta), matrix[0,0]/math.cos(beta))
     gamma = math.atan2(matrix[2,1]/math.cos(beta), matrix[2,2]/math.cos(beta))
-    print "Alpha: "+str(np.rad2deg(alpha))+", Beta: "+str(np.rad2deg(beta))+", Gamma: "+str(np.rad2deg(gamma))
+    return np.rad2deg(alpha), np.rad2deg(beta), np.rad2deg(gamma)
 
 """
 @type robot: model of the robot

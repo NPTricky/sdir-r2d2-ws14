@@ -1,5 +1,6 @@
 import sys
 import socket
+import Kinematics as kin
 from PyQt4 import QtGui, QtCore
 
 SERVER_IP = '127.0.0.1'
@@ -90,7 +91,6 @@ class GUI(QtGui.QWidget):
         group_box = QtGui.QGroupBox('Cartesian Position')
         # use grid layout
         grid_cartpos = QtGui.QGridLayout()
-        
         # set up labels
         label_cartpos_x = QtGui.QLabel('X', self)
         label_cartpos_y = QtGui.QLabel('Y', self)
