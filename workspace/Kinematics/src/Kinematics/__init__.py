@@ -131,6 +131,7 @@ if __name__ == "__main__":
     I = kin.inverse(robot, kin.get_pose_from(T))
   #  print I
     
+    configList = [[0,0,0,0,90,0], [90,0,0,0,0,0]] 
+    config = kin.selectConfiguration(configList)
+    
     dataTransfer()
-    
-    
