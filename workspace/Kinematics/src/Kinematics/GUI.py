@@ -2,6 +2,8 @@ import sys
 import socket
 import Kinematics as kin
 from PyQt4 import QtGui, QtCore
+from sympy.mpmath import *
+import math
 
 SERVER_IP = '127.0.0.1'
 SERVER_PORT = 54321
@@ -250,7 +252,12 @@ class GUI(QtGui.QWidget):
         # prefix for parsing
         prefix = "MOV#"   
         # get values and convert QString to string
-        msg = str(self.lineedit_ptp_a1.text()+";"+self.lineedit_ptp_a2.text()+";"+self.lineedit_ptp_a3.text()+";"+self.lineedit_ptp_a4.text()+";"+self.lineedit_ptp_a5.text()+";"+self.lineedit_ptp_a6.text()) 
+        msg = str( str( mp.radians( float( self.lineedit_ptp_a1.text()))) + ";" + 
+                   str( mp.radians( float( self.lineedit_ptp_a2.text()))) + ";" +
+                   str( mp.radians( float( self.lineedit_ptp_a3.text()))) + ";" + 
+                   str( mp.radians( float( self.lineedit_ptp_a4.text()))) + ";" + 
+                   str( mp.radians( float( self.lineedit_ptp_a5.text()))) + ";" + 
+                   str( mp.radians( float( self.lineedit_ptp_a6.text())))) 
         # get motion type
         if self.radio_asynch.isChecked() is True:
             motion_type = "#A"
@@ -266,11 +273,16 @@ class GUI(QtGui.QWidget):
         # prefix for parsing
         prefix = "CAL#"   
         # get values and convert QString to string
-        values = str(self.lineedit_cartptp_x.text()+";"+self.lineedit_cartptp_y.text()+";"+self.lineedit_cartptp_z.text()+";"+self.lineedit_cartptp_a.text()+";"+self.lineedit_cartptp_b.text()+";"+self.lineedit_cartptp_c.text()) 
+        values = str( self.lineedit_cartptp_x.text() + ";" + 
+                      self.lineedit_cartptp_y.text() + ";" + 
+                      self.lineedit_cartptp_z.text() + ";" + 
+                      str( mp.radians( float( self.lineedit_cartptp_a.text()))) + ";" + 
+                      str( mp.radians( float( self.lineedit_cartptp_b.text()))) + ";" + 
+                      str( mp.radians( float( self.lineedit_cartptp_c.text())))) 
         # send data
         self.dataTransfer(prefix+values)
         
-
+    
     # handles the data transfer between the GUI (client) and openrave (server)
     def dataTransfer(self, msg):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -297,21 +309,22 @@ class GUI(QtGui.QWidget):
     def updateValues(self, data):
         # update axis values
         axis_arr = data[1].split(";")
-        self.lineedit_axes_a1.setText(axis_arr[0])
-        self.lineedit_axes_a2.setText(axis_arr[1])
-        self.lineedit_axes_a3.setText(axis_arr[2])
-        self.lineedit_axes_a4.setText(axis_arr[3])
-        self.lineedit_axes_a5.setText(axis_arr[4])
-        self.lineedit_axes_a6.setText(axis_arr[5])
+        
+        self.lineedit_axes_a1.setText( str( round( mp.degrees( float( axis_arr[0])), 6)))
+        self.lineedit_axes_a2.setText( str( round( mp.degrees( float( axis_arr[1])), 6)))
+        self.lineedit_axes_a3.setText( str( round( mp.degrees( float( axis_arr[2])), 6)))
+        self.lineedit_axes_a4.setText( str( round( mp.degrees( float( axis_arr[3])), 6)))
+        self.lineedit_axes_a5.setText( str( round( mp.degrees( float( axis_arr[4])), 6)))
+        self.lineedit_axes_a6.setText( str( round( mp.degrees( float( axis_arr[5])), 6)))
         
         # update position and orientaion values
         cart_arr = data[2].split(";")
         self.lineedit_cartpos_x.setText(cart_arr[0])
         self.lineedit_cartpos_y.setText(cart_arr[1])
         self.lineedit_cartpos_z.setText(cart_arr[2])
-        self.lineedit_cartpos_a.setText(cart_arr[3])
-        self.lineedit_cartpos_b.setText(cart_arr[4])
-        self.lineedit_cartpos_c.setText(cart_arr[5])
+        self.lineedit_cartpos_a.setText( str( round( mp.degrees( float( cart_arr[3])), 6)))
+        self.lineedit_cartpos_b.setText( str( round( mp.degrees( float( cart_arr[4])), 6)))
+        self.lineedit_cartpos_c.setText( str( round( mp.degrees( float( cart_arr[5])), 6)))
         
     
     # update UI with multiple inverse kinematic solutions

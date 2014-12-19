@@ -33,3 +33,9 @@ def Move(robot, trajectory):
     for i in range(trajectory.shape[0]):
         robot.SetDOFValues(trajectory[i])
         time.sleep(0.01)
+
+
+def velocity(robot, pose):
+    
+    
+    return
