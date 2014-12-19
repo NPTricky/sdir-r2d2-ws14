@@ -79,11 +79,6 @@ def handleData(data):
         angles = kin.extract_euler_angles_from(TNEW)
         cart_values = str(TNEW[0,3]) + ";" + str(TNEW[1,3]) + ";" + str(TNEW[2,3]) + ";" + str(angles[0]) + ";" + str(angles[1]) + ";" + str(angles[2])  
         
-        print "End Effector (OpenRave):\n"+str(m.GetEndEffectorTransform())
-        T = kin.forward(robot)
-        print "End Effector:\n"+str(T)
-        I = kin.inverse(robot, T)
-        
         return prefix+axis_values+cart_values
     
     # check if inverse kinematics should be calculated

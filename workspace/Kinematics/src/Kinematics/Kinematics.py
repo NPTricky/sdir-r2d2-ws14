@@ -53,13 +53,6 @@ def get_y(matrix):
 def get_z(matrix):
     return matrix[2,3]
 
-def extract_euler_angles_from(matrix):
-    beta = math.atan2(-matrix[2,0], math.sqrt(math.pow(matrix[0,0], 2) + math.pow(matrix[1,0], 2))) 
-    alpha = math.atan2(matrix[1,0]/math.cos(beta), matrix[0,0]/math.cos(beta))
-    gamma = math.atan2(matrix[2,1]/math.cos(beta), matrix[2,2]/math.cos(beta))
-    print "Alpha: "+str(mp.degrees(alpha))+", Beta: "+str(mp.degrees(beta))+", Gamma: "+str(mp.degrees(gamma))
-    return np.array((alpha, beta, gamma))
-
 def get_pose(matrix):
     euler_angle = extract_euler_angles_from(matrix)
     return np.array(((get_x(matrix),get_y(matrix),get_z(matrix),euler_angle[0], euler_angle[1], euler_angle[2])))
@@ -69,7 +62,7 @@ def get_pose(matrix):
 @param robot: robot instance
 @return: pose of end effector in homogeneous coordinates
 """
-def forward(robot, ):
+def forward(robot):
 
     if len(robot.GetManipulators()) > 1:
         for m in robot.GetManipulators():
@@ -135,7 +128,7 @@ def extract_euler_angles_from(matrix):
     beta = math.atan2(-matrix[2,0], math.sqrt(math.pow(matrix[0,0], 2) + math.pow(matrix[1,0], 2)))    
     alpha = math.atan2(matrix[1,0]/math.cos(beta), matrix[0,0]/math.cos(beta))
     gamma = math.atan2(matrix[2,1]/math.cos(beta), matrix[2,2]/math.cos(beta))
-    return np.rad2deg(alpha), np.rad2deg(beta), np.rad2deg(gamma)
+    return alpha, beta, gamma
 
 """
 @type robot: model of the robot
