@@ -1,5 +1,8 @@
 import numpy as np
 import time
+import Kinematics as kin
+from sympy.mpmath import *
+import math
 
 def PTPtoConfiguration(start_cfg, target_cfg, motiontype):
     """PTP path planning
@@ -26,9 +29,8 @@ def PTPtoConfiguration(start_cfg, target_cfg, motiontype):
         
     trajectory[99] = target_cfg
     
-    return trajectory
-
-
+    return trajectory   
+    
 def Move(robot, trajectory):
     for i in range(trajectory.shape[0]):
         robot.SetDOFValues(trajectory[i])
