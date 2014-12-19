@@ -53,10 +53,36 @@ def get_y(matrix):
 def get_z(matrix):
     return matrix[2,3]
 
-def get_pose(matrix):
+""" 
+@type matrix: homogeneous transformation matrix
+@param matrix: matrix from a point or coordinate-system
+@rtype: position and rotation of a point
+@return: position and rotation of a point
+"""
+def get_pose_from(matrix):
     euler_angle = extract_euler_angles_from(matrix)
     return np.array(((get_x(matrix),get_y(matrix),get_z(matrix),euler_angle[0], euler_angle[1], euler_angle[2])))
 
+
+""" 
+@type pose: position and rotation of a point
+@param pose: position and rotation of a point
+@rtype: homogeneous transformation matrix
+@return: matrix from a point or coordinate-system
+"""    
+def get_matrix_from(pose):
+    ca = math.cos(pose[3])
+    cb = math.cos(pose[4])
+    cg = math.cos(pose[5])
+    sa = math.sin(pose[3])
+    sb = math.sin(pose[4])
+    sg = math.sin(pose[5])
+    return np.matrix([[ ca*cb, ca*sb*sg - sa*cg, ca*sb*cg + sa*sg, pose[0]],
+                      [ sa*cb, sa*sb*sg + ca*cg, sa*sb*cg - ca*sg, pose[1]],
+                      [   -sb,    cb*sg        ,    cb*cg        , pose[2]],
+                      [     0,                0,                0,       1]])
+    
+    
 """
 @type robot: model of the robot
 @param robot: robot instance
@@ -72,12 +98,12 @@ def forward(robot):
 
     # transformation matrix of the base as a starting point       
     A = _BASE
-    _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), A, 0.5, 2))
+    #_DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), A, 0.5, 2))
     
     # apply the denavit-hartenberg parameters for homogeneous transformation
     for i in range(0, robot.GetDOF()):
-        A = A * homogeneous_transformation_from(robot.GetDOFValues(), i)
-        _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), A, 0.5, 2))
+        A = A * homogeneous_transformation_from(robot.GetDOFValues()[i], i)
+        #_DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), A, 0.5, 2))
     
     # for debug purposes without tool
     # transform the tool into the coordinate system of the base
@@ -88,12 +114,14 @@ def forward(robot):
     
 """ Homogeneous transformation from joint i to i+1
 
-@type angels: angels of the joints
+@type angels: angel of the z-axis of an joint
 @param angles: angles in radiant
-@param     i: joint index
+@type i: i as integer
+@param i: joint index
+return: homogeneous coordinates
 """
-def homogeneous_transformation_from( angels, i):
-    return homogeneous_transformation(get_alpha(i), get_d(i), get_a(i), get_theta(i) - angels[i])
+def homogeneous_transformation_from( angle, i):
+    return homogeneous_transformation(get_alpha(i), get_d(i), get_a(i), get_theta(i) - angle)
 
 """ Homogeneous transformation by given parameters.
     A = T(d) * R(theta) * T(a) * R(alpha)
@@ -108,10 +136,10 @@ def homogeneous_transformation_from( angels, i):
 @return: homogeneous coordinates
 """
 def homogeneous_transformation(alpha, d, a, theta):
-    ca = math.cos(alpha)
-    ct = math.cos(theta)
-    sa = math.sin(alpha)
-    st = math.sin(theta)
+    ca = mp.cos(alpha)
+    ct = mp.cos(theta)
+    sa = mp.sin(alpha)
+    st = mp.sin(theta)
     return np.matrix([[ct,-st*ca, st*sa, a*ct],
                       [st, ct*ca,-ct*sa, a*st],
                       [ 0,    sa,    ca,    d],
@@ -133,110 +161,168 @@ def extract_euler_angles_from(matrix):
 """
 @type robot: model of the robot
 @param robot: robot instance
-@type T: homogeneous coordinates
-@param T: pose of end effector
-@rtype: joint coordinates
-@return: pose of end effector
+@type pose: position and rotation of a point
+@param pose: point in robot coordinate system were move the robot
+@rtype: configuration of angles
+@return: configuration for each joint of the robot
 """
-def inverse(robot,T):
+def inverse(robot, pose):
+    """
+    # calculate position of wrist point in coordinate system 0 for theta0
+    """
+    # determin of the wrist point matrix for ks0
+    P_wp0 = get_matrix_from( pose) * _TOOL
     
-    # calculate position of wrist point in coordinate system 1 for theta_11 and theta_12
-    pos_wp_0 = T * _TOOL
-    print "Pos WP 0:\n" + str(pos_wp_0)
-    _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), pos_wp_0, 0.5, 2))
+    # theta 0 / 1
+    theta0_0 = math.atan2( get_y( P_wp0), get_x( P_wp0))
+   
+    # theta 0 / 2
+    theta0_1 = theta0_0 + np.pi if theta0_0 < 0 else theta0_0 - np.pi
 
-    # theta 11
-    theta_11 = math.atan2( get_y(pos_wp_0), get_x(pos_wp_0))
     
-    # theta 21
-    theta_12 = theta_11 
-    theta_12 += np.pi if theta_11 < 0 else -np.pi
+    
+    _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), P_wp0, 0.5, 2))
 
-    print "Theta 11:\n"+str(mp.degrees(theta_11))
-    print "Theta 12:\n"+str(mp.degrees(theta_12))
-        
-    # calculate position of wrist point in coordinate system 2 for theta_21 and theta_22
-    pos_wp_21 = np.linalg.inv(homogeneous_transformation_from(np.array((theta_11,0,0,0,0,0)),0)) * pos_wp_0
-    print "Pos WP 21:\n" + str(pos_wp_21)
-    _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), homogeneous_transformation_from(np.array((theta_11,0,0,0,0,0)),0) * pos_wp_21, 0.5, 2))
- 
-    pos_wp_22 = np.linalg.inv(homogeneous_transformation_from(np.array((theta_12,0,0,0,0,0)),0)) * pos_wp_0
-    print "Pos WP 22:\n" + str(pos_wp_22)
-    _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), homogeneous_transformation_from(np.array((theta_12,0,0,0,0,0)),0) * pos_wp_22, 0.5, 2))
+    #print "Pos WP 0:\n" + str(P_wp0)
+    print "Theta 0 / 0: " + str(mp.degrees(theta0_0))
+    print "Theta 0 / 1: " + str(mp.degrees(theta0_1))
     
-    # theta_21 and theta_22
+    
+    
+    """    
+    # calculate position of wrist point in coordinate system 1 for theta1
+    """
+    # d_h is the lenght from ks2 to ks4
     d_h = math.sqrt( math.pow( get_a(2), 2) + math.pow( get_d(3), 2))
+  
+    # wrist point matrix form ks1 for theta0_0
+    P_wp1_0 = np.linalg.inv( homogeneous_transformation_from( theta0_0, 0)) * P_wp0
     
-    d_wp2 = math.sqrt( math.pow( get_x(pos_wp_21), 2) + math.pow( get_y(pos_wp_21), 2))
-    print "d_wp2:\n" + str(d_wp2)
+    # determin of theta0_00 and theta0_01 for theta0_0
+    d_wp2 = math.sqrt( math.pow( get_x(P_wp1_0), 2) + math.pow( get_y(P_wp1_0), 2))
+
     alpha_h1 = mp.acos( ( -math.pow( d_h, 2) + math.pow( d_wp2, 2) + math.pow( get_a(1), 2)) / ( 2 * d_wp2 * get_a(1)))
-    alpha_h2 = math.atan2( get_y(pos_wp_21), get_x(pos_wp_21))
+    alpha_h2 = math.atan2( get_y(P_wp1_0), get_x(P_wp1_0))
     
-    theta_21_1 = alpha_h2 + alpha_h1
-    theta_22_1 = alpha_h2 - alpha_h1
-    print "Theta 21 by Theta 11:\n" + str(mp.degrees(theta_21_1)) 
-    print "Theta 22 by Theta 11:\n" + str(mp.degrees(theta_22_1))
-	
-    d_wp2 = math.sqrt( math.pow( get_x(pos_wp_22), 2) + math.pow( get_y(pos_wp_22), 2))
-    print "d_wp2:\n" + str(d_wp2)
+    theta1_00 = alpha_h1 + alpha_h2 - np.pi/2
+    theta1_01 = alpha_h1 - alpha_h2 - np.pi/2
+    
+    
+    _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), homogeneous_transformation_from( theta0_0, 0) * P_wp1_0, 0.5, 2))
+ 
+    #print "math.atan2( get_y(P_wp1_0), get_x(P_wp1_0)):\n" + str(mp.degrees( math.atan2( get_y(P_wp1_0), get_x(P_wp1_0))) )
+    #print "math.atan2( get_x(P_wp1_0), get_y(P_wp1_0)):\n" + str(mp.degrees( math.atan2( get_x(P_wp1_0), get_y(P_wp1_0))) )
+ 
+    #print "Pos WP 1 / 0:\n" + str(P_wp1_0)
+    #print "d_wp2:\n" + str(d_wp2)
+    print "Theta 1 / 0  for Theta 0 / 0: " + str(mp.degrees(theta1_00)) 
+    print "Theta 1 / 1  for Theta 0 / 0: " + str(mp.degrees(theta1_01))
+
+    
+    
+    # wrist point matrix form ks1 for theta0_1
+    P_wp1_1 = np.linalg.inv( homogeneous_transformation_from( theta0_1, 0)) * P_wp0
+        
+    # determin of theta1_10 and theta1_11 for theta0_1
+    d_wp2 = math.sqrt( math.pow( get_x(P_wp1_1), 2) + math.pow( get_y(P_wp1_1), 2))
+    
     alpha_h1 = mp.acos( ( -math.pow( d_h, 2) + math.pow( d_wp2, 2) + math.pow( get_a(1), 2)) / ( 2 * d_wp2 * get_a(1)))
-    alpha_h2 = math.atan2( get_y(pos_wp_22), get_x(pos_wp_22))
+    alpha_h2 = math.atan2( get_x(P_wp1_1), get_y(P_wp1_1))
     
-    theta_21_2 = alpha_h2 + alpha_h1
-    theta_22_2 = alpha_h2 - alpha_h1
-    
-    print "Theta 21 by Theta 12:\n" + str(mp.degrees(theta_21_2)) 
-    print "Theta 22 by Theta 12:\n" + str(mp.degrees(theta_22_2))
+    theta1_10 = alpha_h1 + alpha_h2 - np.pi
+    theta1_11 = alpha_h1 - alpha_h2 - np.pi
     
     
-    # calculate position of wrist point in coordinate system 3 for theta_31 and theta_32
-    pos_wp_31 = np.linalg.inv(homogeneous_transformation_from(np.array((theta_11,theta_21_1,0,0,0,0)),1)) * pos_wp_21
-    print "Pos WP 31:\n" + str(pos_wp_31)
-    _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), homogeneous_transformation_from(np.array((theta_11,0,0,0,0,0)),0) * homogeneous_transformation_from(np.array((theta_11,theta_21_1- np.pi/2,0,0,0,0)),1) * pos_wp_31, 0.5, 2))
+
+    _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), homogeneous_transformation_from( theta0_1, 0) * P_wp1_1, 0.5, 2))
     
-    pos_wp_32 = np.linalg.inv( homogeneous_transformation_from(np.array((theta_11,theta_22_1,0,0,0,0)),1)) * pos_wp_21
-    print "Pos WP 32:\n" + str(pos_wp_32)
-    _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), homogeneous_transformation_from(np.array((theta_11,0,0,0,0,0)),0) * homogeneous_transformation_from(np.array((theta_11,theta_22_1- np.pi/2,0,0,0,0)),1) * pos_wp_32, 0.5, 2))
+    #print "Pos WP 1 / 1:\n" + str(P_wp1_1)    
+    #print "d_wp2:\n" + str(d_wp2)
+    print "Theta 1 / 0  for Theta 0 / 1: " + str(mp.degrees(theta1_10)) 
+    print "Theta 1 / 1  for Theta 0 / 1: " + str(mp.degrees(theta1_11))
+
     
-    #pos_wp_33 = np.linalg.inv( homogeneous_transformation_from(np.array((theta_12,theta_21_2,0,0,0,0)),1)) * pos_wp_22
-    #print "Pos WP 33:\n" + str(pos_wp_33)
-    #   _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), homogeneous_transformation_from(np.array((theta_12,0,0,0,0,0)),0) * homogeneous_transformation_from(np.array((theta_12,theta_21_2- np.pi/2,0,0,0,0)),1) * pos_wp_33, 0.5, 2))
     
-    #pos_wp_34 = np.linalg.inv(homogeneous_transformation_from(np.array((theta_12,theta_22_2- np.pi/2,0,0,0,0)),1)) * pos_wp_22
-    #print "Pos WP 34:\n" + str(pos_wp_34)
-    #   _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), homogeneous_transformation_from(np.array((theta_12,0,0,0,0,0)),0) * homogeneous_transformation_from(np.array((theta_12,theta_22_2- np.pi/2,0,0,0,0)),1) * pos_wp_34, 0.5, 2))
-    
-    # theta_31 and theta_32
+    """
+    # calculate position of wrist point in coordinate system 2 for theta2
+    """
     beta_2 = math.atan2( get_a(2), get_d(3))
     
-    # theta_31
-    beta_1 = math.atan2( get_y(pos_wp_31), get_x(pos_wp_31))
-    theta_31 = beta_1 + beta_2
+    # wrist point matrix form ks2 for theta1_00
+    P_wp2_00 = np.linalg.inv( homogeneous_transformation_from( theta1_00, 1)) * P_wp1_0
     
-    # theta_32
-    beta_1 = math.atan2( get_y(pos_wp_32), get_x(pos_wp_32))
-    theta_32 = beta_1 + beta_2
+    # theta2_00
+    beta_1 = math.atan2( get_y(P_wp2_00), get_x(P_wp2_00))
+    theta2_00 = beta_1 + beta_2 - np.pi/2
     
-    # theta_33
-    #beta_1 = math.atan2( get_y(pos_wp_33), get_x(pos_wp_33))
-    theta_33 = beta_1 + beta_2
     
-    # theta_34
-    #beta_1 = math.atan2( get_y(pos_wp_34), get_x(pos_wp_34))
-    theta_34 = beta_1 + beta_2
     
-    print "Theta 31:\n" + str(mp.degrees(theta_31))
-    print "Theta 32:\n" + str(mp.degrees(theta_32))
-    print "Theta 33:\n" + str(mp.degrees(theta_33))
-    print "Theta 34:\n" + str(mp.degrees(theta_34))
-      
+    _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), homogeneous_transformation_from( theta0_0, 0) * homogeneous_transformation_from( theta1_00, 1) * P_wp2_00, 0.5, 2))
+    #print "Pos WP 2 / 00:\n" + str(P_wp2_00)
+    print "Theta 2 / 0  for Theta 1 / 0: " + str(mp.degrees(theta2_00)) 
+    
+    
+        
+    # wrist point matrix form ks2 for theta1_01
+    P_wp2_01 = np.linalg.inv( homogeneous_transformation_from( theta1_01, 1)) * P_wp1_0
+    
+    # theta2_01
+    beta_1 = math.atan2( get_y(P_wp2_01), get_x(P_wp2_01))
+    theta2_01 = beta_1 + beta_2 - np.pi/2
+    
+    
+    
+    
+    _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), homogeneous_transformation_from( theta0_0, 0) * homogeneous_transformation_from( theta1_01, 1) * P_wp2_01, 0.5, 2))
+    #print "Pos WP 2 / 00:\n" + str(P_wp2_00)
+    print "Theta 2 / 1  for Theta 1 / 1: " + str(mp.degrees(theta2_01)) 
+    
+    
+    
+    # wrist point matrix form ks2 for theta1_10
+    P_wp2_10 = np.linalg.inv( homogeneous_transformation_from( theta1_10, 1)) * P_wp1_1
+    
+    # theta2_10
+    beta_1 = math.atan2( get_x(P_wp2_10), get_y(P_wp2_10))
+    theta2_10 = beta_1 - beta_2 
+    
+    
+    
+    _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), homogeneous_transformation_from( theta0_1, 0) * homogeneous_transformation_from( theta1_10, 1) * P_wp2_10, 0.5, 2))
+    #print "Pos WP 2 / 00:\n" + str(P_wp2_10)
+    print "Theta 2 / 0  for Theta 1 / 0: " + str(mp.degrees(theta2_10)) 
+    
+    
+        
+    # wrist point matrix form ks2 for theta1_11
+    P_wp2_11 = np.linalg.inv( homogeneous_transformation_from( theta1_11, 1)) * P_wp1_1
+    
+    # theta2_11
+    beta_1 = math.atan2( get_x(P_wp2_11), get_y(P_wp2_11))
+    theta2_11 = beta_1 + beta_2
+    
+    
+    
+    
+    _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), homogeneous_transformation_from( theta0_1, 0) * homogeneous_transformation_from( theta1_11, 1) * P_wp2_11, 0.5, 2))
+    #print "Pos WP 2 / 00:\n" + str(P_wp2_11)
+    print "Theta 2 / 1  for Theta 1 / 1: " + str(mp.degrees(theta2_11)) 
+    
+    
+       
+          
+    new_forward(robot, np.array((theta0_0,theta1_00, theta2_00,0,0,0)))
+    new_forward(robot, np.array((theta0_0,theta1_01, theta2_01,0,0,0)))
+    new_forward(robot, np.array((theta0_1,theta1_10, theta2_10,0,0,0)))
+    #new_forward(robot, np.array((theta0_1,theta1_11, theta2_11,0,0,0)))
+    
+    
     # calculate position of wrist orientation in coordinate system 3 to 6 for theta_4, theta_5 and theta_6
-    
     T_0_3 = _BASE
     for i in range(0,2):
-        T_0_3 = T_0_3 * homogeneous_transformation_from(np.array((0,0,0,0,0,0)),i)
+        T_0_3 = T_0_3 * homogeneous_transformation_from(0,i)
                 
-    T_3_6 = np.linalg.inv(T_0_3) * T * np.linalg.inv(_TOOL)
+    T_3_6 = np.linalg.inv(T_0_3) *  get_matrix_from( pose) * np.linalg.inv(_TOOL)
     
     theta_5 = math.atan2(math.sqrt(math.pow(T_3_6[0,2], 2) + math.pow(T_3_6[1,2], 2)), T_3_6[2,2])
     
@@ -276,3 +362,13 @@ def wrist_orientation(theta_4, theta_5, theta_6):
     return np.matrix([[ c4*c5*c6-s4*s6,-c4*c5*s6-s4*c6, c4*s5],
                       [ s4*c5*c6+c4*s6,-s4*c5*s6+c4*c6, s4*s5],
                       [         -s5*c6,          s5*s6,    c5]])
+
+
+def new_forward(robot, values):
+    A = _BASE
+    _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), A, 0.5, 2))
+    
+    # apply the denavit-hartenberg parameters for homogeneous transformation
+    for i in range(0, robot.GetDOF()):
+        A = A * homogeneous_transformation_from(values[i], i)
+        _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), A, 0.5, 2))

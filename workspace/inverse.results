@@ -1,0 +1,67 @@
+[0;34;48mpython logutils not present so cannot colorize python output.[0;38;48m
+DH (OpenRave):
+[<DHParameter(joint=RaveGetEnvironment(1).GetKinBody('Kuka_kr30').GetJoint('j0'), parentindex=-1, d=0.000000, a=-0.000000, theta=0.000000, alpha=-3.141593)>, <DHParameter(joint=RaveGetEnvironment(1).GetKinBody('Kuka_kr30').GetJoint('j1'), parentindex=0, d=-0.815000, a=0.350000, theta=0.000000, alpha=-1.570796)>, <DHParameter(joint=RaveGetEnvironment(1).GetKinBody('Kuka_kr30').GetJoint('j2'), parentindex=1, d=0.000000, a=-1.200000, theta=-1.570796, alpha=-0.000000)>, <DHParameter(joint=RaveGetEnvironment(1).GetKinBody('Kuka_kr30').GetJoint('j3'), parentindex=2, d=0.000000, a=-0.145000, theta=-0.000000, alpha=1.570796)>, <DHParameter(joint=RaveGetEnvironment(1).GetKinBody('Kuka_kr30').GetJoint('j4'), parentindex=3, d=-1.545000, a=-0.000000, theta=0.000000, alpha=-1.570796)>, <DHParameter(joint=RaveGetEnvironment(1).GetKinBody('Kuka_kr30').GetJoint('j5'), parentindex=4, d=0.000000, a=-0.000000, theta=0.000000, alpha=1.570796)>]
+End Effector (OpenRave):
+[[ 0.     0.     1.     2.053]
+ [ 1.     0.     0.    -0.   ]
+ [ 0.     1.     0.     2.16 ]
+ [ 0.     0.     0.     1.   ]]
+Alpha: 90.0, Beta: 0.0, Gamma: 90.0
+End Effector:
+[[-0.    -0.     1.     2.053]
+ [ 1.    -0.     0.     0.   ]
+ [ 0.     1.     0.     2.16 ]
+ [ 0.     0.     0.     1.   ]]
+Pos WP 0:
+[[-0.    -0.     1.     1.895]
+ [ 1.    -0.     0.     0.   ]
+ [ 0.     1.     0.     2.16 ]
+ [ 0.     0.     0.     1.   ]]
+Pos WP 1:
+[[-0.    -0.     1.     1.545]
+ [ 0.     1.     0.     1.345]
+ [-1.     0.    -0.    -0.   ]
+ [ 0.     0.     0.     1.   ]]
+Theta 11:
+41.041205938535
+Theta 12:
+-138.958794061465
+Pos WP 21:
+[[-0.      0.6566  0.7542  0.8484]
+ [ 0.      0.7542 -0.6566 -0.    ]
+ [-1.      0.     -0.     -0.    ]
+ [ 0.      0.      0.      1.    ]]
+Pos WP 22:
+[[ 0.     -0.6566 -0.7542 -3.2484]
+ [-0.     -0.7542  0.6566 -0.    ]
+ [-1.      0.     -0.     -0.    ]
+ [ 0.      0.      0.      1.    ]]
+Theta 21:
+(-6.72130385307022e-15 + 101.221553991089j)
+Theta 22:
+(180.0 + 178.143589449533j)
+Pos WP 31:
+[[-0.      0.6566  0.7542  0.7034]
+ [ 1.     -0.      0.      0.    ]
+ [ 0.      0.7542 -0.6566 -0.    ]
+ [ 0.      0.      0.      1.    ]]
+Pos WP 32:
+[[-0.      0.6566  0.7542  3.1034]
+ [ 1.     -0.      0.      0.    ]
+ [ 0.      0.7542 -0.6566  0.    ]
+ [ 0.      0.      0.      1.    ]]
+Theta 31:
+7.70546892352477e-15
+Theta 32:
+1.74653061643021e-15
+Wrist Orientation:
+[[ 0.     1.     0.     0.145]
+ [ 0.     0.    -1.    -1.861]
+ [-1.     0.    -0.    -0.   ]
+ [ 0.     0.     0.     1.   ]]
+Theta 4:
+-90.0
+Theta 5:
+90.0
+Theta 6:
+3.50823878194633e-15
