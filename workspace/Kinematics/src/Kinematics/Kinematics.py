@@ -372,3 +372,76 @@ def new_forward(robot, values):
     for i in range(0, robot.GetDOF()):
         A = A * homogeneous_transformation_from(values[i], i)
         _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), A, 0.5, 2))
+        
+        
+        
+#eine Liste mit 8 Konfiguration mit je 6 Theta
+#loop ueber Liste: checken ob Singularity vorhanden ist
+#waehle den aus der Liste der keine Singularitaet + kleinsten theta 1 (pos 0)
+def selectConfiguration(configList):
+    configListWithoutSing = []
+    #WP = getWristPoint
+    
+    WP = _TOOL
+    
+    for config in configList:
+        isSingularity = checkSingularity(config, WP)
+        if not isSingularity:
+            configListWithoutSing.append(config, WP)
+       
+    selectedConfig = [] 
+    for config in configListWithoutSing:
+        if not 'selectedConfig' in locals():
+            selectedConfig = config
+        elif selectedConfig[0] > config[0]: 
+            selectedConfig = config           
+    
+    return selectedConfig
+
+def checkSingularity(angles, wp):
+    T4 = homogeneous_transformation_from(angles, 3)
+    A = T4
+    for i in range(4, 6):
+        A = A * homogeneous_transformation_from(angles, i)
+    T4to6 = A
+        
+    #evtl werden noch in der if else noch solution eingebaut (abhaengig von anderen test-daten)
+    if isOverheadSingularity(wp) and isWristSingularity(T4to6):
+        print str('Overhead and Wrist')
+        return True
+    elif isOverheadSingularity(wp):
+        print str('Overhead')
+        return True
+    elif isWristSingularity(T4, T4to6):
+        print str('Wrist')
+        return True
+    else:
+        return False
+
+def isOverheadSingularity(WP):
+    print WP[0,3], WP[1,3]
+    if WP[0,3] == 0 and WP[1,3] == 0:
+       return True
+       
+    return False
+
+def isWristSingularity(T4to6):
+    print T4to6[0,3], T4to6[1,3]
+    if T4to6[0,3] == 0 and T4to6[1,3] == 0:
+       return True
+       
+    return False
+"""
+    v4 = np.array(T4[:,2], dtype=np.float)
+    print v4
+    v6 = np.array(T6[:,2], dtype=np.float)
+    print v6
+    
+    v = v4/v6
+    print v
+    
+    if v[0] == v[1] == v[2]:
+        return True
+     
+    return False
+""" 
