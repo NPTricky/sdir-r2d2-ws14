@@ -73,10 +73,11 @@ def handleData(data):
         # convert to string
         axis_values = str(axis_arr[0])+";"+str(axis_arr[1])+";"+str(axis_arr[2])+";"+str(axis_arr[3])+";"+str(axis_arr[4])+";"+str(axis_arr[5])+'#'
         
+        TNEW = kin.forward(robot)
         # adding dummy values for orientation and position (you need to compute the values)
         #welche Matrix nehme ich? wie berechnen wir diese?
-        angles = kin.extract_euler_angles_from(T)
-        cart_values = str(T[0,3]) + ";" + str(T[1,3]) + ";" + str(T[2,3]) + ";" + str(angles[0]) + ";" + str(angles[1]) + ";" + str(angles[2])  
+        angles = kin.extract_euler_angles_from(TNEW)
+        cart_values = str(TNEW[0,3]) + ";" + str(TNEW[1,3]) + ";" + str(TNEW[2,3]) + ";" + str(angles[0]) + ";" + str(angles[1]) + ";" + str(angles[2])  
         
         return prefix+axis_values+cart_values
     

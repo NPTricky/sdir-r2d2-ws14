@@ -17,7 +17,6 @@ def PTPtoConfiguration(start_cfg, target_cfg, motiontype):
     trajectory = np.empty([100, 6])
 
     #TODO: Implement PTP (Replace pseudo implementation with your own code)! Consider the max. velocity and acceleration of each axis
-    #auf grad umstellen! nicht sicher wie....
     
     diff = target_cfg - start_cfg
     delta = diff / 100.0  
