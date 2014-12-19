@@ -75,6 +75,11 @@ def handleData(data):
         # adding dummy values for orientation and position (you need to compute the values)
         cart_values = "0;0;0;0;0;0"     
         
+        print "End Effector (OpenRave):\n"+str(m.GetEndEffectorTransform())
+        T = kin.forward(robot)
+        print "End Effector:\n"+str(T)
+        I = kin.inverse(robot, T)
+        
         return prefix+axis_values+cart_values
     
     # check if inverse kinematics should be calculated
@@ -119,7 +124,7 @@ if __name__ == "__main__":
     T = kin.forward(robot)
     print "End Effector:\n"+str(T)
     I = kin.inverse(robot, T)
-    #print I
+  #  print I
     
     dataTransfer()
     
