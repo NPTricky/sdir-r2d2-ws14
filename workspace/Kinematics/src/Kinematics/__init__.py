@@ -8,6 +8,8 @@ import socket
 SERVER_IP = '127.0.0.1'
 SERVER_PORT = 54321
 
+_DEBUG_DRAW = []
+
 # handles the data transfer between openrave (server) and the GUI (client)
 def dataTransfer():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -45,6 +47,7 @@ def handleData(data):
         axis_values = str(axis_arr[0])+";"+str(axis_arr[1])+";"+str(axis_arr[2])+";"+str(axis_arr[3])+";"+str(axis_arr[4])+";"+str(axis_arr[5])+'#'
         
         # adding dummy values for orientation and position (you need to compute the values)
+        T = kin.forward(robot)
         angles = kin.extract_euler_angles_from(T)
         cart_values = str(T[0,3]) + ";" + str(T[1,3]) + ";" + str(T[2,3]) + ";" + str(angles[0]) + ";" + str(angles[1]) + ";" + str(angles[2])
         
@@ -73,14 +76,15 @@ def handleData(data):
         # convert to string
         axis_values = str(axis_arr[0])+";"+str(axis_arr[1])+";"+str(axis_arr[2])+";"+str(axis_arr[3])+";"+str(axis_arr[4])+";"+str(axis_arr[5])+'#'
         
-        TNEW = kin.forward(robot)
+        T = kin.forward(robot)
+        
+        _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), T, 0.5, 2))
         # adding dummy values for orientation and position (you need to compute the values)
         #welche Matrix nehme ich? wie berechnen wir diese?
-        angles = kin.extract_euler_angles_from(TNEW)
-        cart_values = str(TNEW[0,3]) + ";" + str(TNEW[1,3]) + ";" + str(TNEW[2,3]) + ";" + str(angles[0]) + ";" + str(angles[1]) + ";" + str(angles[2])  
-        
-        I = kin.inverse(robot, kin.get_pose_from( TNEW))
-        
+        angles = kin.extract_euler_angles_from( T )
+        cart_values = str( str(kin.get_x(T)) + ";" + str(kin.get_y(T)) + ";" + str(kin.get_z(T)) + ";" + 
+                           str(angles[0]) + ";" + str(angles[1]) + ";" + str(angles[2]))  
+                
         return prefix+axis_values+cart_values
     
     # check if inverse kinematics should be calculated
@@ -89,16 +93,23 @@ def handleData(data):
         values = data_arr[1].split(';')
         
         # calculate inverse kinematic solution
+        pose = [ float(values[0]), float(values[1]), float(values[2]), 
+                 float(values[3]), float(values[4]), float(values[5]) ]
         
+        _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), kin.get_matrix_from( pose), 0.5, 2))
+        
+        I = kin.inverse( pose )
+
         # send the (multiple) solutions to the GUI
         # prefix for parsing
         prefix = "INK#"
-        
-        # adding dummy values (you need to replace them with the solutions)
-        ik_values = "0;0;0;0;0;0"
-        
+            
+        if 0 < len(I):                         
+            ik_values = str(I[0][0]) + ";" + str(I[0][1]) + ";" + str(I[0][2]) + ";" + str(I[0][3]) + ";" + str(I[0][4]) + ";" + str(I[0][5])      
+        else:
+            ik_values = "not possible"
+            
         return prefix+ik_values
-    
     
 if __name__ == "__main__":
     np.set_printoptions(precision=4)
@@ -122,16 +133,16 @@ if __name__ == "__main__":
     #H.append(misc.DrawAxes(robot.GetEnv(), m.GetEndEffectorTransform(), 0.5, 2))
     #H.append(misc.DrawAxes(robot.GetEnv(), m.GetBase().GetTransform(), 0.5, 2))
 
-    T = kin.forward(robot)
-    angles = kin.extract_euler_angles_from(T)
-    print angles[0]
-    print "End Effector:\n"+str(T)
+    #T = kin.forward(robot)
+    #angles = kin.extract_euler_angles_from(T)
+    #print angles[0]
+    #print "End Effector:\n"+str(T)
 
-    print  kin.get_pose_from(T)
-    I = kin.inverse(robot, kin.get_pose_from(T))
-  #  print I
+    #print  kin.get_pose_from(T)
+    #I = kin.inverse(kin.get_pose_from(T))
+    #print I
     
-    configList = [[0,0,0,0,90,0], [90,0,0,0,0,0]] 
-    config = kin.selectConfiguration(configList)
+    #configList = [[0,0,0,0,90,0], [90,0,0,0,0,0]] 
+    #config = kin.selectConfiguration(configList)
     
     dataTransfer()

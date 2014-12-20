@@ -210,7 +210,7 @@ class GUI(QtGui.QWidget):
         self.lineedit_cartptp_b = QtGui.QLineEdit('0', self) 
         self.lineedit_cartptp_c = QtGui.QLineEdit('0', self)
         # set up the line edit box for the multiple kinematic solutions
-        self.lineedit_cartptp_box = QtGui.QLineEdit(self)
+        self.lineedit_cartptp_box = QtGui.QTextEdit(self)
         self.lineedit_cartptp_box.setSizePolicy(QtGui.QSizePolicy.Expanding,QtGui.QSizePolicy.Expanding)
         # set up button for the calculation
         self.button_calculate = QtGui.QPushButton('Calculate IK', self)
@@ -329,7 +329,22 @@ class GUI(QtGui.QWidget):
     
     # update UI with multiple inverse kinematic solutions
     def updateINK(self, data):
-        self.lineedit_cartptp_box.setText(data[1])
+        
+        values = data[1].split(';')
+        
+        text = ""
+        
+        if len(values) == 1:
+            text = values[0] 
+        elif len(values) == 6:
+            text = str( str( round( mp.degrees( float( values[0])), 6)) + '\n' + 
+                        str( round( mp.degrees( float( values[1])), 6)) + '\n' + 
+                        str( round( mp.degrees( float( values[2])), 6)) + '\n' + 
+                        str( round( mp.degrees( float( values[3])), 6)) + '\n' + 
+                        str( round( mp.degrees( float( values[4])), 6)) + '\n' + 
+                        str( round( mp.degrees( float( values[5])), 6))  )
+        
+        self.lineedit_cartptp_box.setText(text)
     
     
 def main():
