@@ -161,37 +161,36 @@ def extract_euler_angles_from(matrix):
 """
 @type pose: position and rotation of a point
 @param pose: point in robot coordinate system were move the robot
-@rtype: configuration of angles, angles in radiant
+@rtype: configurations of angles, angle in radiant
 @return: configuration for each joint of the robot
 """
 def inverse(pose):
     """
     # calculate position of wrist point in coordinate system 0 and theta0
     """
-    theta0_0, theta0_1, P_wp0 = determin_theta0a_theta0b_and_wp0(pose)
+    theta0_0, theta0_1, P_wp0 = determine_theta0a_theta0b_and_wp0(pose)
         
     """    
     # calculate position of wrist point in coordinate system 1 and  theta1
     """
-    theta1_00, theta1_01, P_wp1_0 = determin_theta1a_theta1b_and_wp1(theta0_0, P_wp0)
-    theta1_10, theta1_11, P_wp1_1 = determin_theta1a_theta1b_and_wp1(theta0_1, P_wp0)  
+    theta1_00, theta1_01, P_wp1_0 = determine_theta1a_theta1b_and_wp1(theta0_0, P_wp0)
+    theta1_10, theta1_11, P_wp1_1 = determine_theta1a_theta1b_and_wp1(theta0_1, P_wp0)  
     
     """
     # calculate the position of wrist point in coordinate system 2 and theta2
     """
-    theta2_00, P_wp2_00 = determin_theta2_and_wp2( theta1_00, P_wp1_0 )
-    theta2_01, P_wp2_01 = determin_theta2_and_wp2( theta1_01, P_wp1_0 )
-    theta2_10, P_wp2_10 = determin_theta2_and_wp2( theta1_10, P_wp1_1 )
-    theta2_11, P_wp2_11 = determin_theta2_and_wp2( theta1_11, P_wp1_1 )
+    theta2_00, P_wp2_00 = determine_theta2_and_wp2( theta1_00, P_wp1_0 )
+    theta2_01, P_wp2_01 = determine_theta2_and_wp2( theta1_01, P_wp1_0 )
+    theta2_10, P_wp2_10 = determine_theta2_and_wp2( theta1_10, P_wp1_1 )
+    theta2_11, P_wp2_11 = determine_theta2_and_wp2( theta1_11, P_wp1_1 )
     
     """
     # calculate of theta_3, theta_4 and theta_5
     """
-    theta3_000, theta3_001, theta4_000, theta4_001, theta5_000, theta5_001 = determin_theta3a_theta3b_theta4a_theta5b_theta5a_theta5b(theta0_0, theta1_00, theta2_00, pose)
-    theta3_010, theta3_011, theta4_010, theta4_011, theta5_010, theta5_011 = determin_theta3a_theta3b_theta4a_theta5b_theta5a_theta5b(theta0_0, theta1_01, theta2_01, pose)
-    theta3_100, theta3_101, theta4_100, theta4_101, theta5_100, theta5_101 = determin_theta3a_theta3b_theta4a_theta5b_theta5a_theta5b(theta0_1, theta1_10, theta2_10, pose)
-    theta3_110, theta3_111, theta4_110, theta4_111, theta5_110, theta5_111 = determin_theta3a_theta3b_theta4a_theta5b_theta5a_theta5b(theta0_1, theta1_11, theta2_11, pose)
-    
+    theta3_000, theta3_001, theta4_000, theta4_001, theta5_000, theta5_001 = determine_theta3a_theta3b_theta4a_theta5b_theta5a_theta5b(theta0_0, theta1_00, theta2_00, pose)
+    theta3_010, theta3_011, theta4_010, theta4_011, theta5_010, theta5_011 = determine_theta3a_theta3b_theta4a_theta5b_theta5a_theta5b(theta0_0, theta1_01, theta2_01, pose)
+    theta3_100, theta3_101, theta4_100, theta4_101, theta5_100, theta5_101 = determine_theta3a_theta3b_theta4a_theta5b_theta5a_theta5b(theta0_1, theta1_10, theta2_10, pose)
+    theta3_110, theta3_111, theta4_110, theta4_111, theta5_110, theta5_111 = determine_theta3a_theta3b_theta4a_theta5b_theta5a_theta5b(theta0_1, theta1_11, theta2_11, pose)
     
     """
     # create the configurations
@@ -217,18 +216,20 @@ def inverse(pose):
 @rtype: three values; theta0a and theta0b in radiant and the wrist point in position and rotation of a point
 @return: theta0a, theta0b of joint 0 and position of wrist point in coordinate system 0
 """
-def determin_theta0a_theta0b_and_wp0(pose):
+def determine_theta0a_theta0b_and_wp0(pose):
 
-    # determin of the wrist point matrix for ks0
+    # determine of the wrist point matrix for ks0
     P_wp0 = get_matrix_from( pose) * _TOOL
     
-    # theta 0 / 1
-    theta0a = math.atan2( -get_y( P_wp0), get_x( P_wp0))
-   
-    # theta 0 / 2
+    if isOverheadSingularity(P_wp0):
+        theta0a = 0.0
+    else:
+        theta0a = math.atan2( -get_y( P_wp0), get_x( P_wp0))
+     
     theta0b = theta0a + np.pi if theta0a < 0 else theta0a - np.pi
 
     return theta0a, theta0b, P_wp0
+
 
 """
 @type theta0: angle in radiant
@@ -238,7 +239,7 @@ def determin_theta0a_theta0b_and_wp0(pose):
 @rtype: three values; theta1a and theta1b in radiant and the wrist point in position and rotation of a point
 @return: theta1a, theta1b of joint 1 and position of wrist point in coordinate system 1
 """
-def determin_theta1a_theta1b_and_wp1(theta0, wp0):
+def determine_theta1a_theta1b_and_wp1(theta0, wp0):
     
     if theta0 is None or wp0 is None:
         return None, None
@@ -248,7 +249,7 @@ def determin_theta1a_theta1b_and_wp1(theta0, wp0):
     # wrist point matrix form ks1 for theta0_0
     P_wp1 = np.linalg.inv( homogeneous_transformation_from( theta0, 0)) * wp0
     
-    # determin of theta0_00 and theta0_01 for theta0_0
+    # determine of theta0_00 and theta0_01 for theta0_0
     d_wp2 = math.sqrt( math.pow( get_x(P_wp1), 2) + math.pow( get_y(P_wp1), 2))
 
     # check, it is not possible to reach the wrist point
@@ -263,6 +264,7 @@ def determin_theta1a_theta1b_and_wp1(theta0, wp0):
    
     return theta1a, theta1b, P_wp1
 
+
 """
 @type theta1: angle in radiant
 @param theta1: angle of joint 1
@@ -271,7 +273,7 @@ def determin_theta1a_theta1b_and_wp1(theta0, wp0):
 @rtype: two values; theta2 in radiant and the wrist point in position and rotation of a point
 @return: theta2 of joint 2 and position of wrist point in coordinate system 2
 """
-def determin_theta2_and_wp2(theta1, wp1):
+def determine_theta2_and_wp2(theta1, wp1):
     
     if theta1 is None or wp1 is None:
         return None, None
@@ -298,28 +300,56 @@ def determin_theta2_and_wp2(theta1, wp1):
 @rtype: six values; theta3a, theta3b, theta4a, theta4b, theta5a and theta5b in radiant 
 @return: angles for joint 3 to 6
 """
-def determin_theta3a_theta3b_theta4a_theta5b_theta5a_theta5b(theta0, theta1, theta2, pose):
+def determine_theta3a_theta3b_theta4a_theta5b_theta5a_theta5b(theta0, theta1, theta2, pose):
     
     if theta0 is None or theta1 is None or theta2 is None:
         return None, None, None, None, None, None
     
-    # calculate position of wrist orientation in coordinate system 3 to 6 for theta_4, theta_5 and theta_6
+    # calculate position of wrist orientation in coordinate system 3 to 5 for theta_3, theta_4 and theta_5
     T_0_1 = homogeneous_transformation_from(theta0,0)
     T_1_2 = homogeneous_transformation_from(theta1,1)
     T_2_3 = homogeneous_transformation_from(theta2,2)
-                
-    T_4_6 = np.linalg.inv( T_0_1 * T_1_2 * T_2_3 ) *  get_matrix_from( pose ) * np.linalg.inv( _TOOL )
-
-    theta3a = math.atan2( T_4_6[1,2],  T_4_6[0,2])    
-    theta4a = math.atan2(math.sqrt(math.pow(T_4_6[0,2], 2) + math.pow(T_4_6[1,2], 2)), T_4_6[2,2])
-    theta5a = math.atan2( T_4_6[2,0], -T_4_6[2,1]) 
-
+    
+    A = get_matrix_from( pose )
+    
+    T_3_5 = np.linalg.inv( T_0_1 * T_1_2 * T_2_3 ) *  A * np.linalg.inv( _TOOL )
+    
+    if isWristSingularity(T_3_5):
+        theta3a = 0.0
+        theta4a = 0.0
+        theta5a = math.atan2( -A[2,0], A[2,1])
+    else:    
+        theta3a = math.atan2( T_3_5[1,2],  T_3_5[0,2])    
+        theta4a = math.atan2(math.sqrt(math.pow(T_3_5[0,2], 2) + math.pow(T_3_5[1,2], 2)), T_3_5[2,2])
+        theta5a = math.atan2( T_3_5[2,0], -T_3_5[2,1]) 
+            
     theta3b = theta3a + np.pi
     theta4b = -theta4a
     theta5b = theta5a + np.pi    
     
     return theta3a, theta3b, theta4a, theta4b, theta5a, theta5b
     
+    
+"""
+@type pose: position and rotation of a point
+@param pose: point in robot coordinate system were move the robot
+@rtype: configurations of angles, angle in radiant
+@return: configuration for each joint of the robot
+
+def get_best_invese_solution(robot, configurations)
+    
+    current_angles = robot.getDOFValues()
+    
+    
+    if abs(configurations[0][0] - current_angles[0]) < abs(configurations[3][0] - current_angles[0]):
+        abs(configurations[0][1] + configurations[0][2] - current_angles[1] - current_angles[2]) < abs(configurations[1][1] + configurations[1][2] - current_angles[1] - current_angles[2])
+    
+    else:
+    
+    
+    
+    return
+"""
 """
 @type theta_4: angle in radiant
 @param theta_4: joint angle of joint 4
@@ -385,15 +415,15 @@ def checkSingularity(angles, wp):
         return False
 
 def isOverheadSingularity(WP):
-    print WP[0,3], WP[1,3]
-    if WP[0,3] == 0 and WP[1,3] == 0:
+    #print WP[0,3], WP[1,3]
+    if round(WP[0,3],6) == 0 and round( WP[1,3],6) == 0:
        return True
        
     return False
 
 def isWristSingularity(T4to6):
-    print T4to6[0,3], T4to6[1,3]
-    if T4to6[0,3] == 0 and T4to6[1,3] == 0:
+    #print T4to6[0,3], T4to6[1,3]
+    if round(T4to6[0,3],6) == 0 and round(T4to6[1,3],6) == 0:
        return True
        
     return False
