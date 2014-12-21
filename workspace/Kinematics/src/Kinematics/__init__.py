@@ -48,8 +48,10 @@ def handleData(data):
         
         # adding dummy values for orientation and position (you need to compute the values)
         T = kin.forward(robot)
-        angles = kin.extract_euler_angles_from(T)
-        cart_values = str(T[0,3]) + ";" + str(T[1,3]) + ";" + str(T[2,3]) + ";" + str(angles[0]) + ";" + str(angles[1]) + ";" + str(angles[2])
+        
+        pose = kin.get_pose_from( T )
+        cart_values = str( str(pose[0]) + ";" + str(pose[1]) + ";" + str(pose[2]) + ";" + 
+                           str(pose[3]) + ";" + str(pose[4]) + ";" + str(pose[5]))  
         
         return prefix+axis_values+cart_values
     
@@ -76,14 +78,16 @@ def handleData(data):
         # convert to string
         axis_values = str(axis_arr[0])+";"+str(axis_arr[1])+";"+str(axis_arr[2])+";"+str(axis_arr[3])+";"+str(axis_arr[4])+";"+str(axis_arr[5])+'#'
         
+        # adding dummy values for orientation and position (you need to compute the values)
+        #welche Matrix nehme ich? wie berechnen wir diese?
+        
         T = kin.forward(robot)
         
         _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), T, 0.5, 2))
-        # adding dummy values for orientation and position (you need to compute the values)
-        #welche Matrix nehme ich? wie berechnen wir diese?
-        angles = kin.extract_euler_angles_from( T )
-        cart_values = str( str(kin.get_x(T)) + ";" + str(kin.get_y(T)) + ";" + str(kin.get_z(T)) + ";" + 
-                           str(angles[0]) + ";" + str(angles[1]) + ";" + str(angles[2]))  
+        
+        pose = kin.get_pose_from( T )
+        cart_values = str( str(pose[0]) + ";" + str(pose[1]) + ";" + str(pose[2]) + ";" + 
+                           str(pose[3]) + ";" + str(pose[4]) + ";" + str(pose[5]))  
                 
         return prefix+axis_values+cart_values
     
@@ -96,21 +100,8 @@ def handleData(data):
         pose = [ float(values[0]), float(values[1]), float(values[2]), 
                  float(values[3]), float(values[4]), float(values[5]) ]
         
-        _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), kin.get_matrix_from( pose), 0.5, 2))
-        
         I = kin.inverse( pose )
-        
-        print str(len(I))
-        
-        for j in I:
-            text =""
-            for i in j:
-                text += str( str(np.degrees( float(i))) + '\t' )
-            print text
-        
-        conf = mf.get_best_invese_solution(robot, I)
-        
-        print str(conf)
+        conf = mf.get_fastest_invese_solution(robot, I)
         
         # send the (multiple) solutions to the GUI
         # prefix for parsing
@@ -121,6 +112,25 @@ def handleData(data):
         else:
             ik_values = "not possible"
             
+
+        _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), kin.get_matrix_from( pose), 0.5, 2))
+        
+        for j in I:
+            text =""
+            for i in j:
+                text += str( str(np.degrees( float(i))) + '\t' )
+        
+        I = mf.get_possible_inverse_solution(robot, I)
+        
+        for j in I:
+            text =""
+            for i in j:
+                text += str( str(np.degrees( float(i))) + '\t' )
+            print text
+        
+        print str(conf)
+        
+        
         return prefix+ik_values
     
 if __name__ == "__main__":

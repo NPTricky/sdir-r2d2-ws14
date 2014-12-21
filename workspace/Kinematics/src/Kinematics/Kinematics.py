@@ -254,10 +254,11 @@ def determine_theta1a_theta1b_and_wp1(theta0, wp0):
     d_wp2 = math.sqrt( math.pow( get_x(P_wp1), 2) + math.pow( get_y(P_wp1), 2))
 
     # check, it is not possible to reach the wrist point
-    if d_h + get_a(1) < d_wp2:
+    x = (-math.pow( d_h, 2) + math.pow( d_wp2, 2) + math.pow( get_a(1), 2)) / ( 2 * d_wp2 * get_a(1))
+    if x < -1 or 1 < x:
         return None, None, None
-
-    alpha_h1 = mp.acos( ( -math.pow( d_h, 2) + math.pow( d_wp2, 2) + math.pow( get_a(1), 2)) / ( 2 * d_wp2 * get_a(1)))
+    
+    alpha_h1 = math.acos( x )
     alpha_h2 = math.atan2( -get_x(P_wp1), -get_y(P_wp1))
     
     theta1a = alpha_h2 + alpha_h1
