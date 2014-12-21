@@ -99,13 +99,25 @@ def handleData(data):
         _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), kin.get_matrix_from( pose), 0.5, 2))
         
         I = kin.inverse( pose )
-
+        
+        print str(len(I))
+        
+        for j in I:
+            text =""
+            for i in j:
+                text += str( str(np.degrees( float(i))) + '\t' )
+            print text
+        
+        conf = mf.get_best_invese_solution(robot, I)
+        
+        print str(conf)
+        
         # send the (multiple) solutions to the GUI
         # prefix for parsing
         prefix = "INK#"
             
-        if 0 < len(I):                         
-            ik_values = str(I[0][0]) + ";" + str(I[0][1]) + ";" + str(I[0][2]) + ";" + str(I[0][3]) + ";" + str(I[0][4]) + ";" + str(I[0][5])      
+        if 0 < len(conf):                         
+            ik_values = str(conf[0]) + ";" + str(conf[1]) + ";" + str(conf[2]) + ";" + str(conf[3]) + ";" + str(conf[4]) + ";" + str(conf[5])      
         else:
             ik_values = "not possible"
             

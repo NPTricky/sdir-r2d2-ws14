@@ -34,9 +34,39 @@ def PTPtoConfiguration(start_cfg, target_cfg, motiontype):
 def Move(robot, trajectory):
     for i in range(trajectory.shape[0]):
         robot.SetDOFValues(trajectory[i])
+        #kin.forward(robot)
         time.sleep(0.01)
 
 
+    
+"""
+@type pose: position and rotation of a point
+@param pose: point in robot coordinate system were move the robot
+@rtype: configurations of angles, angle in radiant
+@return: configuration for each joint of the robot
+"""
+def get_best_invese_solution(robot, configurations):
+
+    current_angles = robot.GetDOFValues()
+    velocity_limits = robot.GetDOFVelocityLimits()
+    
+    
+    t_min = 999999
+    best_conf = []
+    for j in range(0, len(configurations)):
+    
+        t_cur = 0
+        for i in range(0, len(configurations[j])):
+            t_cur += np.abs(configurations[j][i] - current_angles[i]) / velocity_limits[i]
+        
+        if t_cur < t_min:
+            t_min = t_cur
+            best_conf = configurations[j]
+        
+    return best_conf
+
+
+        
 def velocity(robot, pose):
     
     
