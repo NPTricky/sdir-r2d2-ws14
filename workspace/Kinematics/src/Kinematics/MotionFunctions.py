@@ -3,6 +3,7 @@ import time
 import Kinematics as kin
 from sympy.mpmath import *
 import math
+import sys
 
 def PTPtoConfiguration(robot, target_cfg, motiontype):
     """PTP path planning
@@ -55,7 +56,7 @@ def get_fastest_inverse_solution(robot, configurations):
     # calculate the movement time for each configuration and give back
     # the fastet configuration
     # the function checked, if the angle for this robot possible
-    t_min = 999999
+    t_min = sys.maxsize
     ret_value = []
     for config in configurations:
     
@@ -66,7 +67,7 @@ def get_fastest_inverse_solution(robot, configurations):
                 possible = False
                 break
             
-            t_conf += np.abs(config[i] - current_angles[i]) / velocity_limits[i]
+            t_conf += np.fabs(config[i] - current_angles[i]) / velocity_limits[i]
         
         if possible and t_conf < t_min:
             t_min = t_conf
@@ -121,7 +122,7 @@ def limits_and_times_asynchronous(robot, distance, velocity_limit, acceleration_
         if (distance[i] < 1e-12): continue
         
         # maximum amplitude of velocity ramp (triangle situation)
-        v_limit = mp.sqrt(distance[i]) * robot.GetDOFAccelerationLimits()[i]
+        v_limit = mp.sqrt(distance[i] * robot.GetDOFAccelerationLimits()[i])
         velocity_limit[i] = min(v_limit,robot.GetDOFVelocityLimits()[i])
         
         # maximum acceleration
