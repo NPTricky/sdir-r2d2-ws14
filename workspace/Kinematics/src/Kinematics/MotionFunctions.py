@@ -46,7 +46,7 @@ def Move(robot, trajectory):
 @rtype: configurations of angles, angle in radiant
 @return: configuration for each joint of the robot
 """
-def get_fastest_invese_solution(robot, configurations):
+def get_fastest_inverse_solution(robot, configurations):
 
     limit_angles = robot.GetDOFLimits()
     current_angles = robot.GetDOFValues()

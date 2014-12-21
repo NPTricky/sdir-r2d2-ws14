@@ -101,7 +101,7 @@ def handleData(data):
                  float(values[3]), float(values[4]), float(values[5]) ]
         
         I = kin.inverse( pose )
-        conf = mf.get_fastest_invese_solution(robot, I)
+        conf = mf.get_fastest_inverse_solution(robot, I)
         
         # send the (multiple) solutions to the GUI
         # prefix for parsing
