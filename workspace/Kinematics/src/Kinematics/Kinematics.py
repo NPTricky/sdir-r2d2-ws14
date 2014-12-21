@@ -60,8 +60,8 @@ def get_z(matrix):
 @return: position and rotation of a point
 """
 def get_pose_from(matrix):
-    euler_angle = extract_euler_angles_from(matrix)
-    return np.array(((get_x(matrix),get_y(matrix),get_z(matrix),euler_angle[0], euler_angle[1], euler_angle[2])))
+    alpha, beta, gamma = extract_euler_angles_from(matrix)
+    return get_x(matrix), get_y(matrix), get_z(matrix), alpha, beta, gamma
 
 
 """ 
@@ -103,7 +103,8 @@ def forward(robot):
     # apply the denavit-hartenberg parameters for homogeneous transformation
     for i in range(0, robot.GetDOF()):
         A = A * homogeneous_transformation_from(robot.GetDOFValues()[i], i)
-        #_DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), A, 0.5, 2))
+
+    _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), A, 0.5, 2))
     
     # for debug purposes without tool
     # transform the tool into the coordinate system of the base
@@ -253,10 +254,11 @@ def determine_theta1a_theta1b_and_wp1(theta0, wp0):
     d_wp2 = math.sqrt( math.pow( get_x(P_wp1), 2) + math.pow( get_y(P_wp1), 2))
 
     # check, it is not possible to reach the wrist point
-    if d_h + get_a(1) < d_wp2:
+    x = (-math.pow( d_h, 2) + math.pow( d_wp2, 2) + math.pow( get_a(1), 2)) / ( 2 * d_wp2 * get_a(1))
+    if x < -1 or 1 < x:
         return None, None, None
-
-    alpha_h1 = mp.acos( ( -math.pow( d_h, 2) + math.pow( d_wp2, 2) + math.pow( get_a(1), 2)) / ( 2 * d_wp2 * get_a(1)))
+    
+    alpha_h1 = math.acos( x )
     alpha_h2 = math.atan2( -get_x(P_wp1), -get_y(P_wp1))
     
     theta1a = alpha_h2 + alpha_h1
@@ -319,37 +321,17 @@ def determine_theta3a_theta3b_theta4a_theta5b_theta5a_theta5b(theta0, theta1, th
         theta4a = 0.0
         theta5a = math.atan2( -A[2,0], A[2,1])
     else:    
-        theta3a = math.atan2( T_3_5[1,2],  T_3_5[0,2])    
+        theta3a = math.atan2( -T_3_5[1,2], T_3_5[0,2])    
         theta4a = math.atan2(math.sqrt(math.pow(T_3_5[0,2], 2) + math.pow(T_3_5[1,2], 2)), T_3_5[2,2])
         theta5a = math.atan2( T_3_5[2,0], -T_3_5[2,1]) 
             
-    theta3b = theta3a + np.pi
+    theta3b = theta3a + np.pi if theta3a < 0 else theta3a - np.pi  
     theta4b = -theta4a
-    theta5b = theta5a + np.pi    
+    theta5b = theta5a + np.pi if theta5a < 0 else theta5a - np.pi
     
     return theta3a, theta3b, theta4a, theta4b, theta5a, theta5b
-    
-    
-"""
-@type pose: position and rotation of a point
-@param pose: point in robot coordinate system were move the robot
-@rtype: configurations of angles, angle in radiant
-@return: configuration for each joint of the robot
 
-def get_best_invese_solution(robot, configurations)
     
-    current_angles = robot.getDOFValues()
-    
-    
-    if abs(configurations[0][0] - current_angles[0]) < abs(configurations[3][0] - current_angles[0]):
-        abs(configurations[0][1] + configurations[0][2] - current_angles[1] - current_angles[2]) < abs(configurations[1][1] + configurations[1][2] - current_angles[1] - current_angles[2])
-    
-    else:
-    
-    
-    
-    return
-"""
 """
 @type theta_4: angle in radiant
 @param theta_4: joint angle of joint 4
