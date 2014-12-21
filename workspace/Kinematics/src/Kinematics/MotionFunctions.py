@@ -19,7 +19,7 @@ def PTPtoConfiguration(robot, target_cfg, motiontype):
     :type robot: model of the robot
     :param target_cfg: Target angle of the robot
     :type target_cfg: array of floats
-    :param motiontype: Type of motion (asynchronous, synchronous, fully synchronous)
+    :param motiontype: Type of motion (asynchronous, synchronous, fully synchronous, linear movement)
     :type motiontype: int
     :returns: Array containing the axis angles of the interpolated path
     :rtype: matrix of floats
@@ -32,6 +32,7 @@ def PTPtoConfiguration(robot, target_cfg, motiontype):
     #TODO: Implement PTP (Replace pseudo implementation with your own code)! Consider the max. velocity and acceleration of each axis
     velocity_limit, acceleration_limit, times_acc, times_dec, times_end = limits_and_times(robot, distance, motiontype)
     velocity_limit, acceleration_limit, times_acc, times_dec, times_end = discretize(velocity_limit, acceleration_limit, times_acc, times_dec, times_end)
+        
     trajectory = generate_trajectory(start_cfg, target_cfg, velocity_limit, acceleration_limit, times_acc, times_dec, times_end)
     
     return trajectory   
@@ -108,15 +109,16 @@ def generate_trajectory(start_cfg, target_cfg, velocity_limit, acceleration_limi
     time_steps_end = times_end / _SAMPLE_RATE
     time_steps_dec = times_dec / _SAMPLE_RATE
     
+    entries = int( 1/_SAMPLE_RATE)
     # improvised
-    trajectory = np.empty([100, 6])
+    trajectory = np.empty([entries, 6])
     diff = target_cfg - start_cfg
-    delta = diff / 100.0  
+    delta = diff / entries  
     
-    for i in xrange(100):
+    for i in xrange(entries):
         trajectory[i] = start_cfg + (i*delta)
         
-    trajectory[99] = target_cfg
+    trajectory[ entries - 1 ] = target_cfg
     
     return trajectory
 
@@ -161,11 +163,11 @@ def limits_and_times(robot, distance, motiontype):
     times_dec = np.zeros(robot.GetDOF()) # deceleration start time
     times_end = np.zeros(robot.GetDOF()) # total motion time
     
-    if motiontype == 0: # asynchronous
+    if motiontype == "A": # asynchronous
         velocity_limit, acceleration_limit, times_acc, times_dec, times_end = limits_and_times_asynchronous(robot, distance, velocity_limit, acceleration_limit, times_acc, times_dec, times_end)
-    elif motiontype == 1: # synchronous
+    elif motiontype == "S": # synchronous
         velocity_limit, acceleration_limit, times_acc, times_dec, times_end = limits_and_times_synchronous(robot, distance, velocity_limit, acceleration_limit, times_acc, times_dec, times_end)    
-    elif motiontype == 2: # full synchronous
+    elif motiontype == "F": # full synchronous
         velocity_limit, acceleration_limit, times_acc, times_dec, times_end = limits_and_times_full_synchronous(robot, distance, velocity_limit, acceleration_limit, times_acc, times_dec, times_end)
     else: # default to asynchronous
         velocity_limit, acceleration_limit, times_acc, times_dec, times_end = limits_and_times_asynchronous(robot, distance, velocity_limit, acceleration_limit, times_acc, times_dec, times_end)
@@ -184,7 +186,7 @@ def limits_and_times_asynchronous(robot, distance, velocity_limit, acceleration_
 
     # points in time
     times_acc = velocity_limit / acceleration_limit
-    times_end = (distance / velocity_limit) / times_acc
+    times_end = (distance / velocity_limit) + times_acc
     times_dec = times_end - times_acc
     
     return velocity_limit, acceleration_limit, times_acc, times_dec, times_end

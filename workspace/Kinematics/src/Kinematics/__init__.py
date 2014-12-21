@@ -64,7 +64,7 @@ def handleData(data):
                 
         # get the motion type
         motion_type = data_arr[2]
-        
+                
         # get trajectory
         trajectory = mf.PTPtoConfiguration(robot, target, motion_type)
         # move robot
