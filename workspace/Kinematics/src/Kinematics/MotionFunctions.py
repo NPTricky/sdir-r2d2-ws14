@@ -1,10 +1,18 @@
 import numpy as np
 import time
 import Kinematics as kin
-from sympy.mpmath import *
 import math
 import sys
 
+# e.g. 0.1, 0.01 or 0.001
+_SAMPLE_RATE = 0.01
+# length of the string minus 2, to subtract the two letters "0."
+_SAMPLE_RATE_DECIMAL = len(str(_SAMPLE_RATE)) - 2
+# requirement to simulate a np.ceil() by np.round()
+_SAMPLE_RATE_CEIL_OFFSET = _SAMPLE_RATE / 2
+
+_EPS = 1e-12
+ 
 def PTPtoConfiguration(robot, target_cfg, motiontype):
     """PTP path planning
     :param robot: robot instance
@@ -18,29 +26,26 @@ def PTPtoConfiguration(robot, target_cfg, motiontype):
     """
     # current axis angles of the robot - array of floats
     start_cfg = robot.GetDOFValues();
-        
-    trajectory = np.empty([100, 6])
-
+    distance = np.fabs(target_cfg - start_cfg)
+    distance = distance.clip(min = _EPS)
+    
     #TODO: Implement PTP (Replace pseudo implementation with your own code)! Consider the max. velocity and acceleration of each axis
-    velocity_limit, acceleration_limit, times_acc, times_dec, times_end = limits_and_times(robot, start_cfg, target_cfg, motiontype)
-    
-    diff = target_cfg - start_cfg
-    delta = diff / 100.0  
-    
-    for i in xrange(100):
-        trajectory[i] = start_cfg + (i*delta)
-        
-    trajectory[99] = target_cfg
+    velocity_limit, acceleration_limit, times_acc, times_dec, times_end = limits_and_times(robot, distance, motiontype)
+    velocity_limit, acceleration_limit, times_acc, times_dec, times_end = discretize(velocity_limit, acceleration_limit, times_acc, times_dec, times_end)
+    trajectory = generate_trajectory(start_cfg, target_cfg, velocity_limit, acceleration_limit, times_acc, times_dec, times_end)
     
     return trajectory   
-    
+
+
+
 def Move(robot, trajectory):
     for i in range(trajectory.shape[0]):
         robot.SetDOFValues(trajectory[i])
         kin.forward(robot)
-        time.sleep(0.01)
+        time.sleep(_SAMPLE_RATE)
 
-    
+
+
 """
 @type pose: position and rotation of a point
 @param pose: point in robot coordinate system were move the robot
@@ -54,7 +59,7 @@ def get_fastest_inverse_solution(robot, configurations):
     velocity_limits = robot.GetDOFVelocityLimits()
        
     # calculate the movement time for each configuration and give back
-    # the fastet configuration
+    # the fastest configuration
     # the function checked, if the angle for this robot possible
     t_min = sys.maxsize
     ret_value = []
@@ -74,7 +79,9 @@ def get_fastest_inverse_solution(robot, configurations):
             ret_value = config
         
     return ret_value
-    
+
+
+
 def get_possible_inverse_solution(robot, configurations):
     
     angle_limits = robot.GetDOFLimits()
@@ -93,10 +100,60 @@ def get_possible_inverse_solution(robot, configurations):
     
     return ret_value
 
-def limits_and_times(robot, start_cfg, target_cfg, motiontype):
-    # given
-    distance = np.fabs(target_cfg - start_cfg)
+
+
+def generate_trajectory(start_cfg, target_cfg, velocity_limit, acceleration_limit, times_acc, times_dec, times_end):
+    # calculate the number of discrete time steps
+    time_steps_acc = times_acc / _SAMPLE_RATE
+    time_steps_end = times_end / _SAMPLE_RATE
+    time_steps_dec = times_dec / _SAMPLE_RATE
     
+    # improvised
+    trajectory = np.empty([100, 6])
+    diff = target_cfg - start_cfg
+    delta = diff / 100.0  
+    
+    for i in xrange(100):
+        trajectory[i] = start_cfg + (i*delta)
+        
+    trajectory[99] = target_cfg
+    
+    return trajectory
+
+
+
+def discretize(velocity_limit, acceleration_limit, times_acc, times_dec, times_end):
+    
+    # adjust times_acc, times_dec, times_end to satisfy
+    #  - n = number of discrete time steps
+    #  - h = _SAMPLE_RATE
+    #
+    # times_acc = n_acc * h, n_acc element of N+
+    # times_end = n_end * h, n_end element of N+
+    # times_dec = n_dec * h, n_dec element of N+
+
+    # acceleration stop time
+    times_acc_discrete = np.round(times_acc + _SAMPLE_RATE_CEIL_OFFSET, _SAMPLE_RATE_DECIMAL)
+
+    # cross-multiplication to scale the acceleration limit to the new times_acc
+    scalar = (1 / times_acc_discrete) * times_acc
+    acceleration_limit_discrete = acceleration_limit * scalar
+ 
+    # total motion time
+    times_end_discrete = np.round(times_end + (times_acc_discrete - times_acc) + _SAMPLE_RATE_CEIL_OFFSET, _SAMPLE_RATE_DECIMAL)
+    
+    # cross-multiplication to scale the velocity limit to the new times_end
+    scalar = (1 / times_end_discrete) * times_end
+    velocity_limit_discrete = velocity_limit * scalar
+    
+    # deceleration start time
+    times_dec_discrete = times_end_discrete - times_acc_discrete
+
+    return velocity_limit_discrete, acceleration_limit_discrete, times_acc_discrete, times_dec_discrete, times_end_discrete
+
+
+
+def limits_and_times(robot, distance, motiontype):
     # calculate
     velocity_limit = np.zeros(robot.GetDOF())
     acceleration_limit = np.zeros(robot.GetDOF())
@@ -112,27 +169,24 @@ def limits_and_times(robot, start_cfg, target_cfg, motiontype):
         velocity_limit, acceleration_limit, times_acc, times_dec, times_end = limits_and_times_full_synchronous(robot, distance, velocity_limit, acceleration_limit, times_acc, times_dec, times_end)
     else: # default to asynchronous
         velocity_limit, acceleration_limit, times_acc, times_dec, times_end = limits_and_times_asynchronous(robot, distance, velocity_limit, acceleration_limit, times_acc, times_dec, times_end)
-                    
+    
     return velocity_limit, acceleration_limit, times_acc, times_dec, times_end
 
 
 
 def limits_and_times_asynchronous(robot, distance, velocity_limit, acceleration_limit, times_acc, times_dec, times_end):
-    for i in range(0, robot.GetDOF()):
-        if (distance[i] < 1e-12): continue
-        
-        # maximum amplitude of velocity ramp (triangle situation)
-        v_limit = mp.sqrt(distance[i] * robot.GetDOFAccelerationLimits()[i])
-        velocity_limit[i] = min(v_limit,robot.GetDOFVelocityLimits()[i])
-        
-        # maximum acceleration
-        acceleration_limit[i] = robot.GetDOFAccelerationLimits()[i]
-        
-        # points in time
-        times_acc[i] = velocity_limit[i] / robot.GetDOFAccelerationLimits()[i]
-        times_end[i] = (distance[i] / velocity_limit[i]) / times_acc[i]
-        times_dec[i] = times_end[i] - times_acc[i]
-        
+    # maximum acceleration
+    acceleration_limit = robot.GetDOFAccelerationLimits()
+    
+    # maximum amplitude of velocity ramp (triangle situation)
+    v_limit = np.sqrt(distance * acceleration_limit)
+    velocity_limit = np.minimum(v_limit,robot.GetDOFVelocityLimits())
+
+    # points in time
+    times_acc = velocity_limit / acceleration_limit
+    times_end = (distance / velocity_limit) / times_acc
+    times_dec = times_end - times_acc
+    
     return velocity_limit, acceleration_limit, times_acc, times_dec, times_end
 
 
@@ -144,15 +198,12 @@ def limits_and_times_synchronous(robot, distance, velocity_limit, acceleration_l
     temax_idx = np.where(times_end == times_end.max())
     temax = times_end[temax_idx][0]
     
-    for i in range(0, robot.GetDOF()):
-        if (distance[i] < 1e-12): continue
-        
-        velocity_limit[i] = (temax * robot.GetDOFAccelerationLimits()[i] / 2) - mp.sqrt((math.pow(temax, 2) * math.pow(robot.GetDOFAccelerationLimits()[i], 2) / 4) - robot.GetDOFAccelerationLimits()[i] * distance[i])
-        
-        # points in time
-        times_acc[i] = velocity_limit[i] / robot.GetDOFAccelerationLimits()[i]
-        times_end[i] = temax
-        times_dec[i] = times_end[i] - times_acc[i]
+    velocity_limit = (temax * acceleration_limit / 2) - np.sqrt((math.pow(temax, 2) * math.pow(acceleration_limit, 2) / 4) - acceleration_limit * distance)
+    
+    # points in time
+    times_acc = velocity_limit / acceleration_limit
+    times_end = temax
+    times_dec = times_end - times_acc
     
     return velocity_limit, acceleration_limit, times_acc, times_dec, times_end
    
@@ -173,15 +224,15 @@ def limits_and_times_full_synchronous(robot, distance, velocity_limit, accelerat
     tamax_idx = np.where(times_acc == times_acc.max())
     tamax = times_acc[tamax_idx][0]
     
-    for i in range(0, robot.GetDOF()):
-        if (distance[i] < 1e-12): continue
-        
-        velocity_limit[i] = distance[i] / tdmax
-        acceleration_limit[i] = velocity_limit[i] / tamax
-    
-        # points in time
-        times_acc[i] = velocity_limit[i] / acceleration_limit[i]
-        times_end[i] = temax
-        times_dec[i] = times_end[i] - times_acc[i]
+    # recalculate velocity and acceleration limit
+    velocity_limit = distance / tdmax
+    acceleration_limit = velocity_limit / tamax
+
+    # points in time
+    times_acc = velocity_limit / acceleration_limit
+    times_end = temax
+    times_dec = times_end - times_acc
     
     return velocity_limit, acceleration_limit, times_acc, times_dec, times_end
+
+
