@@ -198,7 +198,7 @@ def limits_and_times_synchronous(robot, distance, velocity_limit, acceleration_l
     temax_idx = np.where(times_end == times_end.max())
     temax = times_end[temax_idx][0]
     
-    velocity_limit = (temax * acceleration_limit / 2) - np.sqrt((math.pow(temax, 2) * math.pow(acceleration_limit, 2) / 4) - acceleration_limit * distance)
+    velocity_limit = (temax * acceleration_limit / 2) - np.sqrt((math.pow(temax, 2) * np.power(acceleration_limit, 2)) / 4 - acceleration_limit * distance)
     
     # points in time
     times_acc = velocity_limit / acceleration_limit
