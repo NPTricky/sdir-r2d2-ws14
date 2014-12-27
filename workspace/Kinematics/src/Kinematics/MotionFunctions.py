@@ -105,20 +105,41 @@ def get_possible_inverse_solution(robot, configurations):
 
 def generate_trajectory(start_cfg, target_cfg, velocity_limit, acceleration_limit, times_acc, times_dec, times_end):
     # calculate the number of discrete time steps
-    time_steps_acc = times_acc / _SAMPLE_RATE
-    time_steps_end = times_end / _SAMPLE_RATE
-    time_steps_dec = times_dec / _SAMPLE_RATE
+    time_acc = np.ones((1,6))[0] * times_acc
+    time_dec = np.ones((1,6))[0] * times_dec
+    time_end = np.ones((1,6))[0] * times_end
     
-    entries = int( 1/_SAMPLE_RATE)
+     # latest total motion time
+    time_steps_max = np.int(time_end.max() / _SAMPLE_RATE)
+    
     # improvised
-    trajectory = np.empty([entries, 6])
+    trajectory = np.empty([time_steps_max, 6])
     diff = target_cfg - start_cfg
-    delta = diff / entries  
     
-    for i in xrange(entries):
-        trajectory[i] = start_cfg + (i*delta)
+    sign = np.sign(diff)
+    delta = np.zeros(len(sign))
+    
+    # determine of the trajectory
+    for i in xrange(0, time_steps_max):
+        # calculate of time t
+        t = i * _SAMPLE_RATE 
         
-    trajectory[ entries - 1 ] = target_cfg
+        # calculate of the angle difference at time t for a trapeziod velocity profile
+        for j in xrange(0, len(delta)):
+            if t < time_acc[j]:   #       t < ta
+                delta[j] = 0.5 * t**2 * acceleration_limit[j]
+            elif t < time_dec[j]: # ta <= t < td
+                delta[j] = velocity_limit[j] * ( t - 0.5 * time_acc[j])
+            elif t < time_end[j]: # td <= t < te
+                delta[j] = velocity_limit[j] * time_dec[j] - 0.5 * acceleration_limit[j] * ( time_end[j] - t)**2                
+            else:                 # te <= t
+                delta[j] = np.abs(diff[j])
+        
+        # calculate the angle position at time t 
+        # delta * sign, why the angle difference is an absolute value
+        trajectory[i] = start_cfg + delta * sign
+    
+    trajectory[ time_steps_max - 1] = target_cfg
     
     return trajectory
 
@@ -197,8 +218,7 @@ def limits_and_times_synchronous(robot, distance, velocity_limit, acceleration_l
     velocity_limit, acceleration_limit, times_acc, times_dec, times_end = limits_and_times_asynchronous(robot, distance, velocity_limit, acceleration_limit, times_acc, times_dec, times_end)
     
     # latest total motion time
-    temax_idx = np.where(times_end == times_end.max())
-    temax = times_end[temax_idx][0]
+    temax = times_end.max()
     
     velocity_limit = (temax * acceleration_limit / 2) - np.sqrt((math.pow(temax, 2) * np.power(acceleration_limit, 2)) / 4 - acceleration_limit * distance)
     
@@ -213,18 +233,12 @@ def limits_and_times_synchronous(robot, distance, velocity_limit, acceleration_l
 
 def limits_and_times_full_synchronous(robot, distance, velocity_limit, acceleration_limit, times_acc, times_dec, times_end):
     velocity_limit, acceleration_limit, times_acc, times_dec, times_end = limits_and_times_asynchronous(robot, distance, velocity_limit, acceleration_limit, times_acc, times_dec, times_end)
-    
-    # latest total motion time
-    temax_idx = np.where(times_end == times_end.max())
-    temax = times_end[temax_idx][0]
-    
+        
     # latest deceleration start time
-    tdmax_idx = np.where(times_dec == times_dec.max())
-    tdmax = times_dec[tdmax_idx][0]
+    tdmax = times_dec.max()
     
     # latest acceleration stop time
-    tamax_idx = np.where(times_acc == times_acc.max())
-    tamax = times_acc[tamax_idx][0]
+    tamax = times_acc.max()
     
     # recalculate velocity and acceleration limit
     velocity_limit = distance / tdmax
@@ -232,7 +246,7 @@ def limits_and_times_full_synchronous(robot, distance, velocity_limit, accelerat
 
     # points in time
     times_acc = velocity_limit / acceleration_limit
-    times_end = temax
+    times_end = (distance / velocity_limit) + times_acc
     times_dec = times_end - times_acc
     
     return velocity_limit, acceleration_limit, times_acc, times_dec, times_end
