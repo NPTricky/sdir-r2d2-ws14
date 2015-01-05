@@ -35,7 +35,7 @@ def PTPtoConfiguration(robot, target_cfg, motiontype):
     
     print 'start_cfg',start_cfg
     print 'target_cfg',target_cfg
-    print 'distance_abs',distance,'\n'
+    print 'distance_abs',distance
     
     #TODO: Implement PTP (Replace pseudo implementation with your own code)! Consider the max. velocity and acceleration of each axis
     
@@ -48,7 +48,7 @@ def PTPtoConfiguration(robot, target_cfg, motiontype):
     print 't_end',times_end
     
     # make values discrete for trajectory interpolation
-    velocity_limit, acceleration_limit, times_acc, times_dec, times_end = discretize(velocity_limit, acceleration_limit, times_acc, times_dec, times_end)
+    velocity_limit, acceleration_limit, times_acc, times_dec, times_end = discretize(distance, velocity_limit, acceleration_limit, times_acc, times_dec, times_end)
     print '(discrete) velocity_limit',velocity_limit
     print '(discrete) acceleration_limit',acceleration_limit
     print '(discrete) t_acc',times_acc
@@ -133,7 +133,7 @@ def generate_trajectory(robot, start_cfg, target_cfg, velocity_limit, accelerati
     time_steps_dec = times_dec / _SAMPLE_RATE
 
     # maximum time step count
-    time_steps_max = int(times_end.max() / _SAMPLE_RATE)
+    time_steps_max = int(time_steps_end.max())
 
     trajectory = np.empty([time_steps_max, robot.GetDOF()])
     trajectory[0] = start_cfg
@@ -142,48 +142,64 @@ def generate_trajectory(robot, start_cfg, target_cfg, velocity_limit, accelerati
     diff = target_cfg - start_cfg
     sign = np.sign(diff)
     delta = np.zeros(robot.GetDOF())
-
-    # trajectory generation
-    for i in xrange(1, time_steps_max-1):
-        # calculate of time t
-        t = i * _SAMPLE_RATE 
-        
-        # calculate of the angle difference at time t for a trapezoid velocity profile
-        for j in xrange(0, len(delta)):
-            if t < times_acc[j]:   #       t < ta
-                delta[j] = 0.5 * t**2 * acceleration_limit[j]
-            elif t < times_dec[j]: # ta <= t < td
-                delta[j] = velocity_limit[j] * ( t - 0.5 * times_acc[j])
-            elif t < times_end[j]: # td <= t < te
-                delta[j] = velocity_limit[j] * times_dec[j] - 0.5 * acceleration_limit[j] * ( times_end[j] - t)**2                
-            else:                  # te <= t
-                delta[j] = np.abs(diff[j])
-        
-        # calculate the angle position at time t 
-        # delta * sign, why the angle difference is an absolute value
-        trajectory[i] = start_cfg + delta * sign
     
-    #for t in xrange(1,time_steps_max):
-    #    time = t * _SAMPLE_RATE
-    #    
-    #    acc = np.less_equal(t,time_steps_acc)
-    #    x = np.where(acc,0.5 * acceleration_limit * math.pow(time, 2),0)
-    #    dec = np.logical_and(np.greater(t,time_steps_acc),np.less_equal(t,time_steps_dec)) 
-    #    y = np.where(dec,(velocity_limit * time) - (np.power(velocity_limit, 2) / (2 * acceleration_limit)),0)
-    #    end = np.logical_and(np.greater(t,time_steps_dec),np.less_equal(t,time_steps_end))
-    #    z = np.where(end,(velocity_limit * times_dec) - ((0.5 * acceleration_limit) * np.power(times_end - time, 2)),0)
-    #    idle = np.greater(t,time_steps_end)
-    #    w = np.where(idle,target_cfg,0)
-    #    xyzw = x + y + z + w
-
-    print 'target_cfg',target_cfg
-    print 'trajectory',trajectory
+    # trajectory generation
+    for i in xrange(1,time_steps_max-1):
+        # calculation of time t
+        t = i * _SAMPLE_RATE
+         
+        # calculation of the angle difference at time t for the (trapezoid) velocity profile
+        #  acc:          t < t_acc
+        #  dec: t_acc <= t < t_dec
+        #  end: t_dec <= t < t_end
+        # idle: t_end <= t
+        for j in xrange(robot.GetDOF()):
+            if (i <= time_steps_acc[j]):
+                delta[j] = 0.5 * acceleration_limit[j] * math.pow(t, 2)
+            elif (i <= time_steps_dec[j]):
+                delta[j] = (velocity_limit[j] * t) - (np.power(velocity_limit[j], 2) / (2 * acceleration_limit[j]))
+            elif (i <= time_steps_end[j]):
+                delta[j] = (velocity_limit[j] * times_dec[j]) - ((0.5 * acceleration_limit[j]) * np.power(times_end[j] - t, 2))
+            else:
+                delta[j] = math.fabs(target_cfg[j])
+                
+        # calculate the angular change at time t
+        # delta * sign, because the angular change is an absolute value
+        trajectory[i,:] = start_cfg + delta * sign
+        print trajectory[i,:]
+    
+    #===========================================================================
+    # # trajectory generation (without inner loop)
+    # for i in xrange(1,time_steps_max-1):
+    #     # calculation of time t
+    #     t = i * _SAMPLE_RATE
+    #     
+    #     # calculation of the angle difference at time t for the (trapezoid) velocity profile
+    #     #  acc:          t < t_acc
+    #     #  dec: t_acc <= t < t_dec
+    #     #  end: t_dec <= t < t_end
+    #     # idle: t_end <= t
+    #     acc_condition = np.less_equal(i,time_steps_acc)
+    #     a = np.where(acc_condition,0.5 * acceleration_limit * math.pow(t, 2),0)
+    #     dec_condition = np.logical_and(np.greater(i,time_steps_acc),np.less_equal(i,time_steps_dec)) 
+    #     d = np.where(dec_condition,(velocity_limit * t) - (np.power(velocity_limit, 2) / (2 * acceleration_limit)),0)
+    #     end_condition = np.logical_and(np.greater(i,time_steps_dec),np.less_equal(i,time_steps_end))
+    #     e = np.where(end_condition,(velocity_limit * times_dec) - ((0.5 * acceleration_limit) * np.power(times_end - t, 2)),0)
+    #     idle_condition = np.greater(i,time_steps_end)
+    #     i = np.where(idle_condition,np.abs(target_cfg),0)
+    #     delta = a + d + e + i
+    #     
+    #     # calculate the angular change at time t 
+    #     # delta * sign, because the angular change is an absolute value
+    #     trajectory[i,:] = start_cfg + delta * sign
+    #     print trajectory[i,:]
+    #===========================================================================
 
     return trajectory
 
 
 
-def discretize(velocity_limit, acceleration_limit, times_acc, times_dec, times_end):
+def discretize(distance, velocity_limit, acceleration_limit, times_acc, times_dec, times_end):
     
     # adjust times_acc, times_dec, times_end to satisfy
     #  - n = number of discrete time steps
@@ -195,21 +211,29 @@ def discretize(velocity_limit, acceleration_limit, times_acc, times_dec, times_e
 
     # acceleration stop time
     times_acc_discrete = np.round(times_acc + _SAMPLE_RATE_CEIL_OFFSET, _SAMPLE_RATE_DECIMAL)
-
-    # cross-multiplication to scale the acceleration limit to the new times_acc
-    scalar = (1 / times_acc_discrete) * times_acc
-    acceleration_limit_discrete = acceleration_limit * scalar
- 
     # total motion time
     times_end_discrete = np.round(times_end + (times_acc_discrete - times_acc) + _SAMPLE_RATE_CEIL_OFFSET, _SAMPLE_RATE_DECIMAL)
-    
-    # cross-multiplication to scale the velocity limit to the new times_end
-    scalar = (1 / times_end_discrete) * times_end
-    velocity_limit_discrete = velocity_limit * scalar
-    
     # deceleration start time
     times_dec_discrete = times_end_discrete - times_acc_discrete
-
+    
+    #===========================================================================
+    # # does not work due to numerical imprecision
+    # 
+    # # cross-multiplication to scale the acceleration limit to the new times_acc
+    # scalar = times_acc / times_acc_discrete
+    # acceleration_limit_discrete = acceleration_limit * scalar
+    # 
+    # # cross-multiplication to scale the velocity limit to the new times_end
+    # scalar = times_end / times_end_discrete
+    # velocity_limit_discrete = velocity_limit * scalar
+    #===========================================================================
+    
+    # recalculate velocity limit
+    velocity_limit_discrete = distance / times_dec_discrete
+    
+    # recalculate acceleration limit
+    acceleration_limit_discrete = velocity_limit_discrete / times_acc_discrete
+    
     return velocity_limit_discrete, acceleration_limit_discrete, times_acc_discrete, times_dec_discrete, times_end_discrete
 
 
@@ -272,10 +296,7 @@ def limits_and_times_synchronous(robot, distance, velocity_limit, acceleration_l
 
 def limits_and_times_full_synchronous(robot, distance, velocity_limit, acceleration_limit, times_acc, times_dec, times_end):
     velocity_limit, acceleration_limit, times_acc, times_dec, times_end = limits_and_times_asynchronous(robot, distance, velocity_limit, acceleration_limit, times_acc, times_dec, times_end)
-    
-    # latest total motion time
-    temax = times_end.max()
-    
+
     # latest deceleration start time
     tdmax = times_dec.max()
     
@@ -288,7 +309,7 @@ def limits_and_times_full_synchronous(robot, distance, velocity_limit, accelerat
 
     # points in time
     times_acc = velocity_limit / acceleration_limit
-    times_end = (distance / velocity_limit) + times_acc # temax?
+    times_end = (distance / velocity_limit) + times_acc # required due to recalculation of velocity limit
     times_dec = times_end - times_acc
     
     return velocity_limit, acceleration_limit, times_acc, times_dec, times_end
