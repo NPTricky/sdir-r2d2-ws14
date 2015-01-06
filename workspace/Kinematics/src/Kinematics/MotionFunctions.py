@@ -13,10 +13,21 @@ _SAMPLE_RATE_CEIL_OFFSET = _SAMPLE_RATE / 2
 
 _EPS = 1e-12
 
-def distance_abs(start_cfg, target_cfg):
-    distance = np.fabs(target_cfg - start_cfg)
-    distance = distance.clip(min = _EPS)
+def distance_rel(start_cfg, target_cfg):
+    # calculate the distance between positions in space
+    distance_pos = target_cfg[:3] - start_cfg[:3]
+    # calculate the distance between angles
+    distance_angle = target_cfg[3:] - start_cfg[3:]
+    distance_angle = (distance_angle + np.pi) % (2 * np.pi) - np.pi
+    # concatenate the results
+    distance = np.concatenate((distance_pos, distance_angle))
     return distance
+
+def distance_abs(start_cfg, target_cfg):
+    distance = distance_rel(start_cfg, target_cfg)
+    # ignore tiny distance
+    # distance = distance.clip(min = _EPS)
+    return np.fabs(distance) 
     
 def PTPtoConfiguration(robot, target_cfg, motiontype):
     """PTP path planning
@@ -31,16 +42,18 @@ def PTPtoConfiguration(robot, target_cfg, motiontype):
     """
     # current axis angles of the robot - array of floats
     start_cfg = robot.GetDOFValues();
-    distance = distance_abs(start_cfg, target_cfg)
+    distance_r = distance_rel(start_cfg, target_cfg)
+    distance_a = distance_abs(start_cfg, target_cfg)
     
     print 'start_cfg',start_cfg
     print 'target_cfg',target_cfg
-    print 'distance_abs',distance
+    print 'distance_rel',distance_r
+    print 'distance_abs',distance_a
     
     #TODO: Implement PTP (Replace pseudo implementation with your own code)! Consider the max. velocity and acceleration of each axis
     
     # calculate velocity, acceleration and points in time for the trajectory interpolation
-    velocity_limit, acceleration_limit, times_acc, times_dec, times_end = limits_and_times(robot, distance, motiontype)
+    velocity_limit, acceleration_limit, times_acc, times_dec, times_end = limits_and_times(robot, distance_a, motiontype)
     print 'velocity_limit',velocity_limit
     print 'acceleration_limit',acceleration_limit
     print 't_acc',times_acc
@@ -48,7 +61,7 @@ def PTPtoConfiguration(robot, target_cfg, motiontype):
     print 't_end',times_end
     
     # make values discrete for trajectory interpolation
-    velocity_limit, acceleration_limit, times_acc, times_dec, times_end = discretize(distance, velocity_limit, acceleration_limit, times_acc, times_dec, times_end)
+    velocity_limit, acceleration_limit, times_acc, times_dec, times_end = discretize(distance_a, velocity_limit, acceleration_limit, times_acc, times_dec, times_end)
     print '(discrete) velocity_limit',velocity_limit
     print '(discrete) acceleration_limit',acceleration_limit
     print '(discrete) t_acc',times_acc
