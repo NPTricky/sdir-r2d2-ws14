@@ -43,6 +43,7 @@ def PTPtoConfiguration(robot, target_cfg, motiontype):
     :returns: Array containing the axis angles of the interpolated path
     :rtype: matrix of floats
     """
+    
     # current axis angles of the robot - array of floats
     start_cfg = robot.GetDOFValues();
     diff_r = difference_rel(start_cfg, target_cfg)
@@ -54,6 +55,10 @@ def PTPtoConfiguration(robot, target_cfg, motiontype):
     print 'difference_abs',diff_a
     
     #TODO: Implement PTP (Replace pseudo implementation with your own code)! Consider the max. velocity and acceleration of each axis
+    
+    if motiontype == "L":
+        trajectory = linear_trajectory_interpolation(robot, start_cfg, target_cfg, 0.5, 1.5)
+        return trajectory 
     
     # calculate velocity, acceleration and points in time for the trajectory interpolation
     velocity_limit, acceleration_limit, times_acc, times_dec, times_end = limits_and_times(robot, diff_a, motiontype)
@@ -73,14 +78,11 @@ def PTPtoConfiguration(robot, target_cfg, motiontype):
     
     # trajectory interpolation
     trajectory = generate_trajectory(robot, start_cfg, target_cfg, velocity_limit, acceleration_limit, times_acc, times_dec, times_end)
-    
-    return trajectory   
-
-
+        
+    return trajectory
 
 def Move(robot, trajectory):
     for i in range(trajectory.shape[0]):
-        print str(trajectory[i])
         robot.SetDOFValues(trajectory[i])
         _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), kin.forward(trajectory[i]), 0.2, 0.5))
         time.sleep(_SAMPLE_RATE)
@@ -194,11 +196,11 @@ def generate_trajectory(robot, start_cfg, target_cfg, velocity_limit, accelerati
                 delta[j] = (velocity_limit[j] * times_dec[j]) - ((0.5 * acceleration_limit[j]) * np.power(times_end[j] - t, 2))
             else:
                 delta[j] = math.fabs(target_cfg[j])
-                
+        
         # calculate the angular change at time t
         # delta * sign, because the angular change is an absolute value
         trajectory[i,:] = start_cfg + delta * sign
-    
+        print trajectory[i]
     #===========================================================================
     # # trajectory generation (without inner loop)
     # for i in xrange(1,time_steps_max-1):
@@ -366,16 +368,18 @@ def linear_trajectory_interpolation(robot, start_cfg, target_cfg, velocity, acce
     time_acc = velocity / acceleration
     time_dec = dist / velocity
     
+    # interpolation of the trajectory path
     sample_rate = _SAMPLE_RATE * 10
     time_steps_max = np.int(time_end / sample_rate)
     
     lin_cfg = []
     lin_cfg.append(start_cfg)
     
-    last_pose = start_pose
     for i in range(1, time_steps_max - 1):
+        # calculate the time t 
         t = i * sample_rate
-            
+        
+        # generate a trapezoid trajectory path
         if t < time_acc:   #       t < ta
             delta = diff * (0.5 * t**2 * acceleration) / dist 
         elif t < time_dec: # ta <= t < td
@@ -385,43 +389,42 @@ def linear_trajectory_interpolation(robot, start_cfg, target_cfg, velocity, acce
         else:               # te <= t
             delta = diff
         
+        # determine the current position and orientation at time t
         current_pose = start_pose + delta
         
-        _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), kin.get_matrix_from(current_pose), 0.1, 0.5))
-                
+        # determine the inverse kinematics for the pose
         inverse_cfgs = get_possible_inverse_solution(robot, kin.inverse(current_pose))
         
         if len(inverse_cfgs) == 0:
             return None
-            
         
-        if sample_rate < np.fabs(lin_cfg[-1] - inverse_cfgs[0]).max():
-            print "singularity", np.fabs(lin_cfg[-1] - inverse_cfgs[0]).max()
-            print "pose before:  ", last_pose
-            print "pose current: ", current_pose
-            # check of singularity and set the theta and calculate a new config
-#            
-#            
-#            for cfg in get_possible_inverse_solution(robot, kin.inverse(last_pose)):  
-#                if np.fabs(inverse_cfgs[0] - cfg).max() < sample_rate:
-#                    print "step2"
-#                    lin_cfg.append(cfg)
-#                    break
-#
         lin_cfg.append(inverse_cfgs[0])
-
-        last_pose = current_pose
         
     lin_cfg.append(target_cfg)
     
-    trajectory = []
-    trajectory.append(start_cfg)
     
-    for i in range( 1, len(lin_cfg)):
-            
-        trajectory[i] = target_cfg
+    # generation of the trajectory path
+    velocity = robot.GetDOFVelocityLimits()
+    acceleration = robot.GetDOFAccelerationLimits()
+    
+    trajectory = np.ones([1,6]) * start_cfg
+    
+    last_cfg = start_cfg;
+    for cfg in lin_cfg[1:]:
         
-    trajectory.append(target_cfg)
-
-#    Move(robot, np.array((lin_cfg)))
-    return None
+        distance_a = distance_abs(last_cfg, cfg)
+                
+        # calculate velocity, acceleration and points in time for the trajectory interpolation
+        velocity_limit, acceleration_limit, times_acc, times_dec, times_end = limits_and_times_full_synchronous(distance_a, velocity, acceleration)
+        
+        # make values discrete for trajectory interpolation
+        velocity_limit, acceleration_limit, times_acc, times_dec, times_end = discretize(distance_a, velocity_limit, acceleration_limit, times_acc, times_dec, times_end)
+        
+        current_trajectory = generate_trajectory(robot, last_cfg, cfg, velocity_limit, acceleration_limit, times_acc, times_dec, times_end)       
+        
+        # trajectory interpolation
+        trajectory = np.concatenate((trajectory, current_trajectory[1:]))
+                
+        last_cfg = cfg
+    
+    return trajectory
