@@ -134,7 +134,7 @@ def get_lowest_difference_inverse_solution(robot, configurations):
     # the fastest configuration
     ret_value = []
     for conf in possible_confs:
-        print np.sum( npo.fabs(conf - current_angles))
+        print np.sum( np.fabs(conf - current_angles))
                 
     return ret_value
 
@@ -359,93 +359,74 @@ def linear_trajectory_interpolation(robot, start_cfg, target_cfg, velocity, acce
                                                     colors=np.array(((0,0,0),(0,0,0))))) 
     
     # calculate the difference form start to end position and the distance
-    diff = target_pose - start_pose
+    diff = distance_rel(start_pose, target_pose)
     sign_diff = np.sign(diff)
     dist = np.sqrt( diff[0]**2 + diff[1]**2 + diff[2]**2 )
+        
+    # determine of the times and recalculate of the velocity
+    time_end = velocity / acceleration + dist / velocity
     
-    # scalar of the euler angles from -pi to pi
-    diff[3] %= -np.pi if diff[3] < 0 else np.pi
-    diff[4] %= -np.pi if diff[4] < 0 else np.pi
-    diff[5] %= -np.pi if diff[5] < 0 else np.pi
-
+    velocity = (time_end * acceleration / 2) - np.sqrt((math.pow(time_end, 2) * np.power(acceleration, 2)) / 4 - acceleration * dist)
+    
     time_acc = velocity / acceleration
     time_dec = dist / velocity
-    time_end = time_acc + time_dec  
     
     sample_rate = _SAMPLE_RATE * 10
     time_steps_max = np.int(time_end / sample_rate)
-    step_size = diff / time_steps_max
     
     lin_cfg = []
     lin_cfg.append(start_cfg)
     
-    lin_path = start_pose
-    
-    for i in range( 1, time_steps_max - 1):
+    last_pose = start_pose
+    for i in range(1, time_steps_max - 1):
         t = i * sample_rate
-        
-        if t < time_acc:
-            delta = diff / dist * (0.5 * t**2 * acceleration)
-        elif t < time_dec:
-            delta = diff / dist * (velocity * (t - 0.5 * time_acc))
-        elif t < time_end:
-            delta = diff / dist * (velocity * time_dec - 0.5 * acceleration * (time_end - t)**2)
-        else:
+            
+        if t < time_acc:   #       t < ta
+            delta = diff * (0.5 * t**2 * acceleration) / dist 
+        elif t < time_dec: # ta <= t < td
+            delta = diff * (velocity * ( t - 0.5 * time_acc)) / dist
+        elif t < time_end: # td <= t < te
+            delta = diff * (velocity * time_dec - 0.5 * acceleration * ( time_end - t)**2) / dist 
+        else:               # te <= t
             delta = diff
         
+        current_pose = start_pose + delta
         
-        _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), kin.get_matrix_from(start_pose + delta), 0.1, 0.5))
+        _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), kin.get_matrix_from(current_pose), 0.1, 0.5))
+                
+        inverse_cfgs = get_possible_inverse_solution(robot, kin.inverse(current_pose))
         
-        inverse_cfgs = get_possible_inverse_solution(robot, kin.inverse(start_pose + delta))
-        
-#        if inverse_cfgs in None:
-#            return None
+        if len(inverse_cfgs) == 0:
+            return None
+            
         
         if sample_rate < np.fabs(lin_cfg[-1] - inverse_cfgs[0]).max():
             print "singularity", np.fabs(lin_cfg[-1] - inverse_cfgs[0]).max()
-            print "pose before:  ", lin_path
-            print "pose current: ", start_pose + delta
+            print "pose before:  ", last_pose
+            print "pose current: ", current_pose
             # check of singularity and set the theta and calculate a new config
-            
-            
-            for cfg in get_possible_inverse_solution(robot, kin.inverse(lin_path)):  
-                if np.fabs(inverse_cfgs[0] - cfg).max() < sample_rate:
-                    print "step2"
-                    lin_cfg.append(cfg)
-                    break
-
+#            
+#            
+#            for cfg in get_possible_inverse_solution(robot, kin.inverse(last_pose)):  
+#                if np.fabs(inverse_cfgs[0] - cfg).max() < sample_rate:
+#                    print "step2"
+#                    lin_cfg.append(cfg)
+#                    break
+#
         lin_cfg.append(inverse_cfgs[0])
-        
-        lin_path = start_pose + delta
+
+        last_pose = current_pose
         
     lin_cfg.append(target_cfg)
     
-#    trajectory = []
-#    trajectory.append(start_cfg)
-#    
-#    for i in range( 1, time_steps_max - 1):
-#        t = i * _SAMPLE_RATE
-#        
-#        if t < time_acc:
-#            delta = diff / dist * (0.5 * t**2 * acceleration)
-#        elif t < time_dec:
-#            delta = diff / dist * (velocity * (t - 0.5 * time_acc))
-#        elif t < time_end:
-#            delta = diff / dist * (velocity * time_dec - 0.5 * acceleration * (time_end - t)**2)
-#        else:
-#            delta = diff
-#        
-#        path = start_pose + delta 
-#        
-#        for cfg in get_possible_inverse_solution(robot, kin.inverse(path)):
-#            if np.fabs(trajectory[i-1] - cfg).max() < _SAMPLE_RATE :
-#                print str(np.fabs(trajectory[i-1] - cfg).max())
-#                target_cfg = cfg
-#                break
-#        
-#        trajectory[i] = target_cfg
-#        
-#    trajectory.append(target_cfg)
+    trajectory = []
+    trajectory.append(start_cfg)
+    
+    for i in range( 1, len(lin_cfg)):
+            
+        trajectory[i] = target_cfg
+        
+    trajectory.append(target_cfg)
 
-    Move(robot, np.array((lin_cfg)))
+#    Move(robot, np.array((lin_cfg)))
     return None
