@@ -285,7 +285,7 @@ def limits_and_times_synchronous(robot, distance, velocity_limit, acceleration_l
     
     # points in time
     times_acc = velocity_limit / acceleration_limit
-    times_end = temax
+    times_end = np.ones(robot.GetDOF()) * temax
     times_dec = times_end - times_acc
     
     return velocity_limit, acceleration_limit, times_acc, times_dec, times_end
@@ -295,9 +295,6 @@ def limits_and_times_synchronous(robot, distance, velocity_limit, acceleration_l
 def limits_and_times_full_synchronous(robot, distance, velocity_limit, acceleration_limit, times_acc, times_dec, times_end):
     velocity_limit, acceleration_limit, times_acc, times_dec, times_end = limits_and_times_asynchronous(robot, distance, velocity_limit, acceleration_limit, times_acc, times_dec, times_end)
 
-    # latest total motion time
-    temax = times_end.max()
-    
     # latest deceleration start time
     tdmax = times_dec.max()
     
@@ -309,9 +306,9 @@ def limits_and_times_full_synchronous(robot, distance, velocity_limit, accelerat
     acceleration_limit = velocity_limit / tamax
 
     # points in time
-    times_acc = tamax
-    times_end = temax
-    times_dec = times_end - times_acc
+    times_acc = np.ones(robot.GetDOF()) * tamax
+    times_dec = np.ones(robot.GetDOF()) * tdmax
+    times_end = times_acc + times_dec
     
     return velocity_limit, acceleration_limit, times_acc, times_dec, times_end
 
