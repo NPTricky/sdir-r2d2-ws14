@@ -161,7 +161,7 @@ if __name__ == "__main__":
     #I = kin.inverse(kin.get_pose_from(T))
     #print I
     
-    #mf.PTPtoConfiguration(robot, [1.2,1.8,0.55,0.2,1.2,-3.2], 'async')
+    #mf.PTPtoConfiguration(robot, [1.2,-1.8,0.55,0.2,1.2,-3.2], 'async')
 
     #configList = [[0,0,0,0,90,0], [90,0,0,0,0,0]] 
     #config = kin.selectConfiguration(configList)
