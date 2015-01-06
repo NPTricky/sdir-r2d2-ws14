@@ -1,11 +1,9 @@
+from openravepy import *
 import numpy as np
 import time
 import Kinematics as kin
 import math
 import sys
-
-from openravepy import *
-from sympy.series import acceleration
 
 # e.g. 0.1, 0.01 or 0.001
 _SAMPLE_RATE = 0.01
@@ -18,22 +16,22 @@ _EPS = 1e-12
 
 _DEBUG_DRAW = []
 
-def distance_rel(start_cfg, target_cfg):
-    # calculate the distance between positions in space
-    distance_pos = target_cfg[:3] - start_cfg[:3]
-    # calculate the distance between angles
-    distance_angle = target_cfg[3:] - start_cfg[3:]
-    distance_angle = (distance_angle + np.pi) % (2 * np.pi) - np.pi
+def difference_rel(start_cfg, target_cfg):
+    # calculate the difference between positions in space
+    diff_pos = target_cfg[:3] - start_cfg[:3]
+    # calculate the difference between angles
+    diff_angle = target_cfg[3:] - start_cfg[3:]
+    diff_angle = (diff_angle + np.pi) % (2 * np.pi) - np.pi
     # concatenate the results
-    distance = np.concatenate((distance_pos, distance_angle))
-    return distance
+    diff = np.concatenate((diff_pos, diff_angle))
+    return diff
 
-def distance_abs(start_cfg, target_cfg):
-    distance = distance_rel(start_cfg, target_cfg)
-    # ignore tiny distance
-    # distance = distance.clip(min = _EPS)
-    return np.fabs(distance) 
-    
+def distance_rel(start_cfg, target_cfg):
+    diff = difference_rel(start_cfg, target_cfg)
+    dist_pos = np.sqrt(np.sum(np.power(diff[:3],2)))
+    dist_angle = np.sqrt(np.sum(np.power(diff[3:],2))) 
+    return dist_pos, dist_angle
+
 def PTPtoConfiguration(robot, target_cfg, motiontype):
     """PTP path planning
     :param robot: robot instance
@@ -47,18 +45,18 @@ def PTPtoConfiguration(robot, target_cfg, motiontype):
     """
     # current axis angles of the robot - array of floats
     start_cfg = robot.GetDOFValues();
-    distance_r = distance_rel(start_cfg, target_cfg)
-    distance_a = distance_abs(start_cfg, target_cfg)
+    diff_r = difference_rel(start_cfg, target_cfg)
+    diff_a = np.fabs(difference_rel(start_cfg, target_cfg))
     
     print 'start_cfg',start_cfg
     print 'target_cfg',target_cfg
-    print 'distance_rel',distance_r
-    print 'distance_abs',distance_a
+    print 'difference_rel',diff_r
+    print 'difference_abs',diff_a
     
     #TODO: Implement PTP (Replace pseudo implementation with your own code)! Consider the max. velocity and acceleration of each axis
     
     # calculate velocity, acceleration and points in time for the trajectory interpolation
-    velocity_limit, acceleration_limit, times_acc, times_dec, times_end = limits_and_times(robot, distance_a, motiontype)
+    velocity_limit, acceleration_limit, times_acc, times_dec, times_end = limits_and_times(robot, diff_a, motiontype)
     print 'velocity_limit',velocity_limit
     print 'acceleration_limit',acceleration_limit
     print 't_acc',times_acc
@@ -66,7 +64,7 @@ def PTPtoConfiguration(robot, target_cfg, motiontype):
     print 't_end',times_end
     
     # make values discrete for trajectory interpolation
-    velocity_limit, acceleration_limit, times_acc, times_dec, times_end = discretize(distance_a, velocity_limit, acceleration_limit, times_acc, times_dec, times_end)
+    velocity_limit, acceleration_limit, times_acc, times_dec, times_end = discretize(diff_a, velocity_limit, acceleration_limit, times_acc, times_dec, times_end)
     print '(discrete) velocity_limit',velocity_limit
     print '(discrete) acceleration_limit',acceleration_limit
     print '(discrete) t_acc',times_acc
@@ -271,12 +269,9 @@ def discretize(distance, velocity_limit, acceleration_limit, times_acc, times_de
 
 
 def limits_and_times(robot, distance, motiontype):
-    # calculate
+    # knowledge base
     velocity_limit = robot.GetDOFVelocityLimits()
     acceleration_limit = robot.GetDOFAccelerationLimits()
-    times_acc = np.zeros(robot.GetDOF()) # acceleration stop time
-    times_dec = np.zeros(robot.GetDOF()) # deceleration start time
-    times_end = np.zeros(robot.GetDOF()) # total motion time
     
     if motiontype == "A": # asynchronous
         velocity_limit, acceleration_limit, times_acc, times_dec, times_end = limits_and_times_asynchronous(distance, velocity_limit, acceleration_limit)
@@ -359,7 +354,7 @@ def linear_trajectory_interpolation(robot, start_cfg, target_cfg, velocity, acce
                                                     colors=np.array(((0,0,0),(0,0,0))))) 
     
     # calculate the difference form start to end position and the distance
-    diff = distance_rel(start_pose, target_pose)
+    diff = difference_rel(start_pose, target_pose)
     sign_diff = np.sign(diff)
     dist = np.sqrt( diff[0]**2 + diff[1]**2 + diff[2]**2 )
         
