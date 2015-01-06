@@ -166,7 +166,6 @@ def generate_trajectory(robot, start_cfg, target_cfg, velocity_limit, accelerati
         # calculate the angular change at time t
         # delta * sign, because the angular change is an absolute value
         trajectory[i,:] = start_cfg + delta * sign
-        print trajectory[i,:]
     
     #===========================================================================
     # # trajectory generation (without inner loop)
@@ -192,7 +191,6 @@ def generate_trajectory(robot, start_cfg, target_cfg, velocity_limit, accelerati
     #     # calculate the angular change at time t 
     #     # delta * sign, because the angular change is an absolute value
     #     trajectory[i,:] = start_cfg + delta * sign
-    #     print trajectory[i,:]
     #===========================================================================
 
     return trajectory
