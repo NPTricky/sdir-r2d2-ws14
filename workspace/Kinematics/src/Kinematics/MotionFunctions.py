@@ -149,10 +149,10 @@ def generate_trajectory(robot, start_cfg, target_cfg, velocity_limit, accelerati
         t = i * _SAMPLE_RATE
          
         # calculation of the angle difference at time t for the (trapezoid) velocity profile
-        #  acc:          t < t_acc
-        #  dec: t_acc <= t < t_dec
-        #  end: t_dec <= t < t_end
-        # idle: t_end <= t
+        #  acc:          i <= ts_acc
+        #  dec: ts_acc < i <= ts_dec
+        #  end: ts_dec < i <= ts_end
+        # idle: ts_end < i
         for j in xrange(robot.GetDOF()):
             if (i <= time_steps_acc[j]):
                 delta[j] = 0.5 * acceleration_limit[j] * math.pow(t, 2)
@@ -174,10 +174,10 @@ def generate_trajectory(robot, start_cfg, target_cfg, velocity_limit, accelerati
     #     t = i * _SAMPLE_RATE
     #     
     #     # calculation of the angle difference at time t for the (trapezoid) velocity profile
-    #     #  acc:          t < t_acc
-    #     #  dec: t_acc <= t < t_dec
-    #     #  end: t_dec <= t < t_end
-    #     # idle: t_end <= t
+    #     #  acc:          i <= ts_acc
+    #     #  dec: ts_acc < i <= ts_dec
+    #     #  end: ts_dec < i <= ts_end
+    #     # idle: ts_end < i
     #     acc_condition = np.less_equal(i,time_steps_acc)
     #     a = np.where(acc_condition,0.5 * acceleration_limit * math.pow(t, 2),0)
     #     dec_condition = np.logical_and(np.greater(i,time_steps_acc),np.less_equal(i,time_steps_dec)) 
