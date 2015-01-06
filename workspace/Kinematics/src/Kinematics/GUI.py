@@ -353,14 +353,13 @@ class GUI(QtGui.QWidget):
         
         if len(values) == 1:
             text = values[0] 
-        elif len(values) == 6:
-            text = str( str( round( mp.degrees( float( values[0])), 6)) + '\n' + 
-                        str( round( mp.degrees( float( values[1])), 6)) + '\n' + 
-                        str( round( mp.degrees( float( values[2])), 6)) + '\n' + 
-                        str( round( mp.degrees( float( values[3])), 6)) + '\n' + 
-                        str( round( mp.degrees( float( values[4])), 6)) + '\n' + 
-                        str( round( mp.degrees( float( values[5])), 6))  )
-        
+        else:
+            for i in xrange(0, len(values)):
+                text += "configuration " + str(i) + ":\n"
+                for angle in values[i].split(' '):
+                    text += str( str( round( mp.degrees( float( angle )), 6)) + '\n' )
+                text += '----------------\n'
+            
         self.lineedit_cartptp_box.setText(text)
     
     

@@ -61,7 +61,7 @@ def get_z(matrix):
 """
 def get_pose_from(matrix):
     alpha, beta, gamma = extract_euler_angles_from(matrix)
-    return get_x(matrix), get_y(matrix), get_z(matrix), alpha, beta, gamma
+    return np.array(((get_x(matrix), get_y(matrix), get_z(matrix), alpha, beta, gamma)))
 
 
 """ 
@@ -88,28 +88,13 @@ def get_matrix_from(pose):
 @param robot: robot instance
 @return: pose of end effector in homogeneous coordinates
 """
-def forward(robot):
-
-    if len(robot.GetManipulators()) > 1:
-        for m in robot.GetManipulators():
-            print "ERROR"
-            print " - Manipulator: \""+m.GetName()+"\" - Base: \""+m.GetBase().GetName()+"\" - End Effector: \""+m.GetEndEffector().GetName()+"\""
-        return
-
+def forward(conf):    
     # transformation matrix of the base as a starting point       
     A = _BASE
-    #_DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), A, 0.5, 2))
     
     # apply the denavit-hartenberg parameters for homogeneous transformation
-    for i in range(0, robot.GetDOF()):
-        A = A * homogeneous_transformation_from(robot.GetDOFValues()[i], i)
-
-    _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), A, 0.5, 2))
-    
-    # for debug purposes without tool
-    # transform the tool into the coordinate system of the base
-    #A = A * robot.GetManipulators()[0].GetEndEffector().GetTransform()
-    #A = A * _TOOL
+    for i in range(0, len(conf)):
+        A = A * homogeneous_transformation_from(conf[i], i)
     
     return A
     
@@ -243,7 +228,7 @@ def determine_theta0a_theta0b_and_wp0(pose):
 def determine_theta1a_theta1b_and_wp1(theta0, wp0):
     
     if theta0 is None or wp0 is None:
-        return None, None
+        return None, None, None
     
     d_h = math.sqrt( math.pow( get_a(2), 2) + math.pow( get_d(3), 2))
   

@@ -47,7 +47,7 @@ def handleData(data):
         axis_values = str(axis_arr[0])+";"+str(axis_arr[1])+";"+str(axis_arr[2])+";"+str(axis_arr[3])+";"+str(axis_arr[4])+";"+str(axis_arr[5])+'#'
         
         # adding dummy values for orientation and position (you need to compute the values)
-        T = kin.forward(robot)
+        T = kin.forward(robot.GetDOFValues())
         
         pose = kin.get_pose_from( T )
         cart_values = str( str(pose[0]) + ";" + str(pose[1]) + ";" + str(pose[2]) + ";" + 
@@ -79,7 +79,7 @@ def handleData(data):
         axis_values = str(axis_arr[0])+";"+str(axis_arr[1])+";"+str(axis_arr[2])+";"+str(axis_arr[3])+";"+str(axis_arr[4])+";"+str(axis_arr[5])+'#'
         
         # adding dummy values for orientation and position (you need to compute the values)
-        T = kin.forward(robot)
+        T = kin.forward(robot.GetDOFValues())
         
         _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), T, 0.5, 2))
         
@@ -98,35 +98,32 @@ def handleData(data):
         pose = [ float(values[0]), float(values[1]), float(values[2]), 
                  float(values[3]), float(values[4]), float(values[5]) ]
         
-        I = kin.inverse( pose )
-        conf = mf.get_fastest_inverse_solution(robot, I)
+        I = kin.inverse( pose )        
+        confs = mf.get_possible_inverse_solution(robot, I)
         
         # send the (multiple) solutions to the GUI
         # prefix for parsing
         prefix = "INK#"
-            
-        if 0 < len(conf):                         
-            ik_values = str(conf[0]) + ";" + str(conf[1]) + ";" + str(conf[2]) + ";" + str(conf[3]) + ";" + str(conf[4]) + ";" + str(conf[5])      
+        ik_values = ""
+        
+        if 0 < len(confs):
+            for i in xrange(0, len(confs)):
+                for j in xrange(0, len(confs[i])):
+                    ik_values += str( confs[i][j] )  + str(" " if j < len(confs[i]) - 1 else "")
+                ik_values += str(";" if i < len(confs) - 1 else "")
         else:
             ik_values = "not possible"
-            
-        _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), kin.get_matrix_from(pose), 0.5, 2))
+            return prefix+ik_values
+                        
+        print str(np.degrees(mf.get_fastest_inverse_solution(robot, I)))    
+
+        _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), kin.get_matrix_from( pose), 0.5, 2))
         
-        for j in I:
-            text =""
-            for i in j:
-                text += str( str(np.degrees( float(i))) + '\t' )
-        
+        mf.linear_trajectory_interpolation(robot, robot.GetDOFValues(), confs[0], 0.5, 1.5) 
+                
         I = mf.get_possible_inverse_solution(robot, I)
         
-        for j in I:
-            text =""
-            for i in j:
-                text += str( str(np.degrees( float(i))) + '\t' )
-            print text
-        
-        print str(conf)
-        
+        print str(np.degrees(I))
         
         return prefix+ik_values
     
