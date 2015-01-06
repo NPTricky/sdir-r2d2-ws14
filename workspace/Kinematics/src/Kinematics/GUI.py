@@ -164,8 +164,11 @@ class GUI(QtGui.QWidget):
         self.radio_lin = QtGui.QRadioButton('linear movement ', self)
         # set up button for the calculation
         self.button_move = QtGui.QPushButton('Move', self)
+        self.button_clear = QtGui.QPushButton('Clear', self)
+        
         # trigger function on clicked
         QtCore.QObject.connect(self.button_move, QtCore.SIGNAL("clicked()"), self.buttonMoveClicked)
+        QtCore.QObject.connect(self.button_clear, QtCore.SIGNAL("clicked()"), self.buttonClearClicked)
         
         # add the widgets to the grid layout
         grid_ptp.addWidget(label_ptp_a1, 0, 0)
@@ -185,6 +188,7 @@ class GUI(QtGui.QWidget):
         grid_ptp.addWidget(label_ptp_a6, 5, 0)
         grid_ptp.addWidget(self.lineedit_ptp_a6, 5, 1)
         grid_ptp.addWidget(self.button_move, 5, 2)
+        grid_ptp.addWidget(self.button_clear, 5, 3)
         
         # set the grid layout for the group
         group_box.setLayout(grid_ptp)
@@ -274,7 +278,10 @@ class GUI(QtGui.QWidget):
 
         # send data
         self.dataTransfer(prefix+msg+motion_type)
-        
+
+    # function is called when the clear button is clicked
+    def buttonClearClicked(self):
+        return
         
     # function is called when the calculate IK button is clicked
     def buttonCalculateClicked(self):
