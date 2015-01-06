@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import sys
 import socket
 import Kinematics as kin
@@ -46,12 +48,12 @@ class GUI(QtGui.QWidget):
         grid_axes = QtGui.QGridLayout()
         
         # set up labels
-        label_axes_a1 = QtGui.QLabel('A1', self)    
-        label_axes_a2 = QtGui.QLabel('A2', self)
-        label_axes_a3 = QtGui.QLabel('A3', self)    
-        label_axes_a4 = QtGui.QLabel('A4', self)    
-        label_axes_a5 = QtGui.QLabel('A5', self)    
-        label_axes_a6 = QtGui.QLabel('A6', self)
+        label_axes_a1 = QtGui.QLabel(u'\u03B11', self)    
+        label_axes_a2 = QtGui.QLabel(u'\u03B12', self)
+        label_axes_a3 = QtGui.QLabel(u'\u03B13', self)    
+        label_axes_a4 = QtGui.QLabel(u'\u03B14', self)    
+        label_axes_a5 = QtGui.QLabel(u'\u03B15', self)    
+        label_axes_a6 = QtGui.QLabel(u'\u03B16', self)
         # set up line edits
         self.lineedit_axes_a1 = QtGui.QLineEdit('0', self)
         self.lineedit_axes_a2 = QtGui.QLineEdit('0', self)
@@ -97,9 +99,9 @@ class GUI(QtGui.QWidget):
         label_cartpos_x = QtGui.QLabel('X', self)
         label_cartpos_y = QtGui.QLabel('Y', self)
         label_cartpos_z = QtGui.QLabel('Z', self)
-        label_cartpos_a = QtGui.QLabel('A', self)
-        label_cartpos_b = QtGui.QLabel('B', self)
-        label_cartpos_c = QtGui.QLabel('C', self)
+        label_cartpos_a = QtGui.QLabel(u'\u03B1', self)
+        label_cartpos_b = QtGui.QLabel(u'\u03B2', self)
+        label_cartpos_c = QtGui.QLabel(u'\u03B3', self)
         # set up line edits 
         self.lineedit_cartpos_x = QtGui.QLineEdit('0', self)
         self.lineedit_cartpos_y = QtGui.QLineEdit('0', self)  
@@ -143,12 +145,12 @@ class GUI(QtGui.QWidget):
         grid_ptp = QtGui.QGridLayout()
         
         # set up labels
-        label_ptp_a1 = QtGui.QLabel('A1', self)
-        label_ptp_a2 = QtGui.QLabel('A2', self)
-        label_ptp_a3 = QtGui.QLabel('A3', self)
-        label_ptp_a4 = QtGui.QLabel('A4', self)
-        label_ptp_a5 = QtGui.QLabel('A5', self)
-        label_ptp_a6 = QtGui.QLabel('A6', self)
+        label_ptp_a1 = QtGui.QLabel(u'\u03B11', self)
+        label_ptp_a2 = QtGui.QLabel(u'\u03B12', self)
+        label_ptp_a3 = QtGui.QLabel(u'\u03B13', self)
+        label_ptp_a4 = QtGui.QLabel(u'\u03B14', self)
+        label_ptp_a5 = QtGui.QLabel(u'\u03B15', self)
+        label_ptp_a6 = QtGui.QLabel(u'\u03B16', self)
         # set up line edits 
         self.lineedit_ptp_a1 = QtGui.QLineEdit('0', self)  
         self.lineedit_ptp_a2 = QtGui.QLineEdit('0', self)  
@@ -207,9 +209,9 @@ class GUI(QtGui.QWidget):
         label_cartptp_x = QtGui.QLabel('X', self)
         label_cartptp_y = QtGui.QLabel('Y', self)
         label_cartptp_z = QtGui.QLabel('Z', self)
-        label_cartptp_a = QtGui.QLabel('A', self)
-        label_cartptp_b = QtGui.QLabel('B', self)
-        label_cartptp_c = QtGui.QLabel('C', self)  
+        label_cartptp_a = QtGui.QLabel(u'\u03B1', self)
+        label_cartptp_b = QtGui.QLabel(u'\u03B2', self)
+        label_cartptp_c = QtGui.QLabel(u'\u03B3', self)  
         # set up line edits 
         self.lineedit_cartptp_x = QtGui.QLineEdit('0', self)
         self.lineedit_cartptp_y = QtGui.QLineEdit('0', self)  
