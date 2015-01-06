@@ -79,8 +79,6 @@ def handleData(data):
         axis_values = str(axis_arr[0])+";"+str(axis_arr[1])+";"+str(axis_arr[2])+";"+str(axis_arr[3])+";"+str(axis_arr[4])+";"+str(axis_arr[5])+'#'
         
         # adding dummy values for orientation and position (you need to compute the values)
-        #welche Matrix nehme ich? wie berechnen wir diese?
-        
         T = kin.forward(robot)
         
         _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), T, 0.5, 2))
@@ -112,8 +110,7 @@ def handleData(data):
         else:
             ik_values = "not possible"
             
-
-        _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), kin.get_matrix_from( pose), 0.5, 2))
+        _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), kin.get_matrix_from(pose), 0.5, 2))
         
         for j in I:
             text =""
