@@ -8,7 +8,7 @@ import sys
 # e.g. 0.1, 0.01 or 0.001
 _SAMPLE_RATE = 0.01
 # length of the string minus 2, to subtract the two letters "0."
-_SAMPLE_RATE_DECIMAL = len(str(_SAMPLE_RATE))
+_SAMPLE_RATE_DECIMAL = len(str(_SAMPLE_RATE)) - 2
 # requirement to simulate a np.ceil() by np.round()
 _SAMPLE_RATE_CEIL_OFFSET = _SAMPLE_RATE / 2
 
@@ -244,10 +244,10 @@ def discretize(distance, velocity_limit, acceleration_limit, times_acc, times_de
     #===========================================================================
     
     # recalculate velocity limit
-    velocity_limit_discrete = distance / times_dec_discrete
+    velocity_limit_discrete = np.nan_to_num( distance / times_dec_discrete )
     
     # recalculate acceleration limit
-    acceleration_limit_discrete = velocity_limit_discrete / times_acc_discrete
+    acceleration_limit_discrete = np.nan_to_num( velocity_limit_discrete / times_acc_discrete )
     
     return velocity_limit_discrete, acceleration_limit_discrete, times_acc_discrete, times_dec_discrete, times_end_discrete
 
