@@ -28,6 +28,7 @@ def difference_rel(start_cfg, target_cfg):
 
 def distance_rel(start_cfg, target_cfg):
     diff = difference_rel(start_cfg, target_cfg)
+    # euclidean distance
     dist_pos = np.sqrt(np.sum(np.power(diff[:3],2)))
     dist_angle = np.sqrt(np.sum(np.power(diff[3:],2))) 
     return dist_pos, dist_angle
@@ -47,11 +48,13 @@ def PTPtoConfiguration(robot, target_cfg, motiontype):
     start_cfg = robot.GetDOFValues();
     diff_r = difference_rel(start_cfg, target_cfg)
     diff_a = np.fabs(difference_rel(start_cfg, target_cfg))
+    dist_pos, dist_angle = distance_rel(start_cfg, target_cfg)
     
     print 'start_cfg',start_cfg
     print 'target_cfg',target_cfg
     print 'difference_rel',diff_r
     print 'difference_abs',diff_a
+    print 'distance_pos',dist_pos,'distance_angle',dist_angle
     
     #TODO: Implement PTP (Replace pseudo implementation with your own code)! Consider the max. velocity and acceleration of each axis
     
