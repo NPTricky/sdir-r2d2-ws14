@@ -114,16 +114,6 @@ def handleData(data):
         else:
             ik_values = "not possible"
             return prefix+ik_values
-                        
-        print str(np.degrees(mf.get_fastest_inverse_solution(robot, I)))    
-
-        _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), kin.get_matrix_from( pose), 0.5, 2))
-        
-        mf.linear_trajectory_interpolation(robot, robot.GetDOFValues(), confs[0], 0.5, 1.5) 
-                
-        I = mf.get_possible_inverse_solution(robot, I)
-        
-        print str(np.degrees(I))
         
         return prefix+ik_values
     
