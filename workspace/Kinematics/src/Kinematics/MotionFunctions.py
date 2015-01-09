@@ -28,6 +28,7 @@ def difference_rel(start_pose, target_pose):
 
 def distance_rel(start_pose, target_pose):
     diff = difference_rel(start_pose, target_pose)
+    # euclidean distance
     dist_pos = np.sqrt(np.sum(np.power(diff[:3],2)))
     dist_angle = np.sqrt(np.sum(np.power(diff[3:],2))) 
     return dist_pos, dist_angle
@@ -48,11 +49,13 @@ def PTPtoConfiguration(robot, target_cfg, motiontype):
     start_cfg = robot.GetDOFValues();
     diff_r = difference_rel(start_cfg, target_cfg)
     diff_a = np.fabs(diff_r)
+    dist_pos, dist_angle = distance_rel(start_cfg, target_cfg)
     
     print 'start_cfg',start_cfg
     print 'target_cfg',target_cfg
     print 'difference_rel',diff_r
     print 'difference_abs',diff_a
+    print 'distance_pos',dist_pos,'distance_angle',dist_angle
     
     #TODO: Implement PTP (Replace pseudo implementation with your own code)! Consider the max. velocity and acceleration of each axis
     
@@ -78,7 +81,7 @@ def PTPtoConfiguration(robot, target_cfg, motiontype):
     
     # trajectory interpolation
     trajectory = generate_trajectory(start_cfg, target_cfg, velocity_limit, acceleration_limit, times_acc, times_dec, times_end)
-        
+    
     return trajectory
 
 def Move(robot, trajectory):
@@ -396,29 +399,19 @@ def linear_trajectory_interpolation(robot, start_cfg, target_cfg, velocity, acce
     
     last_cfg = lin_cfg[0];
     for cfg in lin_cfg[1:]:
-        
         distance_a = np.fabs(cfg - last_cfg)
-                
+
         # calculate velocity, acceleration and points in time for the trajectory interpolation
         velocity_limit, acceleration_limit, times_acc, times_dec, times_end = limits_and_times_full_synchronous(distance_a, velocity, acceleration)
         
         # make values discrete for trajectory interpolation
         velocity_limit, acceleration_limit, times_acc, times_dec, times_end = discretize(distance_a, velocity_limit, acceleration_limit, times_acc, times_dec, times_end)
-
-        print 'start_cfg',start_cfg
-        print 'target_cfg',target_cfg
-
-        print 'velocity_limit',velocity_limit
-        print 'acceleration_limit',acceleration_limit
-        print 't_acc',times_acc
-        print 't_dec',times_dec
-        print 't_end',times_end
         
         current_trajectory = generate_trajectory(last_cfg, cfg, velocity_limit, acceleration_limit, times_acc, times_dec, times_end)       
         
         # trajectory interpolation
         trajectory = np.concatenate((trajectory, current_trajectory[1:]))
-                
+        
         last_cfg = cfg
     
     return trajectory

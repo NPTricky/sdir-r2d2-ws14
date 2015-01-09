@@ -114,7 +114,7 @@ def handleData(data):
         else:
             ik_values = "not possible"
             return prefix+ik_values
-                
+        
         return prefix+ik_values
     
 if __name__ == "__main__":
