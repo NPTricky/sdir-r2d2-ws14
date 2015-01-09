@@ -150,11 +150,11 @@ def extract_euler_angles_from(matrix):
 @rtype: configurations of angles, angle in radiant
 @return: configuration for each joint of the robot
 """
-def inverse(pose):
+def inverse(pose, current_angles):
     """
     # calculate position of wrist point in coordinate system 0 and theta0
     """
-    theta0_0, theta0_1, P_wp0 = determine_theta0a_theta0b_and_wp0(pose)
+    theta0_0, theta0_1, P_wp0 = determine_theta0a_theta0b_and_wp0(pose, current_angles)
         
     """    
     # calculate position of wrist point in coordinate system 1 and  theta1
@@ -173,10 +173,10 @@ def inverse(pose):
     """
     # calculate of theta_3, theta_4 and theta_5
     """
-    theta3_000, theta3_001, theta4_000, theta4_001, theta5_000, theta5_001 = determine_theta3a_theta3b_theta4a_theta5b_theta5a_theta5b(theta0_0, theta1_00, theta2_00, pose)
-    theta3_010, theta3_011, theta4_010, theta4_011, theta5_010, theta5_011 = determine_theta3a_theta3b_theta4a_theta5b_theta5a_theta5b(theta0_0, theta1_01, theta2_01, pose)
-    theta3_100, theta3_101, theta4_100, theta4_101, theta5_100, theta5_101 = determine_theta3a_theta3b_theta4a_theta5b_theta5a_theta5b(theta0_1, theta1_10, theta2_10, pose)
-    theta3_110, theta3_111, theta4_110, theta4_111, theta5_110, theta5_111 = determine_theta3a_theta3b_theta4a_theta5b_theta5a_theta5b(theta0_1, theta1_11, theta2_11, pose)
+    theta3_000, theta3_001, theta4_000, theta4_001, theta5_000, theta5_001 = determine_theta3a_theta3b_theta4a_theta5b_theta5a_theta5b(theta0_0, theta1_00, theta2_00, pose, current_angles)
+    theta3_010, theta3_011, theta4_010, theta4_011, theta5_010, theta5_011 = determine_theta3a_theta3b_theta4a_theta5b_theta5a_theta5b(theta0_0, theta1_01, theta2_01, pose, current_angles)
+    theta3_100, theta3_101, theta4_100, theta4_101, theta5_100, theta5_101 = determine_theta3a_theta3b_theta4a_theta5b_theta5a_theta5b(theta0_1, theta1_10, theta2_10, pose, current_angles)
+    theta3_110, theta3_111, theta4_110, theta4_111, theta5_110, theta5_111 = determine_theta3a_theta3b_theta4a_theta5b_theta5a_theta5b(theta0_1, theta1_11, theta2_11, pose, current_angles)
     
     """
     # create the configurations
@@ -199,16 +199,18 @@ def inverse(pose):
 """
 @type pose: position and rotation of a point
 @param pose: point in robot coordinate system were move the robot
+@type current_angles: angles in radiant
+@param current_angles: current angels of the robot
 @rtype: three values; theta0a and theta0b in radiant and the wrist point in position and rotation of a point
 @return: theta0a, theta0b of joint 0 and position of wrist point in coordinate system 0
 """
-def determine_theta0a_theta0b_and_wp0(pose):
+def determine_theta0a_theta0b_and_wp0(pose, current_angles):
 
     # determine of the wrist point matrix for ks0
     P_wp0 = get_matrix_from( pose) * _TOOL
     
     if isOverheadSingularity(P_wp0):
-        theta0a = 0.0
+        theta0a = current_angles[0]
     else:
         theta0a = math.atan2( -get_y( P_wp0), get_x( P_wp0))
      
@@ -240,7 +242,7 @@ def determine_theta1a_theta1b_and_wp1(theta0, wp0):
 
     # check, it is not possible to reach the wrist point
     x = (-math.pow( d_h, 2) + math.pow( d_wp2, 2) + math.pow( get_a(1), 2)) / ( 2 * d_wp2 * get_a(1))
-    if x < -1 or 1 < x:
+    if 1 < np.fabs(x):
         return None, None, None
     
     alpha_h1 = math.acos( x )
@@ -284,10 +286,14 @@ def determine_theta2_and_wp2(theta1, wp1):
 @param theta1: angle of joint 1
 @type theta2: angle in radiant
 @param theta2: angle of joint 2
+@type pose: position and rotation of a point
+@param pose: point in robot coordinate system were move the robot
+@type current_angles: angles in radiant
+@param current_angles: current angels of the robot
 @rtype: six values; theta3a, theta3b, theta4a, theta4b, theta5a and theta5b in radiant 
 @return: angles for joint 3 to 6
 """
-def determine_theta3a_theta3b_theta4a_theta5b_theta5a_theta5b(theta0, theta1, theta2, pose):
+def determine_theta3a_theta3b_theta4a_theta5b_theta5a_theta5b(theta0, theta1, theta2, pose, current_angles):
     
     if theta0 is None or theta1 is None or theta2 is None:
         return None, None, None, None, None, None
@@ -302,8 +308,8 @@ def determine_theta3a_theta3b_theta4a_theta5b_theta5a_theta5b(theta0, theta1, th
     T_3_5 = np.linalg.inv( T_0_1 * T_1_2 * T_2_3 ) *  A * np.linalg.inv( _TOOL )
     
     if isWristSingularity(T_3_5):
-        theta3a = 0.0
-        theta4a = 0.0
+        theta3a = current_angles[3]
+        theta4a = current_angles[4]
         theta5a = math.atan2( -A[2,0], A[2,1])
     else:    
         theta3a = math.atan2( -T_3_5[1,2], T_3_5[0,2])    

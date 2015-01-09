@@ -358,7 +358,7 @@ def linear_trajectory_interpolation(robot, start_cfg, target_cfg, velocity, acce
     lin_cfg = []
     lin_cfg.append(start_cfg)
     
-    for i in range(1, time_steps_max - 1):
+    for i in range(1, time_steps_max-1):
         # calculate the time t 
         t = i * sample_rate
         
@@ -376,12 +376,14 @@ def linear_trajectory_interpolation(robot, start_cfg, target_cfg, velocity, acce
         current_pose = start_pose + delta
         
         # determine the inverse kinematics for the pose
-        inverse_cfgs = get_possible_inverse_solution(robot, kin.inverse(current_pose))
+        inverse_cfgs = get_possible_inverse_solution(robot, kin.inverse(current_pose, lin_cfg[-1]))
         
         if len(inverse_cfgs) == 0:
             return None
         
         lin_cfg.append(inverse_cfgs[0])
+        
+        _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), kin.forward(inverse_cfgs[0]), 0.2, 0.5))
         
     lin_cfg.append(target_cfg)
     
@@ -390,18 +392,27 @@ def linear_trajectory_interpolation(robot, start_cfg, target_cfg, velocity, acce
     velocity = robot.GetDOFVelocityLimits()
     acceleration = robot.GetDOFAccelerationLimits()
     
-    trajectory = np.ones([1,6]) * start_cfg
+    trajectory = np.ones([1,6]) * lin_cfg[0]
     
-    last_cfg = start_cfg;
+    last_cfg = lin_cfg[0];
     for cfg in lin_cfg[1:]:
         
-        distance_a = np.fabs(difference_rel(last_cfg, cfg))
+        distance_a = np.fabs(cfg - last_cfg)
                 
         # calculate velocity, acceleration and points in time for the trajectory interpolation
         velocity_limit, acceleration_limit, times_acc, times_dec, times_end = limits_and_times_full_synchronous(distance_a, velocity, acceleration)
         
         # make values discrete for trajectory interpolation
         velocity_limit, acceleration_limit, times_acc, times_dec, times_end = discretize(distance_a, velocity_limit, acceleration_limit, times_acc, times_dec, times_end)
+
+        print 'start_cfg',start_cfg
+        print 'target_cfg',target_cfg
+
+        print 'velocity_limit',velocity_limit
+        print 'acceleration_limit',acceleration_limit
+        print 't_acc',times_acc
+        print 't_dec',times_dec
+        print 't_end',times_end
         
         current_trajectory = generate_trajectory(last_cfg, cfg, velocity_limit, acceleration_limit, times_acc, times_dec, times_end)       
         

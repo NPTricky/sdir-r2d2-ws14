@@ -98,7 +98,7 @@ def handleData(data):
         pose = [ float(values[0]), float(values[1]), float(values[2]), 
                  float(values[3]), float(values[4]), float(values[5]) ]
         
-        I = kin.inverse( pose )        
+        I = kin.inverse( pose, robot.GetDOFValues() )        
         confs = mf.get_possible_inverse_solution(robot, I)
         
         # send the (multiple) solutions to the GUI
