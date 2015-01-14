@@ -85,10 +85,12 @@ def PTPtoConfiguration(robot, target_cfg, motiontype):
     return trajectory
 
 def Move(robot, trajectory):
-    for i in range(trajectory.shape[0]):
-        robot.SetDOFValues(trajectory[i])
-        _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), kin.forward(trajectory[i]), 0.2, 0.5))
-        time.sleep(_SAMPLE_RATE)
+    #_DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), kin._BASE, 4.0, 4.5))
+    if not trajectory is None:
+        for i in range(trajectory.shape[0]):
+            robot.SetDOFValues(trajectory[i])
+            _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), kin.forward(trajectory[i]), 0.2, 0.5))
+            time.sleep(_SAMPLE_RATE)
 
 
 
@@ -121,10 +123,73 @@ def get_fastest_inverse_solution(robot, configurations):
     return ret_value
 
 """
+@type current_cfg: angle in radiant
+@param current_cfg: current angle configuration for each joint of the robot
+@type: possible_confs: angle in radiant
+@param: possible_confs: possible configurations for each joint of the robot
+@rtype: one configuration from the possible configurations, angle in radiant
+@return: the best configuration with the lowest angle difference
+"""
+def get_best_inverse_angles_solution(current_cfg, possible_confs):
+    
+    # determine the angle difference from the configurations and the current configuration
+    difference_confs = possible_confs - current_cfg
+    
+    # determine the minimum angles difference
+    min = np.ones(len(current_cfg)) * np.inf
+    for i in xrange(len(min)):
+        for cfg in difference_confs:
+            min[i] = cfg[i] if np.fabs(cfg[i]) < np.fabs(min[i]) else min[i]
+    
+    # compare the angle differences with the minimum angle difference
+    res = np.where(np.fabs(difference_confs) == np.fabs(min))
+    
+    # compare the result with a mask for determine of the lowest
+    # angle difference solution for the first three angles 
+    mask = np.array((0,1,2))
+    index = []
+    for j in xrange(len(mask)):
+        for i in xrange(len(res[1]) - len(mask)):
+            if np.all(res[1][i:i+len(mask)] == mask):
+                index.append(res[0][i])
+        
+        if 0 < len(index): 
+            break
+        
+        mask = np.delete(mask, len(mask)-1)
+        
+    # determine the new minimum angles difference form the result of the compare with the mask
+    min = np.ones(len(current_cfg)) * np.inf
+    for i in xrange(len(min)):    
+        for j in index:
+            min[i] = difference_confs[j][i] if np.fabs(difference_confs[j][i]) < np.fabs(min[i]) else min[i]
+    
+    # compare the angle differences with the new minimum angle difference
+    res = np.where(np.fabs(difference_confs) == np.fabs(min))
+    
+    # compare the result with a mask for determine of the lowest
+    # angle difference solution for the last three angles 
+    mask = np.array((3,4,5))
+    for j in xrange(len(mask)):
+        for i in xrange(len(res[1]) - len(mask)):
+            if np.all(res[1][i:i+len(mask)] == mask):
+                index.append(res[0][i])
+        
+        if 0 < len(index): 
+            break
+        
+        mask = np.delete(mask, len(mask)-1)
+    
+    
+    return possible_confs[index[-1]]
+
+"""
 @type robot: model of the robot
 @param robot: robot instance
+@type configurations: angles in radiant
+@param configurations: configuration for each joint of the robot
 @rtype: configurations of angles, angle in radiant
-@return: configuration for each joint of the robot
+@return: possible configuration for each joint of the robot 
 """
 def get_possible_inverse_solution(robot, configurations):
 
@@ -132,7 +197,7 @@ def get_possible_inverse_solution(robot, configurations):
         return None
         
     angle_limits = robot.GetDOFLimits()
-    
+        
     ret_value = []
     for conf in configurations:
         if np.less_equal(angle_limits[0], conf).all() and np.less_equal(conf, angle_limits[1]).all():
@@ -150,6 +215,7 @@ def generate_trajectory(start_cfg, target_cfg, velocity_limit, acceleration_limi
     
     # maximum time step count
     time_steps_max = int(time_steps_end.max())
+    print time_steps_max
 
     trajectory = np.empty([time_steps_max, len(start_cfg)])
     trajectory[0] = start_cfg
@@ -341,6 +407,7 @@ def linear_trajectory_interpolation(robot, start_cfg, target_cfg, velocity, acce
                                                     linewidth=1.0,
                                                     colors=np.array(((0,0,0),(0,0,0))))) 
     
+    # create the path interpolation from the target position to the start position
     # calculate the difference form start to end position and the distance
     diff = difference_rel(start_pose, target_pose)
     sign_diff = np.sign(diff)
@@ -359,9 +426,9 @@ def linear_trajectory_interpolation(robot, start_cfg, target_cfg, velocity, acce
     time_steps_max = np.int(time_end / sample_rate)
     
     lin_cfg = []
-    lin_cfg.append(start_cfg)
+    lin_cfg.append(target_cfg)
     
-    for i in range(1, time_steps_max-1):
+    for i in range(1, time_steps_max - 1):
         # calculate the time t 
         t = i * sample_rate
         
@@ -376,7 +443,7 @@ def linear_trajectory_interpolation(robot, start_cfg, target_cfg, velocity, acce
             delta = diff
         
         # determine the current position and orientation at time t
-        current_pose = start_pose + delta
+        current_pose = target_pose - delta
         
         # determine the inverse kinematics for the pose
         inverse_cfgs = get_possible_inverse_solution(robot, kin.inverse(current_pose, lin_cfg[-1]))
@@ -384,12 +451,16 @@ def linear_trajectory_interpolation(robot, start_cfg, target_cfg, velocity, acce
         if len(inverse_cfgs) == 0:
             return None
         
-        lin_cfg.append(inverse_cfgs[0])
+        inverse_cfg = get_best_inverse_angles_solution( lin_cfg[-1], inverse_cfgs)
         
-        _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), kin.forward(inverse_cfgs[0]), 0.2, 0.5))
+        lin_cfg.append(inverse_cfg)
         
-    lin_cfg.append(target_cfg)
+        _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), kin.forward(inverse_cfg), 0.2, 0.5))
+        
+    lin_cfg.append(start_cfg)
     
+    # flip the array for the trajectory generation from the start position to the end postition
+    lin_cfg = lin_cfg[::-1]
     
     # generation of the trajectory path
     velocity = robot.GetDOFVelocityLimits()
