@@ -132,9 +132,36 @@ def get_fastest_inverse_solution(robot, configurations):
 """
 def get_best_inverse_angles_solution(current_cfg, possible_confs):
     
-    # determine the angle difference from the configurations and the current configuration
-    difference_confs = possible_confs - current_cfg
+    indices = np.array(xrange(len(possible_confs)))
+    configurations = possible_confs
+        
+    for j in xrange(len(possible_confs)):        
+        indices = indices_of_lowest_difference_of_mask_angles( current_cfg, configurations, np.array((0,1,2,3,4,5)))
+        
+        print "indices:", j ,  indices
+        
+        if len(indices) < 2:
+            break
+        
+        temp_configuration = []
+        for i in indices:
+            temp_configuration.append( configurations[i] )
+        
+        configurations = temp_configuration
+        
+    print "indices:", indices
+    print "configurations:" , configurations
+    print "possible_confs:" , possible_confs 
     
+    return configurations[indices[0]]
+
+    
+    
+def indices_of_lowest_difference_of_mask_angles(current_cfg, configurations, angle_mask):
+    
+    # determine the angle difference from the configurations and the current configuration
+    difference_confs = configurations - current_cfg
+
     # determine the minimum angles difference
     min = np.ones(len(current_cfg)) * np.inf
     for i in xrange(len(min)):
@@ -146,43 +173,20 @@ def get_best_inverse_angles_solution(current_cfg, possible_confs):
     
     # compare the result with a mask for determine of the lowest
     # angle difference solution for the first three angles 
-    mask = np.array((0,1,2))
-    index = []
-    for j in xrange(len(mask)):
+    mask = angle_mask
+    indices = []
+    for j in xrange(len(angle_mask)):
         for i in xrange(len(res[1]) - len(mask)):
             if np.all(res[1][i:i+len(mask)] == mask):
-                index.append(res[0][i])
+                indices.append(res[0][i])
         
-        if 0 < len(index): 
+        if 0 < len(indices): 
             break
         
-        mask = np.delete(mask, len(mask)-1)
+        # if the angle mask not found, resize the mask
+        mask = np.delete(mask, len(mask) - 1)
         
-    # determine the new minimum angles difference form the result of the compare with the mask
-    min = np.ones(len(current_cfg)) * np.inf
-    for i in xrange(len(min)):    
-        for j in index:
-            min[i] = difference_confs[j][i] if np.fabs(difference_confs[j][i]) < np.fabs(min[i]) else min[i]
-    
-    # compare the angle differences with the new minimum angle difference
-    res = np.where(np.fabs(difference_confs) == np.fabs(min))
-    
-    # compare the result with a mask for determine of the lowest
-    # angle difference solution for the last three angles 
-    mask = np.array((3,4,5))
-    for j in xrange(len(mask)):
-        for i in xrange(len(res[1]) - len(mask)):
-            if np.all(res[1][i:i+len(mask)] == mask):
-                index.append(res[0][i])
-        
-        if 0 < len(index): 
-            break
-        
-        mask = np.delete(mask, len(mask)-1)
-    
-    
-    return possible_confs[index[-1]]
-
+    return indices
 """
 @type robot: model of the robot
 @param robot: robot instance
@@ -215,8 +219,7 @@ def generate_trajectory(start_cfg, target_cfg, velocity_limit, acceleration_limi
     
     # maximum time step count
     time_steps_max = int(time_steps_end.max())
-    print time_steps_max
-
+    
     trajectory = np.empty([time_steps_max, len(start_cfg)])
     trajectory[0] = start_cfg
     trajectory[time_steps_max-1] = target_cfg
@@ -451,7 +454,7 @@ def linear_trajectory_interpolation(robot, start_cfg, target_cfg, velocity, acce
         if len(inverse_cfgs) == 0:
             return None
         
-        inverse_cfg = get_best_inverse_angles_solution( lin_cfg[-1], inverse_cfgs)
+        inverse_cfg = inverse_cfgs[0] #get_best_inverse_angles_solution( lin_cfg[-1], inverse_cfgs)
         
         lin_cfg.append(inverse_cfg)
         
