@@ -46,7 +46,7 @@ def PTPtoConfiguration(robot, target_cfg, motiontype):
     """
     
     # current axis angles of the robot - array of floats
-    start_cfg = robot.GetDOFValues();
+    start_cfg = robot.GetDOFValues()
     diff_r = difference_rel(start_cfg, target_cfg)
     diff_a = np.fabs(diff_r)
     dist_pos, dist_angle = distance_rel(start_cfg, target_cfg)
