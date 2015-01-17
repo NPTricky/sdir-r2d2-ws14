@@ -1,6 +1,7 @@
 from openravepy import *
 import Kinematics as kin
 import MotionFunctions as mf
+import RRT as rrt
 import numpy as np
 import sys
 import socket
@@ -152,5 +153,7 @@ if __name__ == "__main__":
 
     #configList = [[0,0,0,0,90,0], [90,0,0,0,0,0]] 
     #config = kin.selectConfiguration(configList)
+    
+    #rrt.generate_rrt(robot, 100, None)
     
     dataTransfer()
