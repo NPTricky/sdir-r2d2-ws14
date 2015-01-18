@@ -10,7 +10,6 @@ import numpy as np
 # tipps
 # use inverse kinematics for the obstacles to transform them into c space
 
-
 # input:
 # - g: graph to plot
 # - layout: plot layout algorithm
@@ -28,6 +27,7 @@ def plot_igraph(graph, layout):
 
 # generate a random state in the configuration space
 def generate_random_state():
+    #angular_limit = robot.GetDOFLimits()
     state_random = 0.0
     return state_random
 
@@ -37,13 +37,17 @@ def generate_random_state():
 # find the nearest neighbor of a (random) state about to be inserted into the graph
 def find_nearest_neighbor(state, graph):
     state_near = 0.0
-    return state_near
+    state_near_idx = 0
+    return state_near,state_near_idx
 
 # input:
 # - state_init:
-# - goal_state:
-# selects the minimal input_u to reach the goal_state from the start_state
-def select_input(state_init, goal_state):
+# - state_goal:
+# selects the minimal input_u to reach the state_goal from the state_init
+def select_input(state_init, state_goal):
+    #difference = np.fabs(mf.difference_rel(start_cfg, target_cfg))
+    #velocity_limit, acceleration_limit, times_acc, times_dec, times_end = mf.limits_and_times(robot, difference, 'F')
+    #velocity_limit, acceleration_limit, times_acc, times_dec, times_end = mf.discretize(difference, velocity_limit, acceleration_limit, times_acc, times_dec, times_end)
     input_u = 0.0
     return input_u
 
@@ -51,7 +55,7 @@ def select_input(state_init, goal_state):
 # - state_init:
 # - input_u:
 # - delta_time:
-# generates a new state from the given start_state and input
+# generates a new state from the given state_init and input
 def generate_state(state_init, input_u, delta_time):
     state_new = 0.0
     return state_new
@@ -63,17 +67,11 @@ def generate_state(state_init, input_u, delta_time):
 # output:
 # - rrt graph g
 def generate_rrt(robot, target_cfg, vertex_count, delta_time):
-    # knowledge base
-    start_cfg = robot.GetDOFValues()
-    difference = np.fabs(mf.difference_rel(start_cfg, target_cfg))
-    velocity_limit, acceleration_limit, times_acc, times_dec, times_end = mf.limits_and_times(robot, difference, 'F')
-    velocity_limit, acceleration_limit, times_acc, times_dec, times_end = mf.discretize(difference, velocity_limit, acceleration_limit, times_acc, times_dec, times_end)
-    
     # create initial & goal state for the rrt algorithm
     velocity = 0.0
-    state_init = np.append(start_cfg,velocity)
-    state_goal = np.append(target_cfg,velocity)
+    state_init = np.append(robot.GetDOFValues(),velocity)
     print 'state_init: ',state_init
+    state_goal = np.append(target_cfg,velocity)
     print 'state_goal: ',state_goal
     
     # create graph structure with initial state
@@ -81,11 +79,15 @@ def generate_rrt(robot, target_cfg, vertex_count, delta_time):
     g.add_vertices(vertex_count)
     g.vs[0]["state"] = state_init
     
-    # explore
-    angular_limit = robot.GetDOFLimits()
-    
-    for i in range(1, vertex_count - 1):
-        a = start_cfg
+    # entire rrt algorithm as in [Lav98c]
+    for i in range(1, vertex_count):
+        state_random = generate_random_state()
+        state_near,state_near_idx = find_nearest_neighbor(state_random, g)
+        input_u = select_input(state_near, state_random)
+        state_new = generate_state(state_near, input_u, delta_time)
+        g.vs[i]["state"] = state_new
+        g.add_edges((state_near_idx, i))
+        g.es[i-1]["input_u"] = input_u
     
     plot_igraph(g, g.layout_kamada_kawai())
 
