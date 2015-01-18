@@ -155,6 +155,6 @@ if __name__ == "__main__":
     #configList = [[0,0,0,0,90,0], [90,0,0,0,0,0]] 
     #config = kin.selectConfiguration(configList)
     
-    rrt.generate_rrt(robot, [1.2,-1.8,0.55,0.2,1.2,-3.2], 100, None)
+    rrt.rrt(robot, [1.2,-1.8,0.55,0.2,1.2,-3.2])
     
     dataTransfer()
