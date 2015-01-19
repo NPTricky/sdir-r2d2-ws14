@@ -14,6 +14,9 @@ def get_cfg(state):
 # return the velocity of the given state
 def get_v(state):
     return state[6]
+# create a state from a given configuration and velocity
+def create_state(cfg, v = 0.0):
+    return np.append(cfg, v)
 
 # general hints
 # - why? saves a lot of inverse kinematic calculation time
@@ -64,7 +67,7 @@ def generate_random_state(robot):
     while valid == False:
         configuration_random = lower + np.random.sample(len(lower)) * angular_limits_difference
         valid = is_valid(robot, configuration_random)
-    return np.append(configuration_random,0.0)
+    return create_state(configuration_random)
 
 
 
@@ -77,9 +80,9 @@ def generate_random_state(robot):
 # find the nearest neighbor of a (random) state about to be inserted into the graph
 def find_nearest_neighbor(state, graph):
     search_structure = spatial.KDTree(graph.vs["configuration"])
-    # search for smallest euclidean distance between configurations
-    distance, state_near_idx = search_structure.query(get_cfg(state),1);
-    state_near = np.append(graph.vs["configuration"][state_near_idx],graph.vs["velocity"][state_near_idx])
+    # search for smallest euclidean distance between configurations (knn with k = 1)
+    distance, state_near_idx = search_structure.query(get_cfg(state), 1);
+    state_near = create_state(graph.vs["configuration"][state_near_idx], graph.vs["velocity"][state_near_idx])
     return state_near,state_near_idx
 
 
