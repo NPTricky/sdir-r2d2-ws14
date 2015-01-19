@@ -4,9 +4,11 @@ import igraph as ig
 import MotionFunctions as mf
 import Kinematics as kin
 import numpy as np
+import random
 
 # six angles and one velocity parameter
 _STATE_LEN = 7
+_GENERATE_GOAL_DIVISOR = 100 # 1/100's chance to generate goal state
 
 # return the configuration of the given state
 def get_cfg(state):
@@ -58,9 +60,12 @@ def is_valid(robot, configuration):
 
 # input:
 # - robot:
+# - state_goal:
 # output:
 # - random state in the configuration space (velocity of 0.0)
-def generate_random_state(robot):
+def generate_random_state(robot, state_goal):
+    if random.randint(1, _GENERATE_GOAL_DIVISOR) == 1:
+        return state_goal
     lower,upper = robot.GetDOFLimits()
     angular_limits_difference = upper - lower
     valid = False
@@ -148,7 +153,7 @@ def generate_rt(robot, target_cfg, vertex_count, delta_time):
     
     # entire rt generation algorithm as in [Lav98c]
     for i in range(1, vertex_count):
-        state_random = generate_random_state(robot)
+        state_random = generate_random_state(robot, state_goal)
         state_near,state_near_idx = find_nearest_neighbor(state_random, g)
         input_u = select_input(state_near, state_random)
         state_new = generate_state(state_near, input_u, delta_time)
