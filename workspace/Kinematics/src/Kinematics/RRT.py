@@ -8,8 +8,10 @@ import numpy as np
 # six angles and one velocity parameter
 _STATE_LEN = 7
 
+# return the configuration of the given state
 def get_cfg(state):
     return state[:5]
+# return the velocity of the given state
 def get_v(state):
     return state[6]
 
@@ -33,15 +35,20 @@ def plot_igraph(graph, layout):
     return
 
 
+
 # input:
 # - robot:
-# - state: state to be checked
+# - configuration: configuration to be checked
 # output:
-# - boolean whether state is valid (in free space)
-def is_valid(robot, state):
+# - boolean whether configuration is valid (in free space)
+def is_valid(robot, configuration):
+    configuration_backup = robot.GetDOFValues()
+    robot.SetDOFValues(configuration)
     report = CollisionReport()
     inlier = robot.GetEnv().CheckCollision(robot,report)
-    contact_count = len(report.contacts) + 1 if robot.CheckSelfCollision() else len(report.contacts)
+    contact_count = len(report.contacts)
+    contact_count = contact_count + 1 if robot.CheckSelfCollision() else contact_count
+    robot.SetDOFValues(configuration_backup)
     return len(report.contacts) < 1
 
 
@@ -49,15 +56,15 @@ def is_valid(robot, state):
 # input:
 # - robot:
 # output:
-# - random state in the configuration space
-def generate_random_state(robot):
+# - random configuration in the configuration space
+def generate_random_configuration(robot):
     lower,upper = robot.GetDOFLimits()
     angular_limits_difference = upper - lower
     valid = False
     while valid == False:
-        state_random = lower + np.random.sample(len(lower)) * angular_limits_difference
-        valid = is_valid(robot, state_random)
-    return state_random
+        configuration_random = lower + np.random.sample(len(lower)) * angular_limits_difference
+        valid = is_valid(robot, configuration_random)
+    return configuration_random
 
 
 
@@ -70,9 +77,9 @@ def generate_random_state(robot):
 # find the nearest neighbor of a (random) state about to be inserted into the graph
 def find_nearest_neighbor(state, graph):
     search_structure = spatial.KDTree(graph.vs["configuration"])
-    # search for smallest euclidean distance between configurations (state[0:5])
+    # search for smallest euclidean distance between configurations
     distance, state_near_idx = search_structure.query(get_cfg(state),1);
-    state_near = graph.vs["configuration"][state_near_idx]
+    state_near = np.append(graph.vs["configuration"][state_near_idx],graph.vs["velocity"][state_near_idx])
     return state_near,state_near_idx
 
 
@@ -139,7 +146,7 @@ def generate_rt(robot, target_cfg, vertex_count, delta_time):
     
     # entire rt generation algorithm as in [Lav98c]
     for i in range(1, vertex_count):
-        state_random = generate_random_state(robot)
+        state_random = generate_random_configuration(robot)
         state_near,state_near_idx = find_nearest_neighbor(state_random, g)
         input_u = select_input(state_near, state_random)
         state_new = generate_state(state_near, input_u, delta_time)
