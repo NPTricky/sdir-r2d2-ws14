@@ -56,15 +56,15 @@ def is_valid(robot, configuration):
 # input:
 # - robot:
 # output:
-# - random configuration in the configuration space
-def generate_random_configuration(robot):
+# - random state in the configuration space (velocity of 0.0)
+def generate_random_state(robot):
     lower,upper = robot.GetDOFLimits()
     angular_limits_difference = upper - lower
     valid = False
     while valid == False:
         configuration_random = lower + np.random.sample(len(lower)) * angular_limits_difference
         valid = is_valid(robot, configuration_random)
-    return configuration_random
+    return np.append(configuration_random,0.0)
 
 
 
@@ -146,7 +146,7 @@ def generate_rt(robot, target_cfg, vertex_count, delta_time):
     
     # entire rt generation algorithm as in [Lav98c]
     for i in range(1, vertex_count):
-        state_random = generate_random_configuration(robot)
+        state_random = generate_random_state(robot)
         state_near,state_near_idx = find_nearest_neighbor(state_random, g)
         input_u = select_input(state_near, state_random)
         state_new = generate_state(state_near, input_u, delta_time)
