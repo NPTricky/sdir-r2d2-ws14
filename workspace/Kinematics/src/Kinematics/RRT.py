@@ -137,10 +137,9 @@ def insert_state(state, graph):
 # - rt graph g
 def generate_rt(robot, target_cfg, vertex_count, delta_time):
     # create initial & goal state for the rrt algorithm
-    velocity = 0.0
-    state_init = np.append(robot.GetDOFValues(),velocity)
+    state_init = create_state(robot.GetDOFValues())
     print 'state_init:',state_init,'- len:',len(state_init)
-    state_goal = np.append(target_cfg,velocity)
+    state_goal = create_state(target_cfg)
     print 'state_goal:',state_goal,'- len:',len(state_goal)
     
     # create graph structure with initial state
