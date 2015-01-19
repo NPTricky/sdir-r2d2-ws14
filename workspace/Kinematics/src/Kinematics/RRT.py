@@ -52,7 +52,7 @@ def is_valid(robot, configuration):
     contact_count = len(report.contacts)
     contact_count = contact_count + 1 if robot.CheckSelfCollision() else contact_count
     robot.SetDOFValues(configuration_backup)
-    return len(report.contacts) < 1
+    return contact_count < 1
 
 
 
