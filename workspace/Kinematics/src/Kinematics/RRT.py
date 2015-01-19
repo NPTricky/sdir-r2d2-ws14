@@ -8,6 +8,11 @@ import numpy as np
 # six angles and one velocity parameter
 _STATE_LEN = 7
 
+def get_cfg(state):
+    return state[:5]
+def get_v(state):
+    return state[6]
+
 # general hints
 # - why? saves a lot of inverse kinematic calculation time
 # - use inverse kinematics for the obstacles to transform them into c space
@@ -28,14 +33,30 @@ def plot_igraph(graph, layout):
     return
 
 
+# input:
+# - robot:
+# - state: state to be checked
+# output:
+# - boolean whether state is valid (in free space)
+def is_valid(robot, state):
+    report = CollisionReport()
+    inlier = robot.GetEnv().CheckCollision(robot,report)
+    contact_count = len(report.contacts) + 1 if robot.CheckSelfCollision() else len(report.contacts)
+    return len(report.contacts) < 1
+
+
 
 # input:
 # - robot:
 # output:
 # - random state in the configuration space
 def generate_random_state(robot):
-    angular_limits = robot.GetDOFLimits()
-    state_random = np.zeros(_STATE_LEN)
+    lower,upper = robot.GetDOFLimits()
+    angular_limits_difference = upper - lower
+    valid = False
+    while valid == False:
+        state_random = lower + np.random.sample(len(lower)) * angular_limits_difference
+        valid = is_valid(robot, state_random)
     return state_random
 
 
@@ -50,7 +71,7 @@ def generate_random_state(robot):
 def find_nearest_neighbor(state, graph):
     search_structure = spatial.KDTree(graph.vs["configuration"])
     # search for smallest euclidean distance between configurations (state[0:5])
-    distance, state_near_idx = search_structure.query(state[0:5],1);
+    distance, state_near_idx = search_structure.query(get_cfg(state),1);
     state_near = graph.vs["configuration"][state_near_idx]
     return state_near,state_near_idx
 
@@ -92,8 +113,8 @@ def insert_state(state, graph):
     idx = graph.vcount()-1
     vertex = graph.vs[idx]
     vertex["name"] = idx
-    vertex["configuration"] = state[0:5]
-    vertex["velocity"] = state[6]
+    vertex["configuration"] = get_cfg(state)
+    vertex["velocity"] = get_v(state)
     return idx
 
 
@@ -108,9 +129,9 @@ def generate_rt(robot, target_cfg, vertex_count, delta_time):
     # create initial & goal state for the rrt algorithm
     velocity = 0.0
     state_init = np.append(robot.GetDOFValues(),velocity)
-    print 'state_init: ',state_init,' - len:',len(state_init)
+    print 'state_init:',state_init,'- len:',len(state_init)
     state_goal = np.append(target_cfg,velocity)
-    print 'state_goal: ',state_goal,' - len:',len(state_goal)
+    print 'state_goal:',state_goal,'- len:',len(state_goal)
     
     # create graph structure with initial state
     g = ig.Graph()
@@ -139,4 +160,3 @@ def rrt(robot, target_cfg):
     rt = generate_rt(robot, target_cfg, vertex_count, delta_time)
 
 
-    
