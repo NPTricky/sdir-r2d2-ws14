@@ -8,7 +8,7 @@ import random
 
 _STATE_LEN = 7 # six angles and one velocity parameter (kinodynamic problem)
 _GENERATE_GOAL_DIVISOR = 100 # 1/100's chance to generate goal state
-_RRT_PRECISION = 0.1 # sampling interval of in between vertices
+_RRT_PRECISION = 1 # sampling interval of in between vertices (lower == higher precision)
 
 # return the configuration of the given state
 def get_cfg(state):
@@ -48,7 +48,9 @@ def lerp(cfg_init, cfg_goal, t):
     return (1 - t) * cfg_init + t * cfg_goal
 
 def lerp_range(cfg_init, cfg_goal):
-    return int((1 / _RRT_PRECISION) * max(np.linalg.norm(cfg_goal - cfg_init),1))
+    max_i = (1 / _RRT_PRECISION) * max(np.linalg.norm(cfg_goal - cfg_init),1)
+    factor = 1 / max_i
+    return int(max_i), factor
 
 # input:
 # - robot:
@@ -74,13 +76,13 @@ def is_valid(robot, configuration):
 # output:
 # - possible configuration
 def make_valid(robot, cfg_init, cfg_goal):
-    assert(np.testing.assert_array_almost_equal(cfg_init,cfg_goal))
-    # check in relation to precision and length
-    max_i = lerp_range(cfg_init, cfg_goal)
-    for i in xrange(1,max_i):
-        valid = is_valid(robot, lerp(cfg_init, cfg_goal, i * _RRT_PRECISION))
+    if (cfg_goal - cfg_init).all() < mf._EPS:
+        return cfg_init
+    max_i, factor = lerp_range(cfg_init, cfg_goal)
+    for i in xrange(1,max_i-1):
+        valid = is_valid(robot, lerp(cfg_init, cfg_goal, i * factor))
         if not valid:
-            return lerp(cfg_init, cfg_goal, (i - 1) * _RRT_PRECISION)
+            return lerp(cfg_init, cfg_goal, (i - 1) * factor)
     return cfg_goal
 
 
@@ -114,25 +116,38 @@ def generate_random_state(robot, state_goal):
 # find the nearest neighbor of a (random) state about to be inserted into the graph
 def find_nearest_neighbor(robot, state_goal, graph):
     # search structure creation (including interpolation of edges)
-    # dead code at the moment
-    """
+    edge_interpolation = []
+    # keep track of edge index
+    edge_idx = 0
+    edge_idx_list = []
     for a,b in graph.get_edgelist():
         cfg_init = graph.vs["configuration"][a]
         cfg_goal = graph.vs["configuration"][b]
-        if np.testing.assert_array_almost_equal(cfg_init,cfg_goal):
-            continue
-        max_i = lerp_range(cfg_init, cfg_goal) - 1
-        for i in xrange(1,max_i):
-            inbetween = lerp(cfg_init, cfg_goal, i * _RRT_PRECISION)
-        print a, b, cfg_init, cfg_goal
-    """
-    search_structure = spatial.KDTree(graph.vs["configuration"])
+        if (cfg_goal - cfg_init).all() < mf._EPS:
+            edge_interpolation.append(cfg_goal)
+            edge_idx_list.append(a)
+        else:
+            max_i, factor = lerp_range(cfg_init, cfg_goal)
+            for i in xrange(0,max_i):
+                edge_interpolation.append(lerp(cfg_init, cfg_goal, i * factor))
+                edge_idx_list.append(a)
+    
+    search_container = graph.vs["configuration"] + edge_interpolation
+    search_structure = spatial.KDTree(search_container)
     # search for smallest (euclidean) distance between configurations (KNN with k = 1)
     distance, state_near_idx = search_structure.query(get_cfg(state_goal), 1);
-    state_near = create_state(graph.vs["configuration"][state_near_idx], graph.vs["velocity"][state_near_idx])
+    if state_near_idx < len(graph.vs["configuration"]):
+        state_near = create_state(graph.vs["configuration"][state_near_idx], graph.vs["velocity"][state_near_idx])
+    else:
+        state_near = create_state(search_container[state_near_idx])
+        state_near_idx = insert_state(state_near, graph)
+        insert_edge(edge_idx_list[state_near_idx], state_near_idx, graph)
     return state_near,state_near_idx
 
 
+
+def generate_state_naive(state_init, state_goal, delta_time):
+    return state_goal
 
 # input:
 # - state_init:
@@ -200,7 +215,7 @@ def generate_rt(robot, target_cfg, vertex_count, delta_time):
     for i in range(1, vertex_count):
         state_random = generate_random_state(robot, state_goal)
         state_near,state_near_idx = find_nearest_neighbor(robot, state_random, g)
-        state_new = generate_state(state_near, state_random, delta_time)
+        state_new = generate_state_naive(state_near, state_random, delta_time)
         state_new_idx = insert_state(state_new, g)
         # add edge and assign input_u as an attribute
         edge_idx = insert_edge(state_near_idx, state_new_idx, g)
