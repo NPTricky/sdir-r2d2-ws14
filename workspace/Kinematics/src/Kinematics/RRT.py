@@ -9,6 +9,7 @@ import random
 _STATE_LEN = 7 # six angles and one velocity parameter (kinodynamic problem)
 _GENERATE_GOAL_DIVISOR = 100 # 1/100's chance to generate goal state
 _RRT_PRECISION = 1 # sampling interval of in between vertices (lower == higher precision)
+_EPS = 1e-4
 
 # return the configuration of the given state
 def get_cfg(state):
@@ -44,13 +45,20 @@ def plot_igraph(graph, layout):
 
 
 
+# interpolate between two configurations with parameter t
 def lerp(cfg_init, cfg_goal, t):
+    assert(t <= 1) # try not to extrapolate
     return (1 - t) * cfg_init + t * cfg_goal
 
+
+
+# apply the precision parameters
 def lerp_range(cfg_init, cfg_goal):
     max_i = (1 / _RRT_PRECISION) * max(np.linalg.norm(cfg_goal - cfg_init),1)
     factor = 1 / max_i
     return int(max_i), factor
+
+
 
 # input:
 # - robot:
@@ -123,25 +131,30 @@ def find_nearest_neighbor(robot, state_goal, graph):
     for a,b in graph.get_edgelist():
         cfg_init = graph.vs["configuration"][a]
         cfg_goal = graph.vs["configuration"][b]
-        if (cfg_goal - cfg_init).all() < mf._EPS:
-            edge_interpolation.append(cfg_goal)
-            edge_idx_list.append(a)
+        if (cfg_goal - cfg_init).all() < _EPS:
+            # distance not interpolation worthy
+            continue
         else:
             max_i, factor = lerp_range(cfg_init, cfg_goal)
-            for i in xrange(0,max_i):
+            for i in xrange(1,max_i-1):
                 edge_interpolation.append(lerp(cfg_init, cfg_goal, i * factor))
                 edge_idx_list.append(a)
     
+    interpolation_idx_offset = len(graph.vs["configuration"])
     search_container = graph.vs["configuration"] + edge_interpolation
     search_structure = spatial.KDTree(search_container)
     # search for smallest (euclidean) distance between configurations (KNN with k = 1)
-    distance, state_near_idx = search_structure.query(get_cfg(state_goal), 1);
-    if state_near_idx < len(graph.vs["configuration"]):
-        state_near = create_state(graph.vs["configuration"][state_near_idx], graph.vs["velocity"][state_near_idx])
+    distance, search_idx = search_structure.query(get_cfg(state_goal), 1);
+    if search_idx < interpolation_idx_offset:
+        # state is already in the graph
+        state_near = create_state(graph.vs["configuration"][search_idx], graph.vs["velocity"][search_idx])
+        state_near_idx = search_idx
     else:
-        state_near = create_state(search_container[state_near_idx])
+        # state is not already in the graph
+        state_near_cfg = make_valid(robot, search_container[search_idx], get_cfg(state_goal))
+        state_near = create_state(state_near_cfg)
         state_near_idx = insert_state(state_near, graph)
-        insert_edge(edge_idx_list[state_near_idx], state_near_idx, graph)
+        insert_edge(edge_idx_list[search_idx-interpolation_idx_offset], state_near_idx, graph)
     return state_near,state_near_idx
 
 
