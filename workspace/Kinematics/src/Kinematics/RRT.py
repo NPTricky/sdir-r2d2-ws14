@@ -6,9 +6,9 @@ import Kinematics as kin
 import numpy as np
 import random
 
-# six angles and one velocity parameter
-_STATE_LEN = 7
+_STATE_LEN = 7 # six angles and one velocity parameter (kinodynamic problem)
 _GENERATE_GOAL_DIVISOR = 100 # 1/100's chance to generate goal state
+_RRT_PRECISION = 0.1 # sampling interval of in between vertices
 
 # return the configuration of the given state
 def get_cfg(state):
@@ -41,6 +41,11 @@ def plot_igraph(graph, layout):
 
 
 
+def lerp(cfg_init, cfg_goal, t):
+    return (1 - t) * cfg_init + t * cfg_goal
+
+
+
 # input:
 # - robot:
 # - configuration: configuration to be checked
@@ -60,9 +65,27 @@ def is_valid(robot, configuration):
 
 # input:
 # - robot:
+# - cfg_init:
+# - cfg_goal:
+# output:
+# - possible configuration
+def make_valid(robot, cfg_init, cfg_goal):
+    # check in relation to precision and length
+    max_i = (1 / _RRT_PRECISION) * max(np.linalg.norm(cfg_goal - cfg_init),1)
+    for i in xrange(1,max_i):
+        valid = is_valid(robot, lerp(cfg_init, cfg_goal, i * _RRT_PRECISION))
+        if not valid:
+            return lerp(cfg_init, cfg_goal, (i - 1) * _RRT_PRECISION)
+    return cfg_goal
+
+
+
+# input:
+# - robot:
 # - state_goal:
 # output:
 # - random state in the configuration space (velocity of 0.0)
+# - generates only configurations without a collision (self intersection & contact)
 def generate_random_state(robot, state_goal):
     if random.randint(1, _GENERATE_GOAL_DIVISOR) == 1:
         return state_goal
@@ -85,7 +108,7 @@ def generate_random_state(robot, state_goal):
 # find the nearest neighbor of a (random) state about to be inserted into the graph
 def find_nearest_neighbor(state, graph):
     search_structure = spatial.KDTree(graph.vs["configuration"])
-    # search for smallest euclidean distance between configurations (knn with k = 1)
+    # search for smallest (euclidean) distance between configurations (KNN with k = 1)
     distance, state_near_idx = search_structure.query(get_cfg(state), 1);
     state_near = create_state(graph.vs["configuration"][state_near_idx], graph.vs["velocity"][state_near_idx])
     return state_near,state_near_idx
