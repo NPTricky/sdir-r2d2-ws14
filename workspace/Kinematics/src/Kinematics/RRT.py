@@ -6,10 +6,10 @@ import Kinematics as kin
 import numpy as np
 import random
 
-_STATE_LEN = 7 # six angles and one velocity parameter (kinodynamic problem)
-_GENERATE_GOAL_DIVISOR = 100 # 1/100's chance to generate goal state
-_RRT_PRECISION = 1 # sampling interval of in between vertices (lower == higher precision)
-_EPS = 1e-4
+_STATE_LEN = 7 # six angles and one velocity parameter
+_GENERATE_GOAL_DIVISOR = 50 # 1/100's chance to generate goal state
+_RRT_PRECISION = 1 # sampling interval multiplier of in between vertices (higher == higher precision)
+_EPS = 1e-6
 
 # return the configuration of the given state
 def get_cfg(state):
@@ -54,7 +54,7 @@ def lerp(cfg_init, cfg_goal, t):
 
 # apply the precision parameters
 def lerp_range(cfg_init, cfg_goal):
-    max_i = (1 / _RRT_PRECISION) * max(np.linalg.norm(cfg_goal - cfg_init),1)
+    max_i = _RRT_PRECISION * max(np.linalg.norm(cfg_goal - cfg_init),1)
     factor = 1 / max_i
     return int(max_i), factor
 
@@ -145,7 +145,6 @@ def find_nearest_neighbor(robot, state_goal, graph):
     # search structure creation (including interpolation of edges)
     edge_interpolation = []
     # keep track of edge index
-    edge_idx = 0
     edge_idx_list = []
     for a,b in graph.get_edgelist():
         cfg_init = graph.vs["configuration"][a]
@@ -242,6 +241,9 @@ def generate_rt(robot, target_cfg, vertex_count, delta_time):
     # create graph structure with initial state
     g = ig.Graph()
     state_init_idx = insert_state(state_init,g)
+    # temporary workaround in case we do not generate a goal state
+    # (possible at the moment)
+    goal_idx = vertex_count
     
     # entire rt generation algorithm as in [Lav98c]
     for i in range(1, vertex_count):
@@ -249,12 +251,13 @@ def generate_rt(robot, target_cfg, vertex_count, delta_time):
         state_near,state_near_idx = find_nearest_neighbor(robot, state_random, g)
         state_new = generate_state_naive(state_near, state_random, delta_time)
         state_new_idx = insert_state(state_new, g)
+        if np.array_equal(state_new, state_goal):
+            print "generating goal state:",state_goal,"index:",state_new_idx
+            goal_idx = state_new_idx
         # add edge and assign input_u as an attribute
         edge_idx = insert_edge(state_near_idx, state_new_idx, g)
         g.es[edge_idx]["weight"] = np.linalg.norm(get_cfg(state_new) - get_cfg(state_near))
     
-    # @TODO let the function return the idx's of the target_cfg node
-    goal_idx = vertex_count
     return g, goal_idx
 
 
