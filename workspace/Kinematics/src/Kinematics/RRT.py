@@ -82,8 +82,27 @@ def is_valid(robot, configuration):
 # - cfg_init:
 # - cfg_goal:
 # output:
+# - if the path is collision free
+def is_valid_path(robot, cfg_init, cfg_goal):
+    if (cfg_goal - cfg_init).all() < mf._EPS:
+        return True
+    max_i, factor = lerp_range(cfg_init, cfg_goal)
+    for i in xrange(1,max_i-1):
+        valid = is_valid(robot, lerp(cfg_init, cfg_goal, i * factor))
+        if not valid:
+            i = 0
+            break
+    return not i == 0
+
+
+
+# input:
+# - robot:
+# - cfg_init:
+# - cfg_goal:
+# output:
 # - possible configuration
-def make_valid(robot, cfg_init, cfg_goal):
+def make_valid_path(robot, cfg_init, cfg_goal):
     if (cfg_goal - cfg_init).all() < mf._EPS:
         return cfg_init
     max_i, factor = lerp_range(cfg_init, cfg_goal)
@@ -151,7 +170,7 @@ def find_nearest_neighbor(robot, state_goal, graph):
         state_near_idx = search_idx
     else:
         # state is not already in the graph
-        state_near_cfg = make_valid(robot, search_container[search_idx], get_cfg(state_goal))
+        state_near_cfg = make_valid_path(robot, search_container[search_idx], get_cfg(state_goal))
         state_near = create_state(state_near_cfg)
         state_near_idx = insert_state(state_near, graph)
         insert_edge(edge_idx_list[search_idx-interpolation_idx_offset], state_near_idx, graph)
@@ -232,17 +251,20 @@ def generate_rt(robot, target_cfg, vertex_count, delta_time):
         state_new_idx = insert_state(state_new, g)
         # add edge and assign input_u as an attribute
         edge_idx = insert_edge(state_near_idx, state_new_idx, g)
-        # g.es[edge_idx]["input_u"] = input_u
+        g.es[edge_idx]["weight"] = np.linalg.norm(get_cfg(state_new) - get_cfg(state_near))
     
-    plot_igraph(g, g.layout_kamada_kawai())
+    # @TODO let the function return the idx's of the target_cfg node
+    goal_idx = vertex_count
+    return g, goal_idx
 
-    return g
 
 
-
-def rrt(robot, target_cfg):
+def rrt(robot, goal_cfg):
     vertex_count = 100
     delta_time = None
-    rt = generate_rt(robot, target_cfg, vertex_count, delta_time)
+    g, goal_idx = generate_rt(robot, goal_cfg, vertex_count, delta_time)
+    shortest_paths = g.get_all_shortest_paths(0, goal_idx)
+    print shortest_paths
+    plot_igraph(g, g.layout_kamada_kawai())
 
 
