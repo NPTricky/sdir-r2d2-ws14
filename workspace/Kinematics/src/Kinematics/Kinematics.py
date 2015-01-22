@@ -150,7 +150,7 @@ def extract_euler_angles_from(matrix):
 @rtype: configurations of angles, angle in radiant
 @return: configuration for each joint of the robot
 """
-def inverse(pose, current_angles):
+def inverse(pose, current_angles = np.zeros(6)):
     """
     # calculate position of wrist point in coordinate system 0 and theta0
     """

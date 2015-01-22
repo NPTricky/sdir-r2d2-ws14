@@ -166,11 +166,9 @@ class GUI(QtGui.QWidget):
         self.radio_lin = QtGui.QRadioButton('linear movement ', self)
         # set up button for the calculation
         self.button_move = QtGui.QPushButton('Move', self)
-        self.button_clear = QtGui.QPushButton('Clear', self)
         
         # trigger function on clicked
         QtCore.QObject.connect(self.button_move, QtCore.SIGNAL("clicked()"), self.buttonMoveClicked)
-        QtCore.QObject.connect(self.button_clear, QtCore.SIGNAL("clicked()"), self.buttonClearClicked)
         
         # add the widgets to the grid layout
         grid_ptp.addWidget(label_ptp_a1, 0, 0)
@@ -190,7 +188,6 @@ class GUI(QtGui.QWidget):
         grid_ptp.addWidget(label_ptp_a6, 5, 0)
         grid_ptp.addWidget(self.lineedit_ptp_a6, 5, 1)
         grid_ptp.addWidget(self.button_move, 5, 2)
-        grid_ptp.addWidget(self.button_clear, 5, 3)
         
         # set the grid layout for the group
         group_box.setLayout(grid_ptp)
@@ -222,6 +219,14 @@ class GUI(QtGui.QWidget):
         # set up the line edit box for the multiple kinematic solutions
         self.lineedit_cartptp_box = QtGui.QTextEdit(self)
         self.lineedit_cartptp_box.setSizePolicy(QtGui.QSizePolicy.Expanding,QtGui.QSizePolicy.Expanding)
+        
+        self.radio_inverse = range(8)
+        for i in self.radio_inverse:
+            self.radio_inverse[i] = QtGui.QRadioButton('inverse ' + str(i), self)
+            QtCore.QObject.connect(self.radio_inverse[i], QtCore.SIGNAL("clicked()"), self.radioClicked)
+            self.radio_inverse[i].setVisible(False)
+        
+        
         # set up button for the calculation
         self.button_calculate = QtGui.QPushButton('Calculate IK', self)
         # trigger function on clicked
@@ -241,7 +246,15 @@ class GUI(QtGui.QWidget):
         grid_cartptp.addWidget(label_cartptp_c, 5, 0)
         grid_cartptp.addWidget(self.lineedit_cartptp_c, 5, 1)
         grid_cartptp.addWidget(self.button_calculate, 5, 2)
-        grid_cartptp.addWidget(self.lineedit_cartptp_box, 0, 2, 4, 1)
+        #grid_cartptp.addWidget(self.lineedit_cartptp_box, 0, 2, 4, 1)
+        grid_cartptp.addWidget(self.radio_inverse[0], 0, 2, 1, 1)
+        grid_cartptp.addWidget(self.radio_inverse[1], 0, 2, 2, 1)
+        grid_cartptp.addWidget(self.radio_inverse[2], 0, 2, 3, 1)
+        grid_cartptp.addWidget(self.radio_inverse[3], 0, 2, 4, 1)
+        grid_cartptp.addWidget(self.radio_inverse[4], 2, 2, 1, 1)
+        grid_cartptp.addWidget(self.radio_inverse[5], 2, 2, 2, 1)
+        grid_cartptp.addWidget(self.radio_inverse[6], 2, 2, 3, 1)
+        grid_cartptp.addWidget(self.radio_inverse[7], 2, 2, 4, 1)
         
         # set the grid layout for the group
         group_box.setLayout(grid_cartptp)
@@ -282,9 +295,17 @@ class GUI(QtGui.QWidget):
         self.dataTransfer(prefix+msg+motion_type)
 
     # function is called when the clear button is clicked
-    def buttonClearClicked(self):
-        return
-        
+    def radioClicked(self):
+        for i in xrange(0, len(self.radio_inverse)):
+            if self.radio_inverse[i].isChecked():
+                self.lineedit_ptp_a1.setText(str(self.inverse_configurations[i][0]))
+                self.lineedit_ptp_a2.setText(str(self.inverse_configurations[i][1]))
+                self.lineedit_ptp_a3.setText(str(self.inverse_configurations[i][2]))
+                self.lineedit_ptp_a4.setText(str(self.inverse_configurations[i][3]))
+                self.lineedit_ptp_a5.setText(str(self.inverse_configurations[i][4]))
+                self.lineedit_ptp_a6.setText(str(self.inverse_configurations[i][5]))
+                break
+            
     # function is called when the calculate IK button is clicked
     def buttonCalculateClicked(self):
         # prefix for parsing
@@ -349,19 +370,16 @@ class GUI(QtGui.QWidget):
         
         values = data[1].split(';')
         
-        text = ""
+        self.inverse_configurations = []
+        for i in xrange(0, len(self.radio_inverse)):
+            self.radio_inverse[i].setVisible(False)
         
-        if len(values) == 1:
-            text = values[0] 
-        else:
-            for i in xrange(0, len(values)):
-                text += "configuration " + str(i) + ":\n"
-                for angle in values[i].split(' '):
-                    text += str( str( round( mp.degrees( float( angle )), 6)) + '\n' )
-                text += '----------------\n'
-            
-        self.lineedit_cartptp_box.setText(text)
-    
+        for i in xrange(0, min(len(values), len(self.radio_inverse))):              
+            config = []
+            for angle in values[i].split(' '):
+                config.append(round(mp.degrees(float(angle)),6))
+            self.inverse_configurations.append(config)
+            self.radio_inverse[i].setVisible(True)    
     
 def main():
     app = QtGui.QApplication(sys.argv)
