@@ -82,7 +82,7 @@ def handleData(data):
         # adding dummy values for orientation and position (you need to compute the values)
         T = kin.forward(robot.GetDOFValues())
         
-        _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), T, 0.5, 2))
+        #_DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), T, 0.5, 2))
         
         pose = kin.get_pose_from( T )
         cart_values = str( str(pose[0]) + ";" + str(pose[1]) + ";" + str(pose[2]) + ";" + 
@@ -101,6 +101,8 @@ def handleData(data):
         
         I = kin.inverse( pose, robot.GetDOFValues() )        
         confs = mf.get_possible_inverse_solution(robot, I)
+        
+        print "get_best_inverse_angles_solution" ,mf.get_nearest_angle_solution(robot.GetDOFValues(), confs)
         
         # send the (multiple) solutions to the GUI
         # prefix for parsing
@@ -155,6 +157,6 @@ if __name__ == "__main__":
     #configList = [[0,0,0,0,90,0], [90,0,0,0,0,0]] 
     #config = kin.selectConfiguration(configList)
     
-    rrt.rrt(robot, [1.2,-1.8,0.55,0.2,1.2,-3.2])
+    #rrt.rrt(robot, [1.2,-1.8,0.55,0.2,1.2,-3.2])
     
     dataTransfer()
