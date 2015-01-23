@@ -7,7 +7,7 @@ import numpy as np
 import random
 
 _STATE_LEN = 7 # six angles and one velocity parameter
-_GENERATE_GOAL_DIVISOR = 50 # 1/100's chance to generate goal state
+_GENERATE_GOAL_DIVISOR = 100 # 1/100's chance to generate goal state
 _RRT_PRECISION = 1 # sampling interval multiplier of in between vertices (higher == higher precision)
 _EPS = 1e-6
 
@@ -203,12 +203,11 @@ def generate_state(state_init, state_goal, delta_time):
 # - index of the new vertex
 def insert_state(state, graph):
     graph.add_vertex()
-    idx = graph.vcount()-1
-    vertex = graph.vs[idx]
-    vertex["name"] = idx
+    vertex = graph.vs[graph.vcount()-1]
+    vertex["name"] = vertex.index
     vertex["configuration"] = get_cfg(state)
     vertex["velocity"] = get_v(state)
-    return idx
+    return vertex.index
 
 
 
@@ -231,29 +230,32 @@ def insert_edge(idx_from, idx_to, graph):
 # - delta_time: incremental distance
 # output:
 # - rt graph g
-def generate_rt(robot, target_cfg, vertex_count, delta_time):
+def generate_rt(robot, goal_cfg, vertex_count, delta_time):
     # create initial & goal state for the rrt algorithm
     state_init = create_state(robot.GetDOFValues())
     print 'state_init:',state_init,'- len:',len(state_init)
-    state_goal = create_state(target_cfg)
+    state_goal = create_state(goal_cfg)
     print 'state_goal:',state_goal,'- len:',len(state_goal)
     
     # create graph structure with initial state
     g = ig.Graph()
     state_init_idx = insert_state(state_init,g)
-    # temporary workaround in case we do not generate a goal state
-    # (possible at the moment)
-    goal_idx = vertex_count
+    goal_idx = 0
     
     # entire rt generation algorithm as in [Lav98c]
     for i in range(1, vertex_count):
         state_random = generate_random_state(robot, state_goal)
         state_near,state_near_idx = find_nearest_neighbor(robot, state_random, g)
         state_new = generate_state_naive(state_near, state_random, delta_time)
-        state_new_idx = insert_state(state_new, g)
-        if np.array_equal(state_new, state_goal):
-            print "generating goal state:",state_goal,"index:",state_new_idx
-            goal_idx = state_new_idx
+        
+        vertex_goal = g.vs.select(lambda vertex: (vertex["configuration"] == goal_cfg).all()) if np.array_equal(state_new, state_goal) else None
+        if vertex_goal:
+            print "random sample of goal_cfg"
+            goal_idx = vertex_goal[0].index
+            state_new_idx = goal_idx
+        else:
+            state_new_idx = insert_state(state_new, g)
+        
         # add edge and assign input_u as an attribute
         edge_idx = insert_edge(state_near_idx, state_new_idx, g)
         g.es[edge_idx]["weight"] = np.linalg.norm(get_cfg(state_new) - get_cfg(state_near))
@@ -263,9 +265,10 @@ def generate_rt(robot, target_cfg, vertex_count, delta_time):
 
 
 def rrt(robot, goal_cfg):
-    vertex_count = 100
+    vertex_count = 250
     delta_time = None
     g, goal_idx = generate_rt(robot, goal_cfg, vertex_count, delta_time)
+    if goal_idx == 0: print "no goal_cfg within the graph"
     shortest_paths = g.get_all_shortest_paths(0, goal_idx)
     print shortest_paths
     plot_igraph(g, g.layout_kamada_kawai())
