@@ -6,23 +6,42 @@ import Kinematics as kin
 import numpy as np
 import random
 
-_STATE_LEN = 6 # six angles
-_GENERATE_GOAL_DIVISOR = 100 # 1/100's chance to generate goal state
-_RRT_PRECISION = 1 # sampling interval multiplier of in between vertices (higher == higher precision)
+# general hints
+# - why? saves a lot of inverse kinematic calculation time
+# - use inverse kinematics for the obstacles to transform them into c space
+
+# one configuration (six angles)
+_STATE_LEN = 6
+# 1/100's chance to generate goal state
+_GENERATE_GOAL_DIVISOR = 100
+# sampling interval multiplier of in between configurations on collision check
+# (higher == higher precision)
+_RRT_PRECISION_COLLISION = 2
+# sampling interval multiplier of interpolation configurations on nearest
+# neighbor search (higher == higher precision)
+_RRT_PRECISION_NEIGHBOR = 1
+# distance not interpolation or collision check worthy
 _EPS = 1e-6
 
+
+
+# input:
+# - state:
 # return the configuration of the given state
 def get_cfg(state):
     assert(len(state) == _STATE_LEN)
     return state[:_STATE_LEN]
+
+
+
+# input:
+# - cfg:
 # create a state from a given configuration and velocity
 def create_state(cfg):
     assert(len(cfg) == _STATE_LEN)
     return np.array(cfg)
 
-# general hints
-# - why? saves a lot of inverse kinematic calculation time
-# - use inverse kinematics for the obstacles to transform them into c space
+
 
 # input:
 # - g: graph to plot
@@ -41,6 +60,10 @@ def plot_igraph(graph, layout):
 
 
 
+# input:
+# - cfg_init:
+# - cfg_goal:
+# - t:
 # interpolate between two configurations with parameter t
 def lerp(cfg_init, cfg_goal, t):
     assert(t <= 1) # try not to extrapolate
@@ -48,9 +71,13 @@ def lerp(cfg_init, cfg_goal, t):
 
 
 
+# input:
+# - cfg_init:
+# - cfg_goal:
+# - precision:
 # apply the precision parameters
-def lerp_range(cfg_init, cfg_goal):
-    max_i = _RRT_PRECISION * max(np.linalg.norm(cfg_goal - cfg_init),1)
+def lerp_range(cfg_init, cfg_goal, precision):
+    max_i = precision * max(np.linalg.norm(cfg_goal - cfg_init),1)
     factor = 1 / max_i
     return int(max_i), factor
 
@@ -82,7 +109,7 @@ def is_valid(robot, configuration):
 def is_valid_path(robot, cfg_init, cfg_goal):
     if (cfg_goal - cfg_init).all() < mf._EPS:
         return True
-    max_i, factor = lerp_range(cfg_init, cfg_goal)
+    max_i, factor = lerp_range(cfg_init, cfg_goal, _RRT_PRECISION_COLLISION)
     for i in xrange(1,max_i-1):
         valid = is_valid(robot, lerp(cfg_init, cfg_goal, i * factor))
         if not valid:
@@ -101,7 +128,7 @@ def is_valid_path(robot, cfg_init, cfg_goal):
 def make_valid_path(robot, cfg_init, cfg_goal):
     if (cfg_goal - cfg_init).all() < mf._EPS:
         return cfg_init
-    max_i, factor = lerp_range(cfg_init, cfg_goal)
+    max_i, factor = lerp_range(cfg_init, cfg_goal, _RRT_PRECISION_COLLISION)
     for i in xrange(1,max_i-1):
         valid = is_valid(robot, lerp(cfg_init, cfg_goal, i * factor))
         if not valid:
@@ -146,7 +173,7 @@ def find_nearest_neighbor(robot, state_goal, graph):
             # distance not interpolation worthy
             continue
         else:
-            max_i, factor = lerp_range(cfg_init, cfg_goal)
+            max_i, factor = lerp_range(cfg_init, cfg_goal, _RRT_PRECISION_NEIGHBOR)
             for i in xrange(1,max_i-1):
                 edge_interpolation.append(lerp(cfg_init, cfg_goal, i * factor))
                 edge_idx_list.append(a)
@@ -170,6 +197,7 @@ def find_nearest_neighbor(robot, state_goal, graph):
 
 
 
+# no heuristics or rules for a generated state
 def generate_state_naive(state_init, state_goal, delta_time):
     return state_goal
 
@@ -246,6 +274,10 @@ def generate_rt(robot, vertex_count, delta_time):
 
 
 
+# input;
+# - robot:
+# - goal_cfg:
+# public interface of the rapidly-exploring random tree algorithm
 def rrt(robot, goal_cfg):
     vertex_count = 250
     delta_time = None
