@@ -2,6 +2,7 @@ from openravepy import *
 import Kinematics as kin
 import MotionFunctions as mf
 import RRT as rrt
+import LevelGenerator as level
 import numpy as np
 import sys
 import socket
@@ -127,9 +128,11 @@ if __name__ == "__main__":
     misc.InitOpenRAVELogging()
     
     # setting up the operave environment
-    env = Environment() # create openrave environment
-    env.SetViewer('qtcoin') # attach viewer (optional)
-    env.Load('../../MyData/MyEnvironment/MyEnv.xml') # load a simple scene
+    #env = Environment() # create openrave environment    
+    #env.SetViewer('qtcoin') # attach viewer (optional)
+    #env.Load('../../MyData/MyEnvironment/MyEnv.xml') # load a simple scene
+
+    env = level.createEnvironment()
     robot = env.GetRobots()[0] # get the first robot
 
     print "DH (OpenRave):\n"+str(planningutils.GetDHParameters(robot))
