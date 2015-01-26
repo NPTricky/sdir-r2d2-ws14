@@ -10,8 +10,8 @@ import random
 # - why? saves a lot of inverse kinematic calculation time
 # - use inverse kinematics for the obstacles to transform them into c space
 
-# one configuration (six angles)
-_STATE_LEN = 6
+# influenced by the robot (usually 6 for 1 configuration or 6 angles)
+_CFG_LEN = 0
 # 1/100's chance to generate goal state
 _GENERATE_GOAL_DIVISOR = 100
 # sampling interval multiplier of in between configurations on collision check
@@ -29,8 +29,8 @@ _EPS = 1e-6
 # - state:
 # return the configuration of the given state
 def get_cfg(state):
-    assert(len(state) == _STATE_LEN)
-    return state[:_STATE_LEN]
+    assert(len(state) == _CFG_LEN)
+    return state[:_CFG_LEN]
 
 
 
@@ -38,7 +38,7 @@ def get_cfg(state):
 # - cfg:
 # create a state from a given configuration and velocity
 def create_state(cfg):
-    assert(len(cfg) == _STATE_LEN)
+    assert(len(cfg) == _CFG_LEN)
     return np.array(cfg)
 
 
@@ -66,7 +66,7 @@ def plot_igraph(graph, layout):
 # - t:
 # interpolate between two configurations with parameter t
 def lerp(cfg_init, cfg_goal, t):
-    assert(t <= 1) # try not to extrapolate
+    assert(0 <= t and t <= 1) # try not to extrapolate
     return (1 - t) * cfg_init + t * cfg_goal
 
 
@@ -92,7 +92,8 @@ def is_valid(robot, configuration):
     configuration_backup = robot.GetDOFValues()
     robot.SetDOFValues(configuration)
     report = CollisionReport()
-    inlier = robot.GetEnv().CheckCollision(robot,report)
+    # check for inlier's and set the corresponding report.contacts number
+    robot.GetEnv().CheckCollision(robot,report)
     contact_count = len(report.contacts)
     contact_count = contact_count + 1 if robot.CheckSelfCollision() else contact_count
     robot.SetDOFValues(configuration_backup)
@@ -162,7 +163,7 @@ def generate_random_state(robot):
 # - the index of the vertex of the nearest configuration
 # find the nearest neighbor of a (random) state about to be inserted into the graph
 def find_nearest_neighbor(robot, state_goal, graph):
-    # search structure creation (including interpolation of edges)
+    # container for the resulting configurations by interpolation of existing edges
     edge_interpolation = []
     # keep track of edge index
     edge_idx_list = []
@@ -201,6 +202,8 @@ def find_nearest_neighbor(robot, state_goal, graph):
 def generate_state_naive(state_init, state_goal, delta_time):
     return state_goal
 
+
+
 # input:
 # - state_init:
 # - state_goal:
@@ -212,7 +215,7 @@ def generate_state(state_init, state_goal, delta_time):
     #difference = np.fabs(mf.difference_rel(start_cfg, target_cfg))
     #velocity_limit, acceleration_limit, times_acc, times_dec, times_end = mf.limits_and_times(robot, difference, 'F')
     #velocity_limit, acceleration_limit, times_acc, times_dec, times_end = mf.discretize(difference, velocity_limit, acceleration_limit, times_acc, times_dec, times_end)
-    state_new = np.zeros(_STATE_LEN)
+    state_new = np.zeros(_CFG_LEN)
     return state_new
 
 
@@ -253,12 +256,11 @@ def insert_edge(idx_from, idx_to, graph):
 def generate_rt(robot, vertex_count, delta_time):
     # create initial & goal state for the rrt algorithm
     state_init = create_state(robot.GetDOFValues())
-    print 'state_init:',state_init,'- len:',len(state_init)
-    
+    _CFG_LEN = robot.GetDOF()
+
     # create graph structure with initial state
     g = ig.Graph()
-    init_idx = insert_state(state_init,g)
-    goal_idx = init_idx
+    insert_state(state_init,g)
     
     # entire rt generation algorithm as in [Lav98c]
     for i in range(1, vertex_count):
@@ -269,8 +271,7 @@ def generate_rt(robot, vertex_count, delta_time):
         # add edge and assign distance as an attribute
         edge_idx = insert_edge(state_near_idx, state_new_idx, g)
         g.es[edge_idx]["weight"] = np.linalg.norm(get_cfg(state_new) - get_cfg(state_near))
-    
-    return g, goal_idx
+    return g
 
 
 
@@ -281,8 +282,10 @@ def generate_rt(robot, vertex_count, delta_time):
 def rrt(robot, goal_cfg):
     vertex_count = 250
     delta_time = None
-    g, goal_idx = generate_rt(robot, vertex_count, delta_time)
-    if goal_idx == 0: print "no goal_cfg within the graph"
+    g = generate_rt(robot, vertex_count, delta_time)
+    
+    goal_idx = vertex_count
+    assert(goal_idx != 0)
     shortest_paths = g.get_all_shortest_paths(0, goal_idx)
     print shortest_paths
     plot_igraph(g, g.layout_kamada_kawai())
