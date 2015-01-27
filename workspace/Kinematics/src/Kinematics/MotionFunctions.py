@@ -47,19 +47,9 @@ def PTPtoConfiguration(robot, target_cfg, motiontype):
     
     # current axis angles of the robot - array of floats
     start_cfg = robot.GetDOFValues()
-    diff_r = difference_rel(start_cfg, target_cfg)
-    diff_a = np.fabs(diff_r)
-    dist_pos, dist_angle = distance_rel(start_cfg, target_cfg)
-    
-    print 'start_cfg',start_cfg
-    print 'target_cfg',target_cfg
-    print 'difference_rel',diff_r
-    print 'difference_abs',diff_a
-    print 'distance_pos',dist_pos,'distance_angle',dist_angle
     
     #TODO: Implement PTP (Replace pseudo implementation with your own code)! Consider the max. velocity and acceleration of each axis
     motion_options = motiontype.split(';')
-    
     configurations = ((start_cfg, target_cfg))
     
     if motion_options[2] == "R":
@@ -69,48 +59,26 @@ def PTPtoConfiguration(robot, target_cfg, motiontype):
         
     if motion_options[1] == "L":
     
-        config = np.ones([1,len(configurations[0])]) * configurations[0]
+        sample_rate = _SAMPLE_RATE * 10
+        interpolated_path = np.ones([1,6]) * kin.get_pose_from(kin.forward(configurations[0]))  
+        
         for cfg in configurations[1:]:
-            # determine the start and the end position in space
-            start_pose  = kin.get_pose_from(kin.forward(config[-1]))    
+        
+            # determine the start and the end position in space  
             target_pose = kin.get_pose_from(kin.forward(cfg))
 
-            _DEBUG_DRAW.append(robot.GetEnv().drawlinestrip(points=np.array(((start_pose[0],start_pose[1],start_pose[2]),(target_pose[0],target_pose[1],target_pose[2]))),
+            _DEBUG_DRAW.append(robot.GetEnv().drawlinestrip(points=np.array(((interpolated_path[-1][0],interpolated_path[-1][1],interpolated_path[-1][2]),(target_pose[0],target_pose[1],target_pose[2]))),
                                                             linewidth=1.0,
-                                                            colors=np.array(((0,0,0),(0,0,0))))) 
+                                                            colors=np.array(((0,0,0),(0,0,0)))))
+                        
+            interpolated_part_path = linear_path_interpolation( robot, interpolated_path[-1], target_pose, sample_rate)
+            interpolated_path = np.concatenate((interpolated_path, interpolated_part_path[1:])) 
             
-            sample_rate = _SAMPLE_RATE * 10
+        configurations = convert_path_interpolation_to_configurations( robot, configurations[0], configurations[-1], interpolated_path)
         
-            interpolated_path = linear_path_interpolation( robot, start_pose, target_pose, sample_rate)
-        
-            config_next = convert_path_interpolation_to_configurations( robot, config[-1], cfg, interpolated_path)
-            config = np.concatenate((config, config_next[1:]))
-        
-        configurations = config
-        
-
+    # trajectory interpolation
     trajectory = generate_trajectory_from_configurations(robot, configurations, motion_options[0])
     
-    """
-    # calculate velocity, acceleration and points in time for the trajectory interpolation
-    velocity_limit, acceleration_limit, times_acc, times_dec, times_end = limits_and_times(robot, diff_a, motiontype)
-    print 'velocity_limit',velocity_limit
-    print 'acceleration_limit',acceleration_limit
-    print 't_acc',times_acc
-    print 't_dec',times_dec
-    print 't_end',times_end
-    
-    # make values discrete for trajectory interpolation
-    velocity_limit, acceleration_limit, times_acc, times_dec, times_end = discretize(diff_a, velocity_limit, acceleration_limit, times_acc, times_dec, times_end)
-    print '(discrete) velocity_limit',velocity_limit
-    print '(discrete) acceleration_limit',acceleration_limit
-    print '(discrete) t_acc',times_acc
-    print '(discrete) t_dec',times_dec
-    print '(discrete) t_end',times_end
-    
-    # trajectory interpolation
-    trajectory = generate_trajectory(start_cfg, target_cfg, velocity_limit, acceleration_limit, times_acc, times_dec, times_end)
-    """
     #return None
     return trajectory
 
@@ -160,22 +128,20 @@ def get_nearest_angle_solution(current_cfg, possible_confs):
     @rtype: one configuration from the possible configurations, angle in radiant
     @return: the best configuration with the lowest angle difference
     """
-
-    indices = np.array(xrange(len(possible_confs)))
-    configurations = possible_confs
+    if len(possible_confs) < 1:
+        return None
+    
     # compare mask for possible solutions
     mask_angle = np.array(xrange(len(current_cfg))) 
-        
-    for j in xrange(len(possible_confs)):
+    configurations = possible_confs
+    
+    for k in xrange(len(possible_confs)):
         
         # determine the angle difference from the configurations and the current configuration
         diff_confs_abs = np.fabs(configurations - current_cfg)
     
-        # determine the minimum angles difference
-        min = np.amin(diff_confs_abs,0)
-        
         # compare the angle differences with the minimum angle difference
-        res = np.where(diff_confs_abs == min)
+        res = np.where(diff_confs_abs == np.amin(diff_confs_abs, 0))
             
         # compare the result with a mask for determine of the lowest
         # angle difference solution for the first three angles 
@@ -185,20 +151,17 @@ def get_nearest_angle_solution(current_cfg, possible_confs):
             for i in xrange(len(res[1]) - len(mask)):
                 if np.all(res[1][i:i+len(mask)] == mask):
                     indices.append(res[0][i])
-            
+                    
             if 0 < len(indices): 
                 break
             
             # if the angle mask not found, resize the mask
-            mask = np.delete(mask, len(mask) - 1)
-                
+            mask = np.delete(mask, len(mask) - 1) 
+        
         if len(indices) < 2:
             break
         
-        for i in xrange(0,len(indices)):
-            configurations[i] = configurations[indices[i]]
-        
-        configurations = configurations[:len(indices)]
+        configurations = [configurations[index] for index in indices]
         
     return configurations[indices[0]]
 
@@ -215,11 +178,11 @@ def get_possible_inverse_solution(robot, configurations):
     if configurations is None:
         return None
         
-    angle_limits = robot.GetDOFLimits()
+    lower, upper = robot.GetDOFLimits()
         
     ret_value = []
     for conf in configurations:
-        if np.less_equal(angle_limits[0], conf).all() and np.less_equal(conf, angle_limits[1]).all():
+        if np.less_equal(lower, conf).all() and np.less_equal(conf, upper).all():
             ret_value.append(conf)
             
     return ret_value
@@ -232,7 +195,7 @@ def generate_trajectory(start_cfg, target_cfg, velocity_limit, acceleration_limi
     time_steps_dec = times_dec / _SAMPLE_RATE
     
     # maximum time step count
-    time_steps_max = int(time_steps_end.max() + 0.5)
+    time_steps_max = int(math.ceil( time_steps_end.max() + 0.5 ))
     
     trajectory = np.empty([time_steps_max + 1, len(start_cfg)])
     trajectory[0] = start_cfg
@@ -302,7 +265,15 @@ def concatenate_trajectory(robot, trajectory_0, trajectory_1, gind_over, velocit
     
     if not gind_over:
         return np.concatenate((trajectory_0, trajectory_1[1:]))
+    
+    if 2 < len(trajectory_0) and 2 < len(trajectory_1): 
+        res = (0 < (trajectory_0[-1] - trajectory_0[-3])) != (0 < (trajectory_1[2] - trajectory_1[0]))
+        if res[0]:
+            #_DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), kin.forward(trajectory_0[-1]), 0.5, 0.1))
+            return np.concatenate((trajectory_0, trajectory_1[1:]))
         
+    
+    
     time_dec0_to_end0 = get_ta(velocity_profile_0).max()
     time_end0_to_acc1 = get_ta(velocity_profile_1).max()
     time_end =  time_dec0_to_end0 + time_end0_to_acc1
@@ -312,13 +283,10 @@ def concatenate_trajectory(robot, trajectory_0, trajectory_1, gind_over, velocit
     
     time_end = np.nan_to_num(velocity / acceleration).max()
     
-    time_steps_max = int(time_end / _SAMPLE_RATE + 0.5)
-    
-    if time_steps_max < 0:
-        return np.concatenate((trajectory_0, trajectory_1[1:]))
-    
-    index_0 = np.minimum(np.abs(len(trajectory_0) - int(time_dec0_to_end0 / _SAMPLE_RATE)-1), len(trajectory_0) - 1)
-    index_1 = np.minimum(int(time_end0_to_acc1 / _SAMPLE_RATE)+1, len(trajectory_1) - 1)
+    time_steps_max = int(math.ceil( time_end / _SAMPLE_RATE + 0.5 ))
+        
+    index_0 = np.minimum(np.abs(len(trajectory_0) - int(math.ceil(time_dec0_to_end0 / _SAMPLE_RATE + 0.5 )) - 1), len(trajectory_0) - 1)
+    index_1 = np.minimum(int(math.ceil(time_end0_to_acc1 / _SAMPLE_RATE + 0.5)) + 1, len(trajectory_1) - 1)
     
     start_cfg = trajectory_0[index_0]
     target_cfg = trajectory_1[index_1]
@@ -326,11 +294,9 @@ def concatenate_trajectory(robot, trajectory_0, trajectory_1, gind_over, velocit
     diff = target_cfg - start_cfg
     velocity = diff / time_end
     
-    #_DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), kin.forward(start_cfg), 0.25, 0.5))
-    #_DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), kin.forward(target_cfg), 0.25, 0.5))
-    
-    trajectory_grind = np.empty([time_steps_max, len(start_cfg)])
-    for i in xrange(time_steps_max):
+    trajectory_grind = np.empty([time_steps_max - 1, len(start_cfg)])
+    trajectory_grind[0] = start_cfg
+    for i in xrange(1, len(trajectory_grind)):
         t = i * _SAMPLE_RATE   
         trajectory_grind[i,:] = start_cfg + velocity * t    
        # _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), kin.forward(trajectory_grind[i,:]), 0.25, 0.5))
@@ -338,8 +304,11 @@ def concatenate_trajectory(robot, trajectory_0, trajectory_1, gind_over, velocit
     return np.concatenate((trajectory_0[:index_0], trajectory_grind, trajectory_1[index_1:]))
 
 def generate_trajectory_from_configurations(robot, configurations, motiontype = "A"):
+    if configurations is None:
+        return None
+    
+    
     # generation of the trajectory path
-
     i = 0
     last_velocity_profile = [ np.zeros(robot.GetDOF()) for i in range(5)]
     trajectory = np.ones([1,len(configurations[0])]) * configurations[0]
@@ -356,7 +325,7 @@ def generate_trajectory_from_configurations(robot, configurations, motiontype = 
         
         current_trajectory = generate_trajectory(trajectory[-1], cfg, get_v(velocity_profile), get_a(velocity_profile), get_ta(velocity_profile), get_td(velocity_profile), get_te(velocity_profile))       
     
-        trajectory = concatenate_trajectory( robot, trajectory, current_trajectory, 1 < i , last_velocity_profile, velocity_profile)
+        trajectory = concatenate_trajectory( robot, trajectory, current_trajectory, True , last_velocity_profile, velocity_profile)
         
         i = i + 1
         last_velocity_profile = velocity_profile
@@ -482,78 +451,30 @@ def limits_and_times_full_synchronous(distance, velocity_limit, acceleration_lim
     return velocity_limit, acceleration_limit, times_acc, times_dec, times_end
 
     
-def linear_path_interpolation(robot, start_pose, target_pose, sample_rate, velocity = 1.0, acceleration=4.0):    
+def linear_path_interpolation(robot, start_pose, target_pose, sample_rate):    
     # create the path interpolation from the target position to the start position
     # calculate the difference form start to end position and the distance
     diff = difference_rel(start_pose, target_pose)
     dist = np.amax(distance_rel(start_pose, target_pose))
-    diff_dist_ratio = diff / dist
-    
-    # determine of the times and recalculate of the velocity
-    time_end = velocity / acceleration + dist / velocity
-    
-    print "dist", dist
-    print "dist 0", distance_rel(start_pose, target_pose)[0]
-    print "dist 1", distance_rel(start_pose, target_pose)[1]
-    print "velocity", velocity
-    print "time_end", time_end
-    velocity = (time_end * acceleration / 2) - np.sqrt((math.pow(time_end, 2) * np.power(acceleration, 2)) / 4 - acceleration * dist)
-    
-    time_acc = velocity / acceleration
-    time_dec = dist / velocity
-    time_end = time_dec + time_acc
-    
-    print "velocity", velocity
-    print "time_end_new", time_end
-    
-    
-    time_steps_acc = time_acc / sample_rate
-    time_steps_end = time_end / sample_rate
-    time_steps_dec = time_dec / sample_rate
-    
+        
     # interpolation of the trajectory path
-    time_steps_max = np.int(time_end / sample_rate + 0.5)
+    interpolation_steps = int(math.ceil( dist / sample_rate + 0.5 ))
     
-    interpolated_path = np.empty([time_steps_max + 1, len(start_pose)])
-    
-    interpolated_path[0] = start_pose
-    interpolated_path[-1] = target_pose
+    #interpolated_path = np.empty([interpolation_steps + 1, len(start_pose)])
+    interpolated_path = [ start_pose + diff * i / interpolation_steps for i in range(interpolation_steps + 1)]
+   
+    #for i in interpolated_path:        
+        #_DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), kin.get_matrix_from(i), 0.2, 0.5))
 
-    #_DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), kin.get_matrix_from(interpolated_path[0]), 0.3, 0.5))
-    #_DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), kin.get_matrix_from(interpolated_path[-1]), 0.3, 0.5))
-    for i in range(1, time_steps_max):
-        # calculate the time t 
-        t = i * sample_rate
-        
-        # generate a trapezoid trajectory path
-        if i < time_steps_acc:   #       t < ta
-            delta = diff_dist_ratio * (0.5 * t**2 * acceleration)
-        elif i < time_steps_dec: # ta <= t < td
-            delta = diff_dist_ratio * (velocity * ( t - 0.5 * time_acc))
-        elif i < time_steps_end: # td <= t < te
-            delta = diff_dist_ratio * (velocity * time_dec - 0.5 * acceleration * ( time_end - t)**2)
-        else:               # te <= t
-            delta = diff
-        
-        #delta = diff * i / time_steps_max
-        
-        # determine the current position and orientation at time t
-        interpolated_path[i] = (start_pose + delta )
-        
-        _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), kin.get_matrix_from(interpolated_path[i]), 0.2, 0.5))
-        
-        
-        #_DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), kin.get_matrix_from(interpolated_path[i]), 0.2, 0.5))
-        
     return interpolated_path
 
 def convert_path_interpolation_to_configurations(robot, start_cfg, target_cfg, interpolated_path):
     
     configurations = []
     configurations.append(target_cfg) 
-    
-    for pose in (interpolated_path[::-1])[1:-2]:
-    
+    res = []
+    for pose in (interpolated_path[::-1])[1:-1]:
+        #_DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), kin.get_matrix_from(pose), 0.3, 0.4))
         # determine the inverse kinematics for the pose
         inverse_configurations = get_possible_inverse_solution(robot, kin.inverse(pose, configurations[-1]))
         
@@ -561,21 +482,30 @@ def convert_path_interpolation_to_configurations(robot, start_cfg, target_cfg, i
             return None
         
         inverse_configuration = inverse_configurations[0]
+         
+        res = np.where(_SAMPLE_RATE * 10 < np.fabs( inverse_configuration - configurations[-1]), True, False ) 
         
-        if np.pi/2 < np.fabs( inverse_configuration - configurations[-1] ).sum():
-            inverse_configuration = get_nearest_angle_solution( configurations[-1], inverse_configurations)
+        
+        if res[0] == True:
+            print "step 1"
+            inverse_configurations = get_possible_inverse_solution(robot, kin.inverse(kin.get_pose_from(kin.forward(inverse_configuration)), configurations[-1]))
+            configurations.append( inverse_configuration )
             
-        if np.pi/2 < np.fabs( inverse_configuration - configurations[-1] ).sum():
-            inverse_configurations = get_possible_inverse_solution(robot, kin.inverse(kin.get_pose_from(kin.forward(configurations[-1])), configurations[-1]))
+            new_theta = np.pi if configurations[-1][0] < 0 else np.pi
+            #if configurations[-1][0] < 0:
+            #    configurations.append( inverse_configuration + np.array(( new_theta , 0 , 0 , 0 , 0, new_theta )) )
                 
-            inverse_singularity_solution = inverse_configurations[ int((len(inverse_configurations) + 1) / 2) ] 
-            configurations.append(inverse_singularity_solution)
+            # inverse_configurations = get_possible_inverse_solution(robot, kin.inverse(kin.get_pose_from(kin.forward(configurations[-1])), configurations[-1]))
             
-        #_DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), kin.forward(configurations[-1]), 0.6, 0.8))
-             
+            
         configurations.append(inverse_configuration)
                 
     configurations.append(start_cfg)
     
+    #for cfg in configurations:
+        #_DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), kin.forward(cfg), 0.6, 0.8))
+             
+    
+    #return None
     return configurations[::-1]
     

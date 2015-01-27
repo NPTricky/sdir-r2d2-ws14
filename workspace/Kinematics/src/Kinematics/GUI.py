@@ -361,9 +361,9 @@ class GUI(QtGui.QWidget):
         
         # update position and orientaion values
         cart_arr = data[2].split(";")
-        self.lineedit_cartpos_x.setText(cart_arr[0])
-        self.lineedit_cartpos_y.setText(cart_arr[1])
-        self.lineedit_cartpos_z.setText(cart_arr[2])
+        self.lineedit_cartpos_x.setText( str( round( float( cart_arr[0]), 6)))
+        self.lineedit_cartpos_y.setText( str( round( float( cart_arr[1]), 6)))
+        self.lineedit_cartpos_z.setText( str( round( float( cart_arr[2]), 6)))
         self.lineedit_cartpos_a.setText( str( round( mp.degrees( float( cart_arr[3])), 6)))
         self.lineedit_cartpos_b.setText( str( round( mp.degrees( float( cart_arr[4])), 6)))
         self.lineedit_cartpos_c.setText( str( round( mp.degrees( float( cart_arr[5])), 6)))
@@ -377,13 +377,14 @@ class GUI(QtGui.QWidget):
         self.inverse_configurations = []
         for i in xrange(0, len(self.radio_inverse)):
             self.radio_inverse[i].setVisible(False)
-        
-        for i in xrange(0, min(len(values), len(self.radio_inverse))):              
-            config = []
-            for angle in values[i].split(' '):
-                config.append(round(mp.degrees(float(angle)),6))
-            self.inverse_configurations.append(config)
-            self.radio_inverse[i].setVisible(True)    
+
+        if 0 < len(values[-1]): 
+            for i in xrange(0, min(len(values), len(self.radio_inverse))):              
+                config = []
+                for angle in values[i].split(' '):
+                    config.append(round(mp.degrees(float(angle)),6))
+                self.inverse_configurations.append(config)
+                self.radio_inverse[i].setVisible(True)    
     
 def main():
     app = QtGui.QApplication(sys.argv)

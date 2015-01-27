@@ -115,9 +115,7 @@ def handleData(data):
                     ik_values += str( confs[i][j] )  + str(" " if j < len(confs[i]) - 1 else "")
                 ik_values += str(";" if i < len(confs) - 1 else "")
         else:
-            ik_values = "not possible"
-            return prefix+ik_values
-        
+            return prefix
         return prefix+ik_values
     
 if __name__ == "__main__":
