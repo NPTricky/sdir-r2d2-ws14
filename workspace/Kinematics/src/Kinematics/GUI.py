@@ -163,7 +163,11 @@ class GUI(QtGui.QWidget):
         self.radio_asynch.setChecked(True)
         self.radio_synch = QtGui.QRadioButton('synchronous', self)
         self.radio_fullsynch = QtGui.QRadioButton('full synchronous', self)
-        self.radio_lin = QtGui.QRadioButton('linear movement ', self)
+        
+        # set up check boxes
+        self.check_lin = QtGui.QCheckBox('lin', self)
+        self.check_rrt = QtGui.QCheckBox('rrt', self)
+        
         # set up button for the calculation
         self.button_move = QtGui.QPushButton('Move', self)
         
@@ -182,9 +186,10 @@ class GUI(QtGui.QWidget):
         grid_ptp.addWidget(self.radio_fullsynch, 2, 2)
         grid_ptp.addWidget(label_ptp_a4, 3, 0)
         grid_ptp.addWidget(self.lineedit_ptp_a4, 3, 1)
+        grid_ptp.addWidget(self.check_lin, 3, 2, 2, 1)
+        grid_ptp.addWidget(self.check_rrt, 3, 2, 3, 1)
         grid_ptp.addWidget(label_ptp_a5, 4, 0)
         grid_ptp.addWidget(self.lineedit_ptp_a5, 4, 1)
-        grid_ptp.addWidget(self.radio_lin, 4, 2)
         grid_ptp.addWidget(label_ptp_a6, 5, 0)
         grid_ptp.addWidget(self.lineedit_ptp_a6, 5, 1)
         grid_ptp.addWidget(self.button_move, 5, 2)
@@ -217,9 +222,7 @@ class GUI(QtGui.QWidget):
         self.lineedit_cartptp_b = QtGui.QLineEdit('0', self) 
         self.lineedit_cartptp_c = QtGui.QLineEdit('0', self)
         # set up the line edit box for the multiple kinematic solutions
-        self.lineedit_cartptp_box = QtGui.QTextEdit(self)
-        self.lineedit_cartptp_box.setSizePolicy(QtGui.QSizePolicy.Expanding,QtGui.QSizePolicy.Expanding)
-        
+
         self.radio_inverse = range(8)
         for i in self.radio_inverse:
             self.radio_inverse[i] = QtGui.QRadioButton('inverse ' + str(i), self)
@@ -246,7 +249,7 @@ class GUI(QtGui.QWidget):
         grid_cartptp.addWidget(label_cartptp_c, 5, 0)
         grid_cartptp.addWidget(self.lineedit_cartptp_c, 5, 1)
         grid_cartptp.addWidget(self.button_calculate, 5, 2)
-        #grid_cartptp.addWidget(self.lineedit_cartptp_box, 0, 2, 4, 1)
+        
         grid_cartptp.addWidget(self.radio_inverse[0], 0, 2, 1, 1)
         grid_cartptp.addWidget(self.radio_inverse[1], 0, 2, 2, 1)
         grid_cartptp.addWidget(self.radio_inverse[2], 0, 2, 3, 1)
@@ -288,8 +291,9 @@ class GUI(QtGui.QWidget):
             motion_type = "#S"
         elif self.radio_fullsynch.isChecked() is True:
             motion_type = "#F"
-        elif self.radio_lin.isChecked() is True:
-            motion_type = "#L"
+            
+        motion_type += ";L" if self.check_lin.isChecked() else "; "
+        motion_type += ";R" if self.check_rrt.isChecked() else "; "    
 
         # send data
         self.dataTransfer(prefix+msg+motion_type)
@@ -357,9 +361,9 @@ class GUI(QtGui.QWidget):
         
         # update position and orientaion values
         cart_arr = data[2].split(";")
-        self.lineedit_cartpos_x.setText(cart_arr[0])
-        self.lineedit_cartpos_y.setText(cart_arr[1])
-        self.lineedit_cartpos_z.setText(cart_arr[2])
+        self.lineedit_cartpos_x.setText( str( round( float( cart_arr[0]), 6)))
+        self.lineedit_cartpos_y.setText( str( round( float( cart_arr[1]), 6)))
+        self.lineedit_cartpos_z.setText( str( round( float( cart_arr[2]), 6)))
         self.lineedit_cartpos_a.setText( str( round( mp.degrees( float( cart_arr[3])), 6)))
         self.lineedit_cartpos_b.setText( str( round( mp.degrees( float( cart_arr[4])), 6)))
         self.lineedit_cartpos_c.setText( str( round( mp.degrees( float( cart_arr[5])), 6)))
@@ -373,13 +377,14 @@ class GUI(QtGui.QWidget):
         self.inverse_configurations = []
         for i in xrange(0, len(self.radio_inverse)):
             self.radio_inverse[i].setVisible(False)
-        
-        for i in xrange(0, min(len(values), len(self.radio_inverse))):              
-            config = []
-            for angle in values[i].split(' '):
-                config.append(round(mp.degrees(float(angle)),6))
-            self.inverse_configurations.append(config)
-            self.radio_inverse[i].setVisible(True)    
+
+        if 0 < len(values[-1]): 
+            for i in xrange(0, min(len(values), len(self.radio_inverse))):              
+                config = []
+                for angle in values[i].split(' '):
+                    config.append(round(mp.degrees(float(angle)),6))
+                self.inverse_configurations.append(config)
+                self.radio_inverse[i].setVisible(True)    
     
 def main():
     app = QtGui.QApplication(sys.argv)
