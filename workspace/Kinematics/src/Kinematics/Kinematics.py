@@ -308,8 +308,8 @@ def determine_theta3a_theta3b_theta4a_theta5b_theta5a_theta5b(theta0, theta1, th
     T_3_5 = np.linalg.inv( T_0_1 * T_1_2 * T_2_3 ) *  A * np.linalg.inv( _TOOL )
     
     if isWristSingularity(T_3_5):
-        theta3a = current_angles[3]
-        theta4a = current_angles[4]
+        theta3a = 0 #current_angles[3]
+        theta4a = 0 #current_angles[4]
         theta5a = math.atan2( -A[2,0], A[2,1])
     else:    
         theta3a = math.atan2( -T_3_5[1,2], T_3_5[0,2])    
@@ -389,28 +389,8 @@ def checkSingularity(angles, wp):
 
 def isOverheadSingularity(WP):
     #print WP[0,3], WP[1,3]
-    if round(WP[0,3],6) == 0 and round( WP[1,3],6) == 0:
-       return True
-       
-    return False
+    return round(WP[0,3],6) == 0 and round( WP[1,3],6) == 0
 
 def isWristSingularity(T4to6):
     #print T4to6[0,3], T4to6[1,3]
-    if round(T4to6[0,3],6) == 0 and round(T4to6[1,3],6) == 0:
-       return True
-       
-    return False
-"""
-    v4 = np.array(T4[:,2], dtype=np.float)
-    print v4
-    v6 = np.array(T6[:,2], dtype=np.float)
-    print v6
-    
-    v = v4/v6
-    print v
-    
-    if v[0] == v[1] == v[2]:
-        return True
-     
-    return False
-""" 
+    return round(T4to6[0,3],6) == 0 and round(T4to6[1,3],6) == 0
