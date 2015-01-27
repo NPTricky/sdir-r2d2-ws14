@@ -8,8 +8,11 @@ import random
 import math
 
 # general hints
-# - why? saves a lot of inverse kinematic calculation time
+# - why rrt? saves a lot of inverse kinematic calculation time
+# - overview: obstacles in configuration space
 # - use inverse kinematics for the obstacles to transform them into c space
+# - task space - euclidean distance?!? distance function?
+# - guided search?
 
 # influenced by the robot (usually 6 for 1 configuration or 6 angles)
 _CFG_LEN = 6
@@ -101,13 +104,15 @@ def map_interval(from_min, from_max, to_min, to_max, value):
 # - boolean whether configuration is valid (in free space)
 def is_valid(robot, configuration):
     configuration_backup = robot.GetDOFValues()
-    robot.SetDOFValues(configuration)
-    report = CollisionReport()
-    # check for inlier's and set the corresponding report.contacts number
-    robot.GetEnv().CheckCollision(robot,report)
-    contact_count = len(report.contacts)
-    contact_count = contact_count + 1 if robot.CheckSelfCollision() else contact_count
-    robot.SetDOFValues(configuration_backup)
+    env = robot.GetEnv()
+    with env: # lock environment
+        robot.SetDOFValues(configuration)
+        report = CollisionReport()
+        # check for inlier's and set the corresponding report.contacts number
+        robot.GetEnv().CheckCollision(robot,report)
+        contact_count = len(report.contacts)
+        contact_count = contact_count + 1 if robot.CheckSelfCollision() else contact_count
+        robot.SetDOFValues(configuration_backup)
     return contact_count < 1
 
 
