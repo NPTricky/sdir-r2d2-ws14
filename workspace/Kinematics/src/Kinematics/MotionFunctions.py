@@ -4,7 +4,7 @@ import time
 import Kinematics as kin
 import math
 import sys
-import rrt as rrt
+import RRT as rrt
 
 # e.g. 0.1, 0.01 or 0.001
 _SAMPLE_RATE = 0.01
