@@ -3,11 +3,28 @@ import numpy as np
 import Kinematics as kin
 import RRT as rrt
 
+def createPhysicsEnvironment(env):
+    physics = RaveCreatePhysicsEngine(env,'ode')
+    physics.SetGravity([0,0,-0.98])
+    env.SetPhysicsEngine(physics)
+    env.StopSimulation()
+    
+    # scene load after physics engine configuration
+    env.Load('../../MyData/MyEnvironment/MyEnv.xml') # load a simple scene
+    
+    # make base of robot static
+    robot = env.GetRobots()[0]
+    robot.GetLinks()[0].SetStatic(True)
+    
+    env.StartSimulation(0.01)
+       
 def createEnvironment():
      # setting up the operave environment
     env = Environment() # create openrave environment
     env.SetViewer('qtcoin') # attach viewer (optional)
-    env.Load('../../MyData/MyEnvironment/MyEnv.xml') # load a simple scene
+    
+    createPhysicsEnvironment(env)
+    
     robot = env.GetRobots()[0]    
     valid = False
     while not valid:
@@ -38,7 +55,8 @@ def createFixEnvironment():
     # setting up the operave environment
     env = Environment() # create openrave environment
     env.SetViewer('qtcoin') # attach viewer (optional)
-    env.Load('../../MyData/MyEnvironment/MyEnv.xml') # load a simple scene
+    
+    createPhysicsEnvironment(env)
     
     with env:
         geom = KinBody.Link.GeometryInfo()
