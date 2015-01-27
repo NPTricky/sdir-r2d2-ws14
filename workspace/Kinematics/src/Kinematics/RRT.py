@@ -300,6 +300,15 @@ def generate_rt(robot, vertex_count, delta_time):
 
 
 
+def node_to_cfg(graph, index_path):
+    cfg_path = []
+    for i in xrange(len(index_path)):
+        cfg = graph.vs["configuration"][index_path[i]]
+        cfg_path.append(cfg)
+    return cfg_path
+    
+    
+    
 # input;
 # - robot:
 # - goal_cfg:
@@ -309,12 +318,11 @@ def rrt(robot, goal_cfg):
     delta_time = 1
     g = generate_rt(robot, vertex_count, delta_time)
     # add goal to the graph
-    
     goal_idx = vertex_count - 1
     assert(goal_idx != 0)
     shortest_paths = g.get_all_shortest_paths(0, goal_idx)
-    print shortest_paths
-    return shortest_paths[0]
+    shortest_path = node_to_cfg(g, shortest_paths[0])
+    return shortest_path
     
     #plot_igraph(g, g.layout_kamada_kawai())
     #vertex_goal = g.vs.select(lambda vertex: (vertex["configuration"] == goal_cfg).all()) if np.array_equal(state_new, state_goal) else None
