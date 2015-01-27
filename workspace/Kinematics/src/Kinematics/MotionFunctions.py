@@ -508,4 +508,3 @@ def convert_path_interpolation_to_configurations(robot, start_cfg, target_cfg, i
     
     #return None
     return configurations[::-1]
-    
