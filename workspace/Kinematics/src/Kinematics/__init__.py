@@ -132,7 +132,7 @@ if __name__ == "__main__":
     #env.SetViewer('qtcoin') # attach viewer (optional)
     #env.Load('../../MyData/MyEnvironment/MyEnv.xml') # load a simple scene
 
-    env = level.createEnvironment()
+    env = level.createFixEnvironment()
     robot = env.GetRobots()[0] # get the first robot
 
     print "DH (OpenRave):\n"+str(planningutils.GetDHParameters(robot))

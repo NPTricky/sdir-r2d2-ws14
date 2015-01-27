@@ -4,6 +4,7 @@ import time
 import Kinematics as kin
 import math
 import sys
+import rrt as rrt
 
 # e.g. 0.1, 0.01 or 0.001
 _SAMPLE_RATE = 0.01
@@ -54,8 +55,7 @@ def PTPtoConfiguration(robot, target_cfg, motiontype):
     
     if motion_options[2] == "R":
         print "rrt"
-        configurations = ((start_cfg, np.array((-0.6696,-0.466, 0.5493,1.4661,-0.6739,-1.4371)), target_cfg))
-        #configurations = rrt.rrt
+        configurations = rrt.rrt(robot, target_cfg)
         
     if motion_options[1] == "L":
     
