@@ -86,6 +86,8 @@ def Move(robot, trajectory):
     #_DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), kin._BASE, 4.0, 4.5))
     if not trajectory is None:
         for i in range(trajectory.shape[0]):
+            #if not rrt.is_valid(robot, trajectory[i]):
+            #    break
             robot.SetDOFValues(trajectory[i])
             _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), kin.forward(trajectory[i]), 0.1, 0.3))
             time.sleep(_SAMPLE_RATE)
@@ -262,22 +264,20 @@ def generate_trajectory(start_cfg, target_cfg, velocity_limit, acceleration_limi
     return trajectory
    
 def concatenate_trajectory(robot, trajectory_0, trajectory_1, gind_over, velocity_profile_0, velocity_profile_1):
+                
+    time_dec0_to_end0 = get_ta(velocity_profile_0).max()
+    time_end0_to_acc1 = get_ta(velocity_profile_1).max()
+    time_end =  time_dec0_to_end0 + time_end0_to_acc1
     
-    if not gind_over:
+    if not gind_over or len(trajectory_0) < (time_end0_to_acc1 / _SAMPLE_RATE):
         return np.concatenate((trajectory_0, trajectory_1[1:]))
-    
-    if 2 < len(trajectory_0) and 2 < len(trajectory_1): 
+            
+    elif 2 < len(trajectory_0) and 2 < len(trajectory_1): 
         res = (0 < (trajectory_0[-1] - trajectory_0[-3])) != (0 < (trajectory_1[2] - trajectory_1[0]))
         if res[0]:
             #_DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), kin.forward(trajectory_0[-1]), 0.5, 0.1))
             return np.concatenate((trajectory_0, trajectory_1[1:]))
-        
-    
-    
-    time_dec0_to_end0 = get_ta(velocity_profile_0).max()
-    time_end0_to_acc1 = get_ta(velocity_profile_1).max()
-    time_end =  time_dec0_to_end0 + time_end0_to_acc1
-            
+
     velocity = np.minimum( np.fabs(get_v(velocity_profile_1) - get_v(velocity_profile_0)), robot.GetDOFVelocityLimits())
     acceleration = np.minimum(np.nan_to_num( 2 * velocity / time_end), robot.GetDOFAccelerationLimits())
     

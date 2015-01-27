@@ -107,10 +107,11 @@ def is_valid(robot, configuration):
     env = robot.GetEnv()
     with env: # lock environment
         robot.SetDOFValues(configuration)
+        env.GetCollisionChecker().SetCollisionOptions(CollisionOptions.Contacts)
         report = CollisionReport()
         # check for inlier's and set the corresponding report.contacts number
-        robot.GetEnv().CheckCollision(robot,report)
-        contact_count = len(report.contacts)
+        env.CheckCollision(robot,report)
+        contact_count = 255 - len(report.contacts)
         contact_count = contact_count + 1 if robot.CheckSelfCollision() else contact_count
         robot.SetDOFValues(configuration_backup)
     return contact_count < 1
