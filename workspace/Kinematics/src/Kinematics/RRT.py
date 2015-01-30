@@ -322,15 +322,40 @@ def node_to_cfg(graph, index_path):
 def rrt(robot, goal_cfg):
     vertex_count = 100
     delta_time = 1
-    g = generate_rt(robot, vertex_count, delta_time)
+    
+    # clone of the environment
+    env = robot.GetEnv().CloneSelf(CloningOptions.Bodies | CloningOptions.RealControllers )
+    new_robot = env.GetRobots()[0]
+    
+    g = generate_rt(new_robot, vertex_count, delta_time)
+    
+    env.Destroy()
     # add goal to the graph
     goal_idx = vertex_count - 1
     assert(goal_idx != 0)
     shortest_paths = g.get_all_shortest_paths(0, goal_idx)
     shortest_path = node_to_cfg(g, shortest_paths[0])
-    return shortest_path
+    return g, shortest_path
     
     #plot_igraph(g, g.layout_kamada_kawai())
     #vertex_goal = g.vs.select(lambda vertex: (vertex["configuration"] == goal_cfg).all()) if np.array_equal(state_new, state_goal) else None
     #goal_idx = vertex_goal[0].index
+
+def printGraph(g, env):
+    mf._DEBUG_DRAW = []
+    for edge in g.get_edgelist():
+        print "edge", edge
+        
+        start_cfg = g.vs["configuration"][edge[0]]
+        start_pose = kin.get_pose_from(kin.forward(start_cfg))
     
+        target_cfg = g.vs["configuration"][edge[1]]
+        target_pose = kin.get_pose_from(kin.forward(target_cfg))
+        
+        mf._DEBUG_DRAW.append(env.drawlinestrip(points=np.array(((start_pose[0],start_pose[1],start_pose[2]),(target_pose[0],target_pose[1],target_pose[2]))),
+                            linewidth=1.0,
+                            colors=np.array(((0,0,0),(0,0,0)))))
+                            
+   
+   
+    plot_igraph(g, g.layout_kamada_kawai())    

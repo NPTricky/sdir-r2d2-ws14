@@ -29,7 +29,8 @@ def createEnvironment():
     env = Environment() # create openrave environment
     env.SetViewer('qtcoin') # attach viewer (optional)
     
-    createPhysicsEnvironment(env)
+    # scene load after physics engine configuration
+    env.Load('../../MyData/MyEnvironment/MyEnv.xml') # load a simple scene
     
     robot = env.GetRobots()[0]    
     valid = False
@@ -57,12 +58,27 @@ def createFixEnvironment():
     env = Environment() # create openrave environment
     env.SetViewer('qtcoin') # attach viewer (optional)
     
-    createPhysicsEnvironment(env)
+    # scene load after physics engine configuration
+    env.Load('../../MyData/MyEnvironment/MyEnv.xml') 
     
+    # load a simple scene
     with env:
         geom = KinBody.Link.GeometryInfo()
         geom._type = KinBody.Link.GeomType.Box
         geom._t[0:3,3] = [1.5, 0.5, 1.8] # position in room
+        geom._vGeomData = [0.1, 0.1, 1]
+    
+        # set last information 
+        geom._bVisible = True
+        geom._fTransparency = 0
+        geom._vDiffuseColor = [1,0,1]
+    
+    insertBodies(env, [geom])
+    
+    with env:
+        geom = KinBody.Link.GeometryInfo()
+        geom._type = KinBody.Link.GeomType.Box
+        geom._t[0:3,3] = [1.5, -0.5, 1.8] # position in room
         geom._vGeomData = [0.1, 0.1, 1]
     
         # set last information 

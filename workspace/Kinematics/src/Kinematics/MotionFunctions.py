@@ -54,8 +54,11 @@ def PTPtoConfiguration(robot, target_cfg, motiontype):
     configurations = ((start_cfg, target_cfg))
     
     if motion_options[2] == "R":
-        print "rrt"
-        configurations = rrt.rrt(robot, target_cfg)
+        g, configurations = rrt.rrt(robot, target_cfg)
+        #g, configurations = myRRT.RapidlyExploringRandomTree(robot, start_cfg, target_cfg, motion_options[0])
+        #g.printGraph(robot.GetEnv())
+        
+        rrt.printGraph(g, robot.GetEnv())
         
     if motion_options[1] == "L":
     
@@ -149,8 +152,8 @@ def get_nearest_angle_solution(current_cfg, possible_confs):
         # angle difference solution for the first three angles 
         mask = mask_angle
         indices = []
-        for j in xrange(len(current_cfg)):
-            for i in xrange(len(res[1]) - len(mask)):
+        for j in xrange(len(mask_angle)):
+            for i in xrange(len(res[1]) - len(mask)+1):
                 if np.all(res[1][i:i+len(mask)] == mask):
                     indices.append(res[0][i])
                     
@@ -294,7 +297,7 @@ def concatenate_trajectory(robot, trajectory_0, trajectory_1, gind_over, velocit
     diff = target_cfg - start_cfg
     velocity = diff / time_end
     
-    trajectory_grind = np.empty([time_steps_max - 1, len(start_cfg)])
+    trajectory_grind = np.empty([time_steps_max, len(start_cfg)])
     trajectory_grind[0] = start_cfg
     for i in xrange(1, len(trajectory_grind)):
         t = i * _SAMPLE_RATE   
