@@ -11,7 +11,7 @@ def setup():
     # scene load after physics engine configuration
     env.Load('../../MyData/MyEnvironment/MyEnv.xml') # load a simple scene
     
-    env.GetCollisionChecker().SetCollisionOptions(CollisionOptions.Contacts)
+    #env.GetCollisionChecker().SetCollisionOptions(CollisionOptions.Contacts)
     
     return env
     
