@@ -19,30 +19,31 @@ def insertBodies(env, bodies):
     body = RaveCreateKinBody(env, '')
     body.SetName('Body')
     body.InitFromGeometries(bodies)
-    env.Add(body, True)
+    env.AddKinBody(body, True)    
+    return body
 
 def createEnvironment():
     env = setup()
     
     robot = env.GetRobots()[0]    
-    valid = False
-    while not valid:
-        with env:
-            noOfGeom = np.random.randint(1,11)
+    with env:
+        noOfGeom = np.random.randint(1,11)
+        geomArray = np.empty([0,noOfGeom])
+    
+        print 'Number of GeomObjects: ', noOfGeom
+    
+        for i in range(0, noOfGeom):
+            geomType = np.random.randint(0,2)
+            print 'GeomType from %d: %d' % (i, geomType)
+            geom = setSettingsOfGeom(geomType)
             geomArray = np.empty([0,noOfGeom])
-        
-            print 'Number of GeomObjects: ', noOfGeom
-        
-            for i in range(0, noOfGeom):
-                geomType = np.random.randint(0,2)
-                print 'GeomType from %d: %d' % (i, geomType)
-                geom = setSettingsOfGeom(geomType)
-                geomArray = np.append(geomArray, geom)
+            geomArray = np.append(geomArray, geom)
             
-            insertBodies(env, geomArray)
+            body = insertBodies(env, geomArray)
             
-            valid = rrt.is_valid(robot, robot.GetDOFValues())
-        
+            if not rrt.is_valid(robot, robot.GetDOFValues()):
+                env.RemoveKinBody(body)
+                
     return env
 
 def createFixEnvironment():
