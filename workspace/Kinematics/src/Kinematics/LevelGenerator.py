@@ -3,6 +3,18 @@ import numpy as np
 import Kinematics as kin
 import RRT as rrt
 
+def setup():
+    # setting up the operave environment
+    env = Environment() # create openrave environment
+    env.SetViewer('qtcoin') # attach viewer (optional)
+    
+    # scene load after physics engine configuration
+    env.Load('../../MyData/MyEnvironment/MyEnv.xml') # load a simple scene
+    
+    env.GetCollisionChecker().SetCollisionOptions(CollisionOptions.Contacts)
+    
+    return env
+    
 def insertBodies(env, bodies):
     body = RaveCreateKinBody(env, '')
     body.SetName('Body')
@@ -10,12 +22,7 @@ def insertBodies(env, bodies):
     env.Add(body, True)
 
 def createEnvironment():
-     # setting up the operave environment
-    env = Environment() # create openrave environment
-    env.SetViewer('qtcoin') # attach viewer (optional)
-    
-    # scene load after physics engine configuration
-    env.Load('../../MyData/MyEnvironment/MyEnv.xml') # load a simple scene
+    env = setup()
     
     robot = env.GetRobots()[0]    
     valid = False
@@ -39,12 +46,7 @@ def createEnvironment():
     return env
 
 def createFixEnvironment():
-    # setting up the operave environment
-    env = Environment() # create openrave environment
-    env.SetViewer('qtcoin') # attach viewer (optional)
-    
-    # scene load after physics engine configuration
-    env.Load('../../MyData/MyEnvironment/MyEnv.xml') 
+    env = setup()
     
     # load a simple scene
     with env:
