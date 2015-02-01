@@ -97,11 +97,15 @@ def draw_graph(graph, env):
 
     for a,b in graph.get_edgelist():
         cfg_init = graph.vs["configuration"][a]
-        pose_init = kin.get_pose_from(kin.forward(cfg_init))
+        kin_init = kin.forward(cfg_init)
+        pose_init = kin.get_pose_from(kin_init)
         
         cfg_goal = graph.vs["configuration"][b]
-        pose_goal = kin.get_pose_from(kin.forward(cfg_goal))
+        kin_goal = kin.forward(cfg_goal)
+        pose_goal = kin.get_pose_from(kin_goal)
 
+        mf._DEBUG_DRAW.append(misc.DrawAxes(env, kin_init, 0.1, 1))
+        mf._DEBUG_DRAW.append(misc.DrawAxes(env, kin_goal, 0.1, 1))
         mf._DEBUG_DRAW.append(env.drawlinestrip(points=np.array(((pose_init[:3]),(pose_goal[:3]))),
                                                 linewidth=1.0,
                                                 colors=np.array(((0,0,0),(0,0,0)))))
