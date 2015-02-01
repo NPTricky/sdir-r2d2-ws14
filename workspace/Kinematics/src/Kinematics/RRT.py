@@ -45,7 +45,18 @@ def create_state(cfg):
 
 
 # input:
-# - g: graph to plot
+# - graph;
+def spatial_layout(graph):
+    layout = []
+    for vertex in graph.vs:
+        vertex_pose = kin.get_pose_from(kin.forward(vertex["configuration"]))
+        layout.append((vertex_pose[0],vertex_pose[1]))
+    return layout
+
+
+
+# input:
+# - graph: graph to plot
 # - layout: plot layout algorithm
 def plot_igraph(graph, layout):
     visual_style = {}
@@ -54,6 +65,7 @@ def plot_igraph(graph, layout):
     visual_style["vertex_label"] = graph.vs["name"]
     #visual_style["edge_width"] = [1 + 2 * int(is_formal) for is_formal in g.es["is_formal"]]
     visual_style["layout"] = layout
+    # need to be specified explicitly due to custom layout
     visual_style["bbox"] = (600,600)
     visual_style["margin"] = 20
     ig.plot(graph, **visual_style)
@@ -61,6 +73,25 @@ def plot_igraph(graph, layout):
 
 
 
+# input:
+# - graph:
+# - env:
+def draw_graph(graph, env):
+    mf._DEBUG_DRAW = []
+
+    for a,b in graph.get_edgelist():
+        cfg_init = graph.vs["configuration"][a]
+        pose_init = kin.get_pose_from(kin.forward(cfg_init))
+        
+        cfg_goal = graph.vs["configuration"][b]
+        pose_goal = kin.get_pose_from(kin.forward(cfg_goal))
+
+        mf._DEBUG_DRAW.append(env.drawlinestrip(points=np.array(((pose_init[:3]),(pose_goal[:3]))),
+                                                linewidth=1.0,
+                                                colors=np.array(((0,0,0),(0,0,0)))))
+    
+    
+    
 # input:
 # - cfg_init:
 # - cfg_goal:
@@ -107,7 +138,6 @@ def is_valid(robot, configuration):
     env = robot.GetEnv()
     with env: # lock environment
         robot.SetDOFValues(configuration)
-        env.GetCollisionChecker().SetCollisionOptions(CollisionOptions.Contacts)
         report = CollisionReport()
         # check for inlier's and set the corresponding report.contacts number
         env.CheckCollision(robot,report)
@@ -321,41 +351,29 @@ def node_to_cfg(graph, index_path):
 # public interface of the rapidly-exploring random tree algorithm
 def rrt(robot, goal_cfg):
     vertex_count = 100
-    delta_time = 1
+    delta_time = 0.5
     
     # clone of the environment
-    env = robot.GetEnv().CloneSelf(CloningOptions.Bodies | CloningOptions.RealControllers )
-    new_robot = env.GetRobots()[0]
+    # env = robot.GetEnv().CloneSelf(CloningOptions.Bodies | CloningOptions.RealControllers )
+    # new_robot = env.GetRobots()[0]
+    # env.Destroy()
     
-    g = generate_rt(new_robot, vertex_count, delta_time)
+    # dangerous due to https://github.com/rdiankov/openrave/issues/335
+    # do not want to introduce another cause for errors...
+    g = generate_rt(robot, vertex_count, delta_time)
     
-    env.Destroy()
     # add goal to the graph
     goal_idx = vertex_count - 1
     assert(goal_idx != 0)
     shortest_paths = g.get_all_shortest_paths(0, goal_idx)
     shortest_path = node_to_cfg(g, shortest_paths[0])
-    return g, shortest_path
+
+    # draw rrt related information
+    draw_graph(g, robot.GetEnv())
+    layout = spatial_layout(g)
+    plot_igraph(g, layout)
+    return shortest_path
     
     #plot_igraph(g, g.layout_kamada_kawai())
     #vertex_goal = g.vs.select(lambda vertex: (vertex["configuration"] == goal_cfg).all()) if np.array_equal(state_new, state_goal) else None
     #goal_idx = vertex_goal[0].index
-
-def printGraph(g, env):
-    mf._DEBUG_DRAW = []
-    for edge in g.get_edgelist():
-        print "edge", edge
-        
-        start_cfg = g.vs["configuration"][edge[0]]
-        start_pose = kin.get_pose_from(kin.forward(start_cfg))
-    
-        target_cfg = g.vs["configuration"][edge[1]]
-        target_pose = kin.get_pose_from(kin.forward(target_cfg))
-        
-        mf._DEBUG_DRAW.append(env.drawlinestrip(points=np.array(((start_pose[0],start_pose[1],start_pose[2]),(target_pose[0],target_pose[1],target_pose[2]))),
-                            linewidth=1.0,
-                            colors=np.array(((0,0,0),(0,0,0)))))
-                            
-   
-   
-    plot_igraph(g, g.layout_kamada_kawai())    
