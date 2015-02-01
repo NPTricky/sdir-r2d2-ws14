@@ -54,11 +54,9 @@ def PTPtoConfiguration(robot, target_cfg, motiontype):
     configurations = ((start_cfg, target_cfg))
     
     if motion_options[2] == "R":
-        g, configurations = rrt.rrt(robot, target_cfg)
+        configurations = rrt.rrt(robot, target_cfg)
         #g, configurations = myRRT.RapidlyExploringRandomTree(robot, start_cfg, target_cfg, motion_options[0])
         #g.printGraph(robot.GetEnv())
-        
-        rrt.printGraph(g, robot.GetEnv())
         
     if motion_options[1] == "L":
     
@@ -92,7 +90,7 @@ def Move(robot, trajectory):
             #if not rrt.is_valid(robot, trajectory[i]):
             #    break
             robot.SetDOFValues(trajectory[i])
-            _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), kin.forward(trajectory[i]), 0.1, 0.3))
+            _DEBUG_DRAW.append(misc.DrawAxes(robot.GetEnv(), kin.forward(trajectory[i]), 0.1, 1))
             time.sleep(_SAMPLE_RATE)
 
 
