@@ -44,12 +44,28 @@ def create_state(cfg):
 
 
 
+# green = high z coordinate
+# blue = low z coordinate
+# input:
+# - minimum:
+# - maximum:
+# - value:
+def heatmap_rgb(value):
+    ratio = map_interval(0.567, 3.567, 0.0, 1.0, value)
+    b = max(0, (1 - ratio))
+    g = max(0, ratio)
+    return (0, g, b)
+
+
+
 # input:
 # - graph;
 def spatial_layout(graph):
     layout = []
     for vertex in graph.vs:
         vertex_pose = kin.get_pose_from(kin.forward(vertex["configuration"]))
+        vertex["vertex_size"] = map_interval(0.567, 3.567, 5.0, 50.0, vertex_pose[2])
+        vertex["vertex_color"] = heatmap_rgb(vertex_pose[2])
         layout.append((vertex_pose[0],vertex_pose[1]))
     return layout
 
@@ -60,14 +76,14 @@ def spatial_layout(graph):
 # - layout: plot layout algorithm
 def plot_igraph(graph, layout):
     visual_style = {}
-    visual_style["vertex_size"] = 20
-    #visual_style["vertex_color"] = [color_dict[gender] for gender in g.vs["gender"]]
-    visual_style["vertex_label"] = graph.vs["name"]
+    visual_style["vertex_size"] = graph.vs["vertex_size"]
+    visual_style["vertex_color"] = graph.vs["vertex_color"]
+    #visual_style["vertex_label"] = graph.vs["name"]
     #visual_style["edge_width"] = [1 + 2 * int(is_formal) for is_formal in g.es["is_formal"]]
     visual_style["layout"] = layout
     # need to be specified explicitly due to custom layout
-    visual_style["bbox"] = (600,600)
-    visual_style["margin"] = 20
+    visual_style["bbox"] = (666,666)
+    visual_style["margin"] = 16
     ig.plot(graph, **visual_style)
     return
 
@@ -192,14 +208,10 @@ def make_valid_path(robot, cfg_init, cfg_goal):
 # - robot:
 # output:
 # - random state in the configuration space (velocity of 0.0)
-# - generates only configurations without a collision (self intersection & contact)
 def generate_random_state(robot):
     lower,upper = robot.GetDOFLimits()
     angular_limits_difference = upper - lower
-    valid = False
-    while valid == False:
-        configuration_random = lower + np.random.sample(len(lower)) * angular_limits_difference
-        valid = is_valid(robot, configuration_random)
+    configuration_random = lower + np.random.sample(len(lower)) * angular_limits_difference
     return create_state(configuration_random)
 
 
