@@ -299,9 +299,26 @@ def insert_edge(idx_from, idx_to, graph):
 
 
 # input:
+#
+# output:
+# - the new graph
+# - the index of the most recently inserted vertex
+def generate_rt_step(robot, motiontype, delta_time, g, state):
+    state_near,state_near_idx = find_nearest_neighbor_new(g, state)
+    state_new, trajectory = generate_state_new(robot, state_near, state, motiontype, delta_time)
+    state_new_idx = insert_state(state_new, g)
+    # add edge and assign distance as an attribute
+    edge_idx = insert_edge(state_near_idx, state_new_idx, g)
+    g.es[edge_idx]["weight"] = np.linalg.norm(state_new - state_near)
+    g.es[edge_idx]["trajectory"] = trajectory
+    return g,state_new_idx
+
+
+# input:
 # - robot: instance of the robot
-# - vertex_count: number of vertices k
-# - delta_time: incremental distance
+# - motiontype:
+# - delta_time:
+# - iterations: the number of iterations to generate the tree
 # output:
 # - rt graph g
 def generate_rt(robot, motiontype, delta_time, iterations):
@@ -321,13 +338,7 @@ def generate_rt(robot, motiontype, delta_time, iterations):
     # entire rt generation algorithm as in [Lav98c]
     for i in range(1, iterations):
         state_random = generate_random_state(robot)
-        state_near,state_near_idx = find_nearest_neighbor_new(g, state_random)
-        state_new, trajectory = generate_state_new(robot, state_near, state_random, motiontype, delta_time)
-        state_new_idx = insert_state(state_new, g)
-        # add edge and assign distance as an attribute
-        edge_idx = insert_edge(state_near_idx, state_new_idx, g)
-        g.es[edge_idx]["weight"] = np.linalg.norm(state_new - state_near)
-        g.es[edge_idx]["trajectory"] = trajectory
+        g,idx = generate_rt_step(robot, motiontype, delta_time, g, state_random)
         if _PLOT_HISTORY: plot_igraph(g, i)
         
     if not _PLOT_HISTORY: plot_igraph(g)
@@ -352,23 +363,25 @@ def node_to_cfg(graph, index_path):
 def rrt(robot, goal_cfg, motiontype):
     iterations = 250
     delta_time = 0.5
+    
     # clone of the environment
-    # env = robot.GetEnv().CloneSelf(CloningOptions.Bodies | CloningOptions.RealControllers )
-    # new_robot = env.GetRobots()[0]
-    # env.Destroy()
-    
     # dangerous due to https://github.com/rdiankov/openrave/issues/335
-    # do not want to introduce another cause for errors...
-    g = generate_rt(robot, motiontype, delta_time, iterations)
+    new_env = robot.GetEnv().CloneSelf(CloningOptions.Bodies)
+    new_robot = new_env.GetRobots()[0]
     
-    # add goal to the graph
-    goal_idx = iterations - 1
+    g = generate_rt(new_robot, motiontype, delta_time, iterations)
+    g,goal_idx = generate_rt_step(new_robot, motiontype, delta_time, g, goal_cfg)
     assert(goal_idx != 0)
+    
+    new_env.Destroy()
+    
+    # find shortest path and convert it to a list of configurations
     shortest_paths = g.get_all_shortest_paths(0, goal_idx)
     shortest_path = node_to_cfg(g, shortest_paths[0])
 
-    # draw rrt related information
+    # draw rrt into the viewer
     draw_graph(g, robot.GetEnv())
+    
     return shortest_path
     
     #plot_igraph(g, g.layout_kamada_kawai())
