@@ -54,7 +54,7 @@ def PTPtoConfiguration(robot, target_cfg, motiontype):
     configurations = ((start_cfg, target_cfg))
     
     if motion_options[2] == "R":
-        configurations = rrt.rrt(robot, target_cfg)
+        configurations = rrt.rrt(robot, target_cfg, motion_options[0])
         #g, configurations = myRRT.RapidlyExploringRandomTree(robot, start_cfg, target_cfg, motion_options[0])
         #g.printGraph(robot.GetEnv())
         
