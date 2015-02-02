@@ -1,0 +1,15 @@
+generate_rt(robot, iterations, delta_time):
+{ 
+  q_init = is the current configuration of the robot
+  
+  T(q_init)
+  
+  for i to iterations do
+    alpha = generate_random_state(robot)
+    q_n = find_nearest_neighbor(robot, alpha, T)
+    q_s = generate_state(robot, q_n, alpha, delta_time)
+    T.insert_state(q_s)
+    T.insert_edge(q_n, q_s)
+    
+  return T;
+}

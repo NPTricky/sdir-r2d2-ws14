@@ -108,7 +108,7 @@
 \author{Tim Jagla, André Keuns, Anne Reich}
 \institute[FIN]{Otto-von-Guericke-Universität Magdeburg}
 \date{\today} 
-%\logo{\pgfimage[width=2cm,height=2cm]{}}
+\logo{\includegraphics[width=0.18\textwidth]{4/cse_logo.jpeg}}
 
 \begin{document}
   \begin{frame}
@@ -121,140 +121,225 @@
     \end{frame}
     
     \subsection*{}
-    \begin{frame}{Motivation}
-      \begin{itemize}
-        \item path planning: find a path from location \emph{A} to \emph{B}
-        \item Example for path planning:
+      \begin{frame}{Motivation}
         \begin{itemize}
-          \item mobile robot inside a build
-          \item shall go to location XY
-        \end{itemize}
-        \item Example extension for collision free path planning:
-        \begin{itemize}
-          \item avoiding walls and not falling stairs
-        \end{itemize}
-      \end{itemize}
-      
-      % bild 0
-      
-    \end{frame}
-    
-    \subsection*{}
-    \begin{frame}{Simple Example}
-      \begin{itemize}
-        \item Simple General Forward Search
-        \begin{itemize}
-          \item State: Unvisited, Dead, Alive
-          \item Priority queue, \emph{Q}, with the set of alive states
-          \item Start loop over \emph{Q}
-          \item In each while iteration check next state
+          \item path planning: find a path from location \emph{A} to \emph{B}
+          \item example for path planning:
           \begin{itemize}
-            \item It is the goal, is terminate
-            \item Otherwise, it tries applying every possible action
-           \end{itemize} 
+            \item mobile robot inside a build
+            \item shall go to location XY
+          \end{itemize}
+          \item example extension for collision free path planning:
+          \begin{itemize}
+            \item avoiding walls and not falling stairs
+          \end{itemize}
         \end{itemize}
-      \end{itemize}
-      
-      % bild 1
-      
-    \end{frame}
+        
+        \begin{figure}[h]
+          \includegraphics[width=0.4\textwidth]{4/example_path_planing_0.png}
+          \caption{example for path planing [2]}
+          \label{fig:example path planing 0}
+        \end{figure}
+      \end{frame}
     
-    \begin{frame}{Algorithms}
-      \begin{itemize}
-        \item Other known collsion free path planning algorithms
+      \begin{frame}{Simple Example}
         \begin{itemize}
-          \item Breadth first
-          \item Deep first
-          \item Dijikstra‘s algorithm
-          \item A*
-          \item Best First
-          \item Backward search
-          \item ...
+          \item simple general forward search
+          \begin{itemize}
+            \item state: unvisited, dead, alive
+            \item queue, \emph{Q}, with the set of alive states
+            \item start loop over \emph{Q}
+            \item in each while iteration check next state
+            \begin{itemize}
+              \item it is the goal, is terminate
+              \item otherwise, it tries applying every possible action
+             \end{itemize} 
+          \end{itemize}
         \end{itemize}
-      \end{itemize}
-    \end{frame}
-
-    \begin{frame}{Principles}
-      \begin{itemize}
-        \item Basic Ingredients of Planning
-        \begin{itemize}
-          \item State
-          \item Input
-          \item Initial and goal states
-          \item A criterion: Feasibility and/or Optimality
-          \item a plan
-        \end{itemize}
-      \end{itemize}
-    \end{frame}
-    
-    \section{Rapidly-Exploring Random Trees}
-      \begin{frame}
-        \huge{\centering{Rapidly-Exploring Random Trees}}
+        \begin{figure}[h]
+          \includegraphics[width=0.4\textwidth]{4/example_path_planing_1.png}
+          \caption{example for path planing [2]}
+          \label{fig:example path planing 1}
+        \end{figure}
       \end{frame}
       
-      \begin{frame}{Principles}
+      \begin{frame}{Algorithms}
         \begin{itemize}
-          \item Grows a tree tooted at the starting configuration by using random samples from the search space
-          \item As each sample is drawn, a connection is attempted between it an the nearest state in the tree
-          \item If the connection is feasible, this results in the addition of the new state to the tree
-          \item The probability of expanding an existing state is proportional to the size of ist Voronoi region
+          \item other known collsion free path planning algorithms
           \begin{itemize}
-            \item As the largest Voronoi regions belong to the states on the frontier of the search = the tree preferentially expands towards large unsearched areas
+            \item breadth first
+            \item deep first
+            \item Dijikstra‘s algorithm
+            \item A*
+            \item backward search
+            \item ...
           \end{itemize}
         \end{itemize}
       \end{frame}
-      
-      \subsection*{}
-        \begin{frame}{Notations}
-          \begin{align*}
-          X        & \text{ = metric space}\\
-          x_{init} & \text{ = initale state}\\
-          X_{goal} & \text{ = goal region},  X_{goal} \subset X\\
-          C        & \text{ = configuration space of a rigid body or}\\
-          & \text{ ~~ systems of bodies in a world}\\
-          T        & \text{ = RRT (Tree of vertices)}\\
-          T(C)     & \text{ = tanget bundle of the configuration space}\\
-          X_{obs}  & \text{ = obstacle region},  X_{obs} \subset X\\
-          X_{free} & \text{ = region without obstacles}, X_{free} \subset X\\
-          \end{align*}
-          Each edge of the RRT will correspond to a path that lies entirely in $X_{free}$
-        \end{frame}
-      
-      \subsection*{}
-      \begin{frame}{General Procedure}
+
+      \begin{frame}{Principles}
         \begin{itemize}
-          \item start with $x_init$ and $T$, with $K$ vertices
-          \item in each iteration a random state, $x_rand$, is selected from $X$
-          \item find the closest vertex to $x_rand$ with the terms of a distance metric
-          \item select an input that minimizes the distance from closest vertex to $x_rand$ and check that the state is in $X_{free}$
-          \item is it free, add this new state as a vertex to $T$
+          \item basic ingredients of planning
+          \begin{itemize}
+            \item state
+            \item input
+            \item initial and goal states
+            \item a criterion: feasibility and/or optimality
+            \item a plan
+          \end{itemize}
+        \end{itemize}
+      \end{frame}
+    
+  \section{Rapidly-Exploring Random Trees}
+    \begin{frame}
+      \huge{\centering{Rapidly-Exploring Random Trees}}
+    \end{frame}
+    
+    \subsection*{}
+      \begin{frame}{Principles}
+        \begin{itemize}
+          \begin{footnotesize}
+            \item grows a tree rooted at the starting configuration by using random samples from the search space
+            \item as each sample is drawn, a connection is attempted between it an the nearest state in the tree
+            \item if the connection is feasible, this results in the addition of the new state to the tree
+            \item the probability of expanding an existing state is proportional to the size of its Voronoi region
+%            \begin{itemize}
+%              \begin{footnotesize}
+%                \item as the largest Voronoi regions belong to the states on the frontier of the search = the tree preferentially expands towards large unsearched areas
+%              \end{footnotesize}
+%            \end{itemize}
+          \end{footnotesize}
+        \end{itemize}
+        \vspace{-5pt}
+        \begin{figure}[h]
+          \includegraphics[width=0.28\textwidth]{4/rrt_iterations_45.png}
+          \includegraphics[width=0.28\textwidth]{4/rrt_iterations_2345.png}
+          \vspace{-10pt}
+          \caption{\footnotesize rrt with 45 and 2345 iterations [2]}
+          \label{fig:rrt_iterations_45_and_2345}
+        \end{figure}
+
+      \end{frame}
+    
+      \begin{frame}{Nice Properties}
+        \begin{itemize}
+          \item the expansion is heavily biased toward unexplored portions of the state space
+          \item the distribution of vertices approaches the sampling distribution, leading to consistent behavior
+          \item is probabilistically complete under very general conditions
+          \item the algorithm is relatively simple, which facilitates performance analysis
         \end{itemize}
       \end{frame}
       
-      \subsection*{}
       \begin{frame}{Nice Properties}
         \begin{itemize}
-          \item The expansion is heavily biased toward unexplored portions of the state space
-          \item The distribution of vertices approaches the sampling distribution, leading to consistent behavior
-          \item Is probabilistically complete under very general conditions
-          \item sThe algorithm is relatively simple, which facilitates performance analysis
-        \end{itemize}
-      \end{frame}
-      
-      \begin{frame}{Nice Properties}
-        \begin{itemize}
-          \item It always remains connected, even though the number of edges is minimal
-          \item Can be considered as a plat planning module, which can be adapted and incorporated into a wide variety of planning systems
-          \item Entire plath planning algorithms can be constructed without requiring the ability to steer the system between two prescibed states, which greatly broadens the applicability of RRTs
+          \item it always remains connected, even though the number of edges is minimal
+          \item can be considered as a plat planning module, which can be adapted and incorporated into a wide variety of planning systems
+          \item entire plath planning algorithms can be constructed without requiring the ability to steer the system between two prescibed states, which greatly broadens the applicability of RRTs
         \end{itemize}
       \end{frame}
       
       \begin{frame}{Challanges of our work}
-        überlegung 2d -> 3d -> 6d / configuration space
+        \begin{itemize}
+          \item implementation from 2D to 6D over 3D
+%          \begin{itemize}
+%            \item we are want direct to the configuration space of the robot and so cloud some difficulties go away
+%          \end{itemize}
+          \item determination of the nearest neighbor of an state/point in space to a state in our tree
+%          \begin{itemize}
+%            \item one way of determination is over the cartesian space, we build us the from our configurations the x-y-z-coordinates in space and calculate the euclidean distance
+%            \item the same way we are going by the splitting of edges
+%          \end{itemize}
+          \item checking of collision by the trajectory of the robot
+%          \begin{itemize}
+%            \item one way is, we use our available function for the velocity profile and trajectory generation, and test if the path to our goal state is free 
+%          \end{itemize}
+        \end{itemize}
+      \end{frame}
+      
+      \begin{frame}{Notations}
+        \begin{align*}
+        T        & \text{ = RRT (tree of vertices)}\\
+        C        & \text{ = configuration space of a rigid body or}\\
+                 & \text{ ~~ systems of bodies in a world}\\
+        T(C)     & \text{ = tanget bundle of the configuration space}\\
+        C_{goal} & \text{ = goal region},  C_{goal} \subset C\\
+        C_{obs}  & \text{ = obstacle region},  C_{obs} \subset C\\
+        C_{free} & \text{ = region without obstacles}, C_{free} \subset C\\
+        q_{init} & \text{ = initale state}\\
+        q_n      & \text{ = neighbor of a state}\\
+        alpha    & \text{ = random state}\\
+        edges    & \text{ = correspond to a path that lies entirely in } C_{free}\\
+        \end{align*}
       \end{frame}
       
       \begin{frame}{Pseudo Code}
+        \lstinputlisting[language=pseudo,style=global,caption={pseudocode for rrt algorithm},label=lst:rrt_algorithm]{rrt_algorithm.pseudo}
+      \end{frame}
+      
+%        \begin{frame}<presentation:0|handout:1>{General Procedure}
+%          \begin{itemize}
+%            \item start with $q_{init}$ and $T$, with $K$ vertices
+%            \item in each iteration a random state, $alpha$, is selected from $C$
+%            \item find the closest vertex to $alpha$ with the terms of a distance metric
+%            \item select an input that minimizes the distance from closest vertex to $alpha$ and check that the state is in $C_{free}$
+%            \item is it free, add this new state as a vertex to $T$
+%          \end{itemize}
+%        \end{frame}
+      
+      \begin{frame}{Function: generate random state}
+        \begin{itemize}
+          \item generate a random state between the minimum and the maximum configuration limits of the robot
+        \end{itemize}
+        \lstinputlisting[language=pseudo,style=global,caption={pseudocode for random state generation},label=lst:generate_random_state]{generate_random_state.pseudo}
+      \end{frame}
+      
+      \begin{frame}{Function: find nearest neighbor}
+        \begin{figure}[h]
+          \footnotesize
+          \begin{columns}
+            \column[c]{.01\textwidth}
+            \vspace{-50pt}
+            a)
+            \column[c]{0.49\textwidth}
+            \includegraphics[width=1\textwidth]{4/rrt_nearest_neighbor_1.png}
+            \column[c]{0.01\textwidth}
+            \vspace{-50pt}
+            b)
+            \column[c]{0.49\textwidth}
+            \includegraphics[width=1\textwidth]{4/rrt_nearest_neighbor_4.png}
+          \end{columns}
+          \vspace{15pt}
+          \begin{columns}
+            \column[c]{.25\textwidth}
+            \column[c]{.01\textwidth}
+            \vspace{-50pt}
+            c)
+            \column[c]{.49\textwidth}
+            \includegraphics[width=1\textwidth]{4/rrt_nearest_neighbor_2.png}
+            \column[c]{.25\textwidth}
+          \end{columns}
+          \caption{nearest neighbor [2]}
+          \label{fig:generate state methode}
+        \end{figure}
+        \vspace{-35pt}
+        \begin{itemize}
+          \item bla
+        \end{itemize}
+      \end{frame}
+      
+      \begin{frame}{Function: generate state}
+        \begin{itemize}
+          \item checked the path between $q_n$ and $alpha$ of collisions free
+          \item if it collisions, then give back the last state before the collision
+          \item if the time for trajectory larger as $delta\_time$, then give back the state at $delta\_time$
+          \item else give $alpha$ back
+        \end{itemize}
         
+        \begin{figure}[h]
+          \includegraphics[width=0.8\textwidth]{4/rrt_generate_state.png}
+          \caption{generate state methode [2]}
+          \label{fig:generate state methode}
+        \end{figure}
       \end{frame}
       
       \begin{frame}{Live Demo}

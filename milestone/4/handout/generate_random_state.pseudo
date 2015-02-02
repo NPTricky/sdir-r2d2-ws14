@@ -1,0 +1,7 @@
+generate_random_state(robot):
+{ 
+  min_angle = the minimum angle limits of the robot
+  max_angle = the minimum angle limits of the robot
+  
+  return min_angle + (max_angle - min_angle) * random value between 0 and 1
+}
