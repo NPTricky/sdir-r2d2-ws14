@@ -78,7 +78,7 @@ def plot_igraph(graph, idx = 0):
     #visual_style["asp"] = False # deactivate 1:1 aspect ratio
     #visual_style["xlim"] = (0,5)
     #visual_style["ylim"] = (0,5)
-    ig.plot(graph, "plot_igraph_"+str(idx)+".png", **visual_style)
+    ig.plot(graph, "plot_igraph_"+str(idx).zfill(5)+".png", **visual_style)
     return
 
 
@@ -350,7 +350,7 @@ def node_to_cfg(graph, index_path):
 # - goal_cfg:
 # public interface of the rapidly-exploring random tree algorithm
 def rrt(robot, goal_cfg, motiontype):
-    iterations = 300
+    iterations = 250
     delta_time = 0.5
     # clone of the environment
     # env = robot.GetEnv().CloneSelf(CloningOptions.Bodies | CloningOptions.RealControllers )
