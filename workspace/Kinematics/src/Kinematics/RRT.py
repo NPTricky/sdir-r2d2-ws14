@@ -23,7 +23,8 @@ _RRT_PRECISION_COLLISION = 10
 # sampling interval maximum of interpolation configurations on nearest
 # neighbor search (higher == higher precision / 1 = no interpolation)
 _RRT_PRECISION_NEIGHBOR = 5
-
+# whether to plot the history of graphs
+_PLOT_HISTORY = False
 
 
 # input:
@@ -60,11 +61,11 @@ def heatmap_rgb(value):
 
 # input:
 # - graph;
-def spatial_layout(graph):
+def attributes_and_spatial_layout(graph):
     layout = []
     for vertex in graph.vs:
         vertex_pose = kin.get_pose_from(kin.forward(vertex["configuration"]))
-        vertex["vertex_size"] = map_interval(0.567, 3.567, 5.0, 50.0, vertex_pose[2])
+        vertex["vertex_size"] = map_interval(0.567, 3.567, 10.0, 40.0, vertex_pose[2])
         vertex["vertex_color"] = heatmap_rgb(vertex_pose[2])
         layout.append((vertex_pose[0],vertex_pose[1]))
     return layout
@@ -73,8 +74,11 @@ def spatial_layout(graph):
 
 # input:
 # - graph: graph to plot
-# - layout: plot layout algorithm
-def plot_igraph(graph, layout):
+# - idx: index of the plot (in a series of plots)
+def plot_igraph(graph, idx = 0):
+    # calculate the layout
+    layout = attributes_and_spatial_layout(graph)
+    # apply the layout to the plot
     visual_style = {}
     visual_style["vertex_size"] = graph.vs["vertex_size"]
     visual_style["vertex_color"] = graph.vs["vertex_color"]
@@ -82,9 +86,14 @@ def plot_igraph(graph, layout):
     #visual_style["edge_width"] = [1 + 2 * int(is_formal) for is_formal in g.es["is_formal"]]
     visual_style["layout"] = layout
     # need to be specified explicitly due to custom layout
-    visual_style["bbox"] = (666,666)
-    visual_style["margin"] = 16
-    ig.plot(graph, **visual_style)
+    bbox = ig.BoundingBox(0,0,666,666)
+    bbox.contract(16)
+    visual_style["bbox"] = bbox
+    #visual_style["margin"] = 16 # same as bbox contract
+    #visual_style["rescale"] = False
+    #visual_style["xlim"] = (0,5)
+    #visual_style["ylim"] = (0,5)
+    ig.plot(graph, "plot_igraph_"+str(idx)+".png", **visual_style)
     return
 
 
@@ -345,6 +354,8 @@ def generate_rt(robot, vertex_count, delta_time):
     g = ig.Graph()
     insert_state(state_init,g)
     
+    if _PLOT_HISTORY: plot_igraph(g)
+    
     # entire rt generation algorithm as in [Lav98c]
     for i in range(1, vertex_count):
         state_random = generate_random_state(robot)
@@ -354,6 +365,9 @@ def generate_rt(robot, vertex_count, delta_time):
         # add edge and assign distance as an attribute
         edge_idx = insert_edge(state_near_idx, state_new_idx, g)
         g.es[edge_idx]["weight"] = np.linalg.norm(get_cfg(state_new) - get_cfg(state_near))
+        if _PLOT_HISTORY: plot_igraph(g, i)
+        
+    if not _PLOT_HISTORY: plot_igraph(g)
     
     return g
 
@@ -373,7 +387,7 @@ def node_to_cfg(graph, index_path):
 # - goal_cfg:
 # public interface of the rapidly-exploring random tree algorithm
 def rrt(robot, goal_cfg):
-    vertex_count = 100
+    vertex_count = 300
     delta_time = 0.5
     
     # clone of the environment
@@ -393,8 +407,7 @@ def rrt(robot, goal_cfg):
 
     # draw rrt related information
     draw_graph(g, robot.GetEnv())
-    layout = spatial_layout(g)
-    plot_igraph(g, layout)
+    #plot_igraph(g)
     return shortest_path
     
     #plot_igraph(g, g.layout_kamada_kawai())
