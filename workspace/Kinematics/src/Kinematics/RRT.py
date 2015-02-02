@@ -90,7 +90,8 @@ def plot_igraph(graph, idx = 0):
     bbox.contract(16)
     visual_style["bbox"] = bbox
     #visual_style["margin"] = 16 # same as bbox contract
-    #visual_style["rescale"] = False
+    #visual_style["rescale"] = False # deactivate rescaling
+    #visual_style["asp"] = False # deactivate 1:1 aspect ratio
     #visual_style["xlim"] = (0,5)
     #visual_style["ylim"] = (0,5)
     ig.plot(graph, "plot_igraph_"+str(idx)+".png", **visual_style)
@@ -113,11 +114,13 @@ def draw_graph(graph, env):
         kin_goal = kin.forward(cfg_goal)
         pose_goal = kin.get_pose_from(kin_goal)
 
+        col = np.array((heatmap_rgb(pose_init[2]),heatmap_rgb(pose_goal[2])))
+
         mf._DEBUG_DRAW.append(misc.DrawAxes(env, kin_init, 0.1, 1))
         mf._DEBUG_DRAW.append(misc.DrawAxes(env, kin_goal, 0.1, 1))
         mf._DEBUG_DRAW.append(env.drawlinestrip(points=np.array(((pose_init[:3]),(pose_goal[:3]))),
                                                 linewidth=1.0,
-                                                colors=np.array(((0,0,0),(0,0,0)))))
+                                                colors=col))
     
     
     
@@ -407,7 +410,6 @@ def rrt(robot, goal_cfg):
 
     # draw rrt related information
     draw_graph(g, robot.GetEnv())
-    #plot_igraph(g)
     return shortest_path
     
     #plot_igraph(g, g.layout_kamada_kawai())
