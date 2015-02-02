@@ -292,73 +292,127 @@
         \end{itemize}
         \lstinputlisting[language=pseudo,style=global,caption={pseudocode for random state generation},label=lst:generate_random_state]{generate_random_state.pseudo}
       \end{frame}
-      
-      \begin{frame}{Function: find nearest neighbor}
-        \begin{figure}[h]
-          \footnotesize
-          \begin{columns}
-            \column[c]{.01\textwidth}
-            \vspace{-50pt}
-            a)
-            \column[c]{0.49\textwidth}
-            \includegraphics[width=1\textwidth]{4/rrt_nearest_neighbor_1.png}
-            \column[c]{0.01\textwidth}
-            \vspace{-50pt}
-            b)
-            \column[c]{0.49\textwidth}
-            \includegraphics[width=1\textwidth]{4/rrt_nearest_neighbor_4.png}
-          \end{columns}
-          \vspace{15pt}
-          \begin{columns}
-            \column[c]{.25\textwidth}
-            \column[c]{.01\textwidth}
-            \vspace{-50pt}
-            c)
-            \column[c]{.49\textwidth}
-            \includegraphics[width=1\textwidth]{4/rrt_nearest_neighbor_2.png}
-            \column[c]{.25\textwidth}
-          \end{columns}
-          \caption{nearest neighbor [2]}
-          \label{fig:generate state methode}
-        \end{figure}
-        \vspace{-35pt}
-        \begin{itemize}
-          \item bla
-        \end{itemize}
-      \end{frame}
-      
-      \begin{frame}{Function: generate state}
-        \begin{itemize}
-          \item checked the path between $q_n$ and $alpha$ of collisions free
-          \item if it collisions, then give back the last state before the collision
-          \item if the time for trajectory larger as $delta\_time$, then give back the state at $delta\_time$
-          \item else give $alpha$ back
-        \end{itemize}
-        
-        \begin{figure}[h]
-          \includegraphics[width=0.8\textwidth]{4/rrt_generate_state.png}
-          \caption{generate state methode [2]}
-          \label{fig:generate state methode}
-        \end{figure}
-      \end{frame}
-      
-      \begin{frame}{Live Demo}
-        graph aufbau 
-        vollständigen graphen
-      \end{frame}
-        
-  \section{}
-    \begin{frame}{Sources}
-      \begin{itemize}
-        \item[1] Rapidly-Exploring Random Trees: A New Tool for Path Planning - Steven M. LaValle 
-        \\\url{http://coitweb.uncc.edu/~xiao/itcs6151-8151/RRT.pdf} (03.02.2015)
-        \item[2] Planning Algorithms - Steven M. LaValle \\\url{http://planning.cs.uiuc.edu/} (03.02.2015)
-        \item[3] \url{http://en.wikipedia.org/wiki/Rapidly_exploring_random_tree} (03.02.2015)
-    \end{itemize}
-  \end{frame}
-  
-  \begin{frame}
-    \Huge{\centering{Thank you for your attention}}
-  \end{frame}
+
+
+
+% tim's stuff
+
+\begin{frame}{Function: find nearest neighbor}
+	\begin{figure}[h]
+		\footnotesize
+		\begin{columns}
+			\column[c]{.01\textwidth}
+			\vspace{-50pt}
+			a)
+			\column[c]{0.49\textwidth}
+			\includegraphics[width=1\textwidth]{4/rrt_nearest_neighbor_1.png}
+			\column[c]{0.01\textwidth}
+			\vspace{-50pt}
+			b)
+			\column[c]{0.49\textwidth}
+			\includegraphics[width=1\textwidth]{4/rrt_nearest_neighbor_4.png}
+		\end{columns}
+		\vspace{15pt}
+		\begin{columns}
+			\column[c]{.25\textwidth}
+			\column[c]{.01\textwidth}
+			\vspace{-50pt}
+			c)
+			\column[c]{.49\textwidth}
+			\includegraphics[width=1\textwidth]{4/rrt_nearest_neighbor_2.png}
+			\column[c]{.25\textwidth}
+		\end{columns}
+		\caption{nearest neighbor [2]}
+		\label{fig:generate state methode}
+	\end{figure}
+	\vspace{-35pt}
+	\begin{itemize}
+		\item bla
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Function: generate state}
+	\begin{itemize}
+		\item checked the path between $q_n$ and $alpha$ of collisions free
+		\item if it collisions, then give back the last state before the collision
+		\item if the time for trajectory larger as $delta\_time$, then give back the state at $delta\_time$
+		\item else give $alpha$ back
+	\end{itemize}
+	
+	\begin{figure}[h]
+		\includegraphics[width=0.8\textwidth]{4/rrt_generate_state.png}
+		\caption{generate state methode [2]}
+		\label{fig:generate state methode}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{Function: generate state}
+	\begin{figure}[h]
+		\centering
+		\includegraphics[width=0.8\textwidth]{4/rrt_generate_state.png}
+		\caption{generate state methode [2]}
+		\label{fig:generate state methode}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{graph buildup}
+	\begin{figure}[h]
+		\centering
+		\includegraphics[width=0.5\textwidth]{4/rrt_history_top_down.jpg}
+		\caption{todo}
+	\end{figure}
+\end{frame}
+
+\begin{frame}
+	\begin{figure}
+		\centering
+		\includemovie{0.8\textwidth}{0.8\textheight}{4/rrt_history_1200.mp4}
+		\caption{graph aufbau}
+	\end{figure}
+\end{frame}
+
+\begin{frame}
+	\begin{figure}[h]
+		\centering
+		\includegraphics[width=0.5\textwidth]{4/rrt_history_top_down_graph.jpg}
+		\caption{todo}
+	\end{figure}
+\end{frame}
+
+\begin{frame}
+	\begin{figure}[h]
+		\centering
+		\includegraphics[width=0.5\textwidth]{4/rrt_history_top_down_fusion.jpg}
+		\caption{todo}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{Live Demo}
+	\centering\Huge{Live Demo}
+\end{frame}
+
+\begin{frame}{huge example}
+	\begin{figure}[h]
+		\centering
+		\includegraphics[width=0.6\textwidth]{4/rrt_history_1200.jpg}
+		\caption{todo}
+	\end{figure}
+\end{frame}
+
+\section{}
+\begin{frame}{Sources}
+	\begin{itemize}
+		\item[1] Rapidly-Exploring Random Trees: A New Tool for Path Planning - Steven M. LaValle
+		\\\url{http://coitweb.uncc.edu/~xiao/itcs6151-8151/RRT.pdf} (03.02.2015)
+		\item[2] Planning Algorithms - Steven M. LaValle
+		\\\url{http://planning.cs.uiuc.edu/} (03.02.2015)
+		\item[3] Wikipedia - Rapidly-Exploring Random Tree
+		\\\url{http://en.wikipedia.org/wiki/Rapidly_exploring_random_tree} (03.02.2015)
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\centering\Huge{Thank you for your attention!}
+\end{frame}
 
 \end{document}
