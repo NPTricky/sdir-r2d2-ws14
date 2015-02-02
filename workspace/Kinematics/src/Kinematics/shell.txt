@@ -1,0 +1,1 @@
+avconv -f image2 -i "plot_igraph_%04d.png" -c:v mpeg4 -b:v 2M -r 12 plot_history.mp4

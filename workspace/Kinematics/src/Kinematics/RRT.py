@@ -17,13 +17,6 @@ import sys
 
 # influenced by the robot (usually 6 for 1 configuration or 6 angles)
 _CFG_LEN = 6
-_STATE_LEN = 6
-# sampling interval maximum of in between configurations on collision check
-# (higher == higher precision / 1 = no interpolation)
-_RRT_PRECISION_COLLISION = 10
-# sampling interval maximum of interpolation configurations on nearest
-# neighbor search (higher == higher precision / 1 = no interpolation)
-_RRT_PRECISION_NEIGHBOR = 5
 # whether to plot the history of graphs
 _PLOT_HISTORY = False
 
@@ -49,7 +42,7 @@ def attributes_and_spatial_layout(graph):
     layout = []
     for vertex in graph.vs:
         vertex_pose = kin.get_pose_from(kin.forward(vertex["configuration"]))
-        vertex["vertex_size"] = map_interval(0.567, 3.567, 10.0, 30.0, vertex_pose[2])
+        vertex["vertex_size"] = map_interval(0.567, 3.567, 10.0, 35.0, vertex_pose[2])
         vertex["vertex_color"] = heatmap_rgb(vertex_pose[2])
         layout.append((vertex_pose[0],vertex_pose[1]))
     return layout
@@ -78,7 +71,7 @@ def plot_igraph(graph, idx = 0):
     #visual_style["asp"] = False # deactivate 1:1 aspect ratio
     #visual_style["xlim"] = (0,5)
     #visual_style["ylim"] = (0,5)
-    ig.plot(graph, "plot_igraph_"+str(idx).zfill(5)+".png", **visual_style)
+    ig.plot(graph, "plot_igraph_"+str(idx).zfill(4)+".png", **visual_style)
     return
 
 
@@ -314,6 +307,7 @@ def generate_rt_step(robot, motiontype, delta_time, g, state):
     return g,state_new_idx
 
 
+
 # input:
 # - robot: instance of the robot
 # - motiontype:
@@ -327,7 +321,6 @@ def generate_rt(robot, motiontype, delta_time, iterations):
     
     # create initial & goal state for the rrt algorithm
     state_init = robot.GetDOFValues()
-    _STATE_LEN = len(state_init)
     
     # create graph structure with initial state
     g = ig.Graph()
@@ -368,22 +361,16 @@ def rrt(robot, goal_cfg, motiontype):
     # dangerous due to https://github.com/rdiankov/openrave/issues/335
     new_env = robot.GetEnv().CloneSelf(CloningOptions.Bodies)
     new_robot = new_env.GetRobots()[0]
-    
     g = generate_rt(new_robot, motiontype, delta_time, iterations)
     g,goal_idx = generate_rt_step(new_robot, motiontype, delta_time, g, goal_cfg)
     assert(goal_idx != 0)
-    
     new_env.Destroy()
     
     # find shortest path and convert it to a list of configurations
     shortest_paths = g.get_all_shortest_paths(0, goal_idx)
     shortest_path = node_to_cfg(g, shortest_paths[0])
-
+    
     # draw rrt into the viewer
     draw_graph(g, robot.GetEnv())
     
     return shortest_path
-    
-    #plot_igraph(g, g.layout_kamada_kawai())
-    #vertex_goal = g.vs.select(lambda vertex: (vertex["configuration"] == goal_cfg).all()) if np.array_equal(state_new, state_goal) else None
-    #goal_idx = vertex_goal[0].index
