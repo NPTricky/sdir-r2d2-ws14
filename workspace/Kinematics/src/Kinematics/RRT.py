@@ -6,6 +6,7 @@ import Kinematics as kin
 import numpy as np
 import random
 import math
+import sys
 
 # general hints
 # - why rrt? saves a lot of inverse kinematic calculation time
@@ -114,16 +115,16 @@ def draw_graph(graph, env):
         kin_goal = kin.forward(cfg_goal)
         pose_goal = kin.get_pose_from(kin_goal)
 
-        col = np.array((heatmap_rgb(pose_init[2]),heatmap_rgb(pose_goal[2])))
-
+        #col = np.array((heatmap_rgb(pose_init[2]),heatmap_rgb(pose_goal[2])))
+        col = np.array(((0,0,0),(0,0,0)))
         mf._DEBUG_DRAW.append(misc.DrawAxes(env, kin_init, 0.1, 1))
         mf._DEBUG_DRAW.append(misc.DrawAxes(env, kin_goal, 0.1, 1))
         mf._DEBUG_DRAW.append(env.drawlinestrip(points=np.array(((pose_init[:3]),(pose_goal[:3]))),
                                                 linewidth=1.0,
                                                 colors=col))
-    
-    
-    
+
+
+
 # input:
 # - cfg_init:
 # - cfg_goal:
@@ -179,7 +180,7 @@ def is_valid(robot, configuration):
             collision = env.CheckCollision(link,report=report)
             contact_count += report.numCols
         
-        # check additionaly for self collision
+        # check additionally for self collision
         contact_count = contact_count + report.numCols if robot.CheckSelfCollision() else contact_count
         robot.SetDOFValues(configuration_backup)
     
@@ -202,6 +203,13 @@ def is_valid_path(robot, cfg_init, cfg_goal):
             break
     return not i == 0
 
+def is_valid_trajectory(robot, trajectory):
+    for i in xrange(1, len(trajectory) - 1):
+        valid = is_valid(robot, trajectory[i])
+        if not valid:
+            return False
+    return True
+
 
 
 # input:
@@ -218,6 +226,13 @@ def make_valid_path(robot, cfg_init, cfg_goal):
             return lerp(cfg_init, cfg_goal, (i - 1) * factor)
     return cfg_goal
 
+def make_valid_trajectory(robot, trajectory):
+    for i in xrange(1, len(trajectory) - 1):
+        valid = is_valid(robot, trajectory[i])
+        if not valid:
+            return trajectory[0:i-1]
+    return trajectory
+
 
 
 # input:
@@ -229,6 +244,53 @@ def generate_random_state(robot):
     angular_limits_difference = upper - lower
     configuration_random = lower + np.random.sample(len(lower)) * angular_limits_difference
     return create_state(configuration_random)
+
+
+# input:
+# - graph:
+# - state_goal:
+# output:
+# - the nearest configuration
+# - the index of the vertex of the nearest configuration
+# find the nearest neighbor of a (random) state about to be inserted into the graph
+def find_nearest_neighbor_new(graph, state_goal):
+    # container for the resulting configurations by interpolation of existing edges
+    edge_interpolation = np.empty([0,6])
+    # keep track of edge index
+    edge_idx_list = []
+    for i in range(len(graph.es)):
+        edge = graph.es[i]
+        edge_interpolation = np.concatenate((edge_interpolation, edge["trajectory"]))
+        edge_idx_list = np.concatenate((edge_idx_list,([i] * len(edge["trajectory"]))))
+    
+    interpolation_idx_offset = len(graph.vs["configuration"])
+    search_container = np.concatenate((graph.vs["configuration"],edge_interpolation))
+    search_structure = spatial.KDTree(search_container)
+    # search for smallest distance between configurations (KNN with k = 1)
+    distance, search_idx = search_structure.query(get_cfg(state_goal), 1)
+    if search_idx < interpolation_idx_offset:
+        # state is already in the graph
+        state_near = graph.vs["configuration"][search_idx]
+        state_near_idx = search_idx
+    else:
+        # state is not already in the graph
+        # guaranteed to be collision free as it was interpolated from tested trajectory
+        state_near = create_state(search_container[search_idx])
+        state_near_idx = insert_state(state_near, graph)
+        # retrieve the edge about to split
+        edge_split_idx = int(edge_idx_list[search_idx-interpolation_idx_offset])
+        edge_split = graph.es[edge_split_idx]
+        edge_split_trajectory = edge_split["trajectory"]
+        edge_split_trajectory_idx = np.where(edge_split_trajectory == state_near)[0][0]
+        # insert edge from init to near
+        init_to_near_idx = insert_edge(edge_split.source, state_near_idx, graph)
+        graph.es[init_to_near_idx]["trajectory"] = edge_split_trajectory[:edge_split_trajectory_idx-1]
+        # insert edge from near to goal
+        near_to_goal_idx = insert_edge(state_near_idx, edge_split.target, graph)
+        graph.es[near_to_goal_idx]["trajectory"] = edge_split_trajectory[edge_split_trajectory_idx+1:]
+        # remove old edge
+        graph.delete_edges(edge_split_idx)
+    return state_near,state_near_idx
 
 
 
@@ -300,6 +362,39 @@ def generate_state(robot, state_init, state_goal, delta_time):
     cfg_new = limit_cfg(robot, cfg_init + (delta * sign))
     return create_state(cfg_new)
 
+# input:
+# - robot:
+# - state_init:
+# - state_goal:
+# - delta_time:
+# output:
+# - new state generated by the given states and delta_time
+# - collision-free
+def generate_state_new(robot, state_init, state_goal, motiontype, delta_time = sys.maxint):
+    # calculate the trajectory from the start configuration to the target configuration
+    configuration = np.array((state_init, state_goal))
+    trajectory = mf.generate_trajectory_from_configurations(robot, configuration, motiontype)
+
+    # maximum time step count given delta time
+    time_steps_limit = int(math.ceil(delta_time / mf._SAMPLE_RATE + 0.5))
+    # maximum time step count overall
+    # do not append the configuration for state_goal (len(trajectory) - 2)
+    time_steps_max = min(len(trajectory) - 2, time_steps_limit)
+    step = int(max(1, np.linalg.norm(get_cfg(state_goal) - get_cfg(state_init))))
+    
+    # create a smaller trajectory to save it into the graph structure
+    # do not append the configuration for state_init (xrange(1,...))
+    trajectory_min = np.array([trajectory[i] for i in xrange(1, time_steps_max, step)])
+    
+    # create a collision free trajectory
+    trajectory_valid = make_valid_trajectory(robot, trajectory_min)
+    if len(trajectory_valid) == 0:
+    	cfg_new = state_init
+    else:
+        cfg_new = trajectory_valid[len(trajectory_valid)-1]
+
+    return cfg_new, trajectory_valid
+
 
 
 # input:
@@ -345,7 +440,7 @@ def insert_edge(idx_from, idx_to, graph):
 # - delta_time: incremental distance
 # output:
 # - rt graph g
-def generate_rt(robot, vertex_count, delta_time):
+def generate_rt(robot, motiontype, delta_time, iterations):
     # degrees of freedom
     _CFG_LEN = robot.GetDOF()
     
@@ -360,14 +455,15 @@ def generate_rt(robot, vertex_count, delta_time):
     if _PLOT_HISTORY: plot_igraph(g)
     
     # entire rt generation algorithm as in [Lav98c]
-    for i in range(1, vertex_count):
+    for i in range(1, iterations):
         state_random = generate_random_state(robot)
-        state_near,state_near_idx = find_nearest_neighbor(robot, state_random, g)
-        state_new = generate_state(robot, state_near, state_random, delta_time)
+        state_near,state_near_idx = find_nearest_neighbor_new(g, state_random)
+        state_new, trajectory = generate_state_new(robot, state_near, state_random, motiontype, delta_time)
         state_new_idx = insert_state(state_new, g)
         # add edge and assign distance as an attribute
         edge_idx = insert_edge(state_near_idx, state_new_idx, g)
         g.es[edge_idx]["weight"] = np.linalg.norm(get_cfg(state_new) - get_cfg(state_near))
+        g.es[edge_idx]["trajectory"] = trajectory
         if _PLOT_HISTORY: plot_igraph(g, i)
         
     if not _PLOT_HISTORY: plot_igraph(g)
@@ -389,10 +485,9 @@ def node_to_cfg(graph, index_path):
 # - robot:
 # - goal_cfg:
 # public interface of the rapidly-exploring random tree algorithm
-def rrt(robot, goal_cfg):
-    vertex_count = 300
+def rrt(robot, goal_cfg, motiontype):
+    iterations = 300
     delta_time = 0.5
-    
     # clone of the environment
     # env = robot.GetEnv().CloneSelf(CloningOptions.Bodies | CloningOptions.RealControllers )
     # new_robot = env.GetRobots()[0]
@@ -400,10 +495,10 @@ def rrt(robot, goal_cfg):
     
     # dangerous due to https://github.com/rdiankov/openrave/issues/335
     # do not want to introduce another cause for errors...
-    g = generate_rt(robot, vertex_count, delta_time)
+    g = generate_rt(robot, motiontype, delta_time, iterations)
     
     # add goal to the graph
-    goal_idx = vertex_count - 1
+    goal_idx = iterations - 1
     assert(goal_idx != 0)
     shortest_paths = g.get_all_shortest_paths(0, goal_idx)
     shortest_path = node_to_cfg(g, shortest_paths[0])
