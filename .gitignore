@@ -1,4 +1,5 @@
 content/
+*.pdf
 
 # -----------------------------------------------------------------------------
 # Adapted from github.com/github/gitignore 'Eclipse'
