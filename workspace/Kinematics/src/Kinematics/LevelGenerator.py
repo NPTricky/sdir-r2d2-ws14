@@ -3,6 +3,8 @@ import numpy as np
 import Kinematics as kin
 import RRT as rrt
 
+_OBJECT_COUNT = 30
+
 def setup():
     # setting up the operave environment
     env = Environment() # create openrave environment
@@ -15,34 +17,35 @@ def setup():
     
     return env
     
-def insertBodies(env, bodies):
+def insertBody(env, bodies):
     body = RaveCreateKinBody(env, '')
     body.SetName('Body')
     body.InitFromGeometries(bodies)
-    env.Add(body, True)
+    env.AddKinBody(body, True)
+    return body
 
 def createEnvironment():
     env = setup()
     
     robot = env.GetRobots()[0]    
-    valid = False
-    while not valid:
-        with env:
-            noOfGeom = np.random.randint(1,11)
+    with env:
+        noOfGeom = np.random.randint(1,_OBJECT_COUNT)
+        geomArray = np.empty([0,noOfGeom])
+    
+        print 'Number of GeomObjects: ', noOfGeom
+    
+        for i in range(0, noOfGeom):
+            geomType = np.random.randint(0,2)
+            print 'GeomType from %d: %d' % (i, geomType)
+            geom = setSettingsOfGeom(geomType)
             geomArray = np.empty([0,noOfGeom])
+            geomArray = np.append(geomArray, geom)
         
-            print 'Number of GeomObjects: ', noOfGeom
-        
-            for i in range(0, noOfGeom):
-                geomType = np.random.randint(0,2)
-                print 'GeomType from %d: %d' % (i, geomType)
-                geom = setSettingsOfGeom(geomType)
-                geomArray = np.append(geomArray, geom)
+            body = insertBody(env, geomArray)
             
-            insertBodies(env, geomArray)
-            
-            valid = rrt.is_valid(robot, robot.GetDOFValues())
-        
+            if not rrt.is_valid(robot, robot.GetDOFValues()):
+                env.RemoveKinBody(body)
+    
     return env
 
 def createFixEnvironment():
@@ -60,7 +63,7 @@ def createFixEnvironment():
         geom._fTransparency = 0
         geom._vDiffuseColor = [1,0,1]
     
-    insertBodies(env, [geom])
+    insertBody(env, [geom])
     
     with env:
         geom = KinBody.Link.GeometryInfo()
@@ -73,7 +76,7 @@ def createFixEnvironment():
         geom._fTransparency = 0
         geom._vDiffuseColor = [1,0,1]
     
-    insertBodies(env, [geom])
+    insertBody(env, [geom])
     
     return env
 
@@ -84,7 +87,7 @@ def setSettingsOfGeom(type):
     geom._t[0:3,3] = [np.random.uniform(-2,2), np.random.uniform(-2,2), np.random.uniform(0,3)] # position in room
     
     # size and color from geom object
-    geomSize = np.random.uniform(0,0.4,3)
+    geomSize = np.random.uniform(0.2,0.8,3)
     geomColor = np.random.uniform(0,1,3)
     
     # set geom type (0 = box, 1 = cylinder, 2 = sphere)
