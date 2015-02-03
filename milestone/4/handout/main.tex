@@ -178,16 +178,26 @@
       \end{frame}
 
       \begin{frame}{Principles}
-        \begin{itemize}
-          \item basic ingredients of planning
+        \begin{columns}
+          \column[c]{.7\textwidth}
           \begin{itemize}
-            \item state
-            \item input
-            \item initial and goal states
-            \item a criterion: feasibility and/or optimality
-            \item a plan
+            \item basic ingredients of planning
+            \begin{itemize}
+              \item state
+              \item input
+              \item initial and goal states
+              \item a criterion: feasibility and/or optimality
+              \item a plan
+            \end{itemize}
           \end{itemize}
-        \end{itemize}
+          
+          \column[c]{.3\textwidth}
+          \begin{figure}[h]
+            \includegraphics[width=0.9\textwidth]{4/beans-recipe-book.png}
+            \scriptsize\caption{\scriptsize\url{http://www.chrismadden.co.uk/food/beans-recipe-book.gif} (03.02.2015)}
+            \label{fig:/determined-challenge-accepte}
+          \end{figure}
+        \end{columns}
       \end{frame}
     
   \section{Rapidly-Exploring Random Trees}
@@ -198,22 +208,28 @@
     \subsection*{}
       \begin{frame}{Principles}
         \begin{itemize}
-          \begin{footnotesize}
-            \item grows a tree rooted at the starting configuration by using random samples from the search space
-            \item as each sample is drawn, a connection is attempted between it an the nearest state in the tree
-            \item if the connection is feasible, this results in the addition of the new state to the tree
-            \item the probability of expanding an existing state is proportional to the size of its Voronoi region
+          %\begin{footnotesize}
+%            \item grows a tree rooted at the starting configuration by using random samples from the search space
+%            \item as each sample is drawn, a connection is attempted between it an the nearest state in the tree
+%            \item if the connection is feasible, this results in the addition of the new state to the tree
+%            \item the probability of expanding an existing state is proportional to the size of its Voronoi region
 %            \begin{itemize}
 %              \begin{footnotesize}
 %                \item as the largest Voronoi regions belong to the states on the frontier of the search = the tree preferentially expands towards large unsearched areas
 %              \end{footnotesize}
 %            \end{itemize}
-          \end{footnotesize}
+            \item is rooted by the starting configuration
+            \item grows by using random samples from the search space
+            \item it is attempted a connection from the sample to the nearest state in the tree
+            \begin{itemize}
+              \item is it feasible, append the state to the tree
+            \end{itemize}
+          %\end{footnotesize}
         \end{itemize}
         \vspace{-5pt}
         \begin{figure}[h]
-          \includegraphics[width=0.28\textwidth]{4/rrt_iterations_45.png}
-          \includegraphics[width=0.28\textwidth]{4/rrt_iterations_2345.png}
+          \includegraphics[width=0.38\textwidth]{4/rrt_iterations_45.png}
+          \includegraphics[width=0.38\textwidth]{4/rrt_iterations_2345.png}
           \vspace{-10pt}
           \caption{\footnotesize rrt with 45 and 2345 iterations [2]}
           \label{fig:rrt_iterations_45_and_2345}
@@ -224,25 +240,27 @@
       \begin{frame}{Nice Properties}
         \begin{itemize}
           \item the expansion is heavily biased toward unexplored portions of the state space
-          \item the distribution of vertices approaches the sampling distribution, leading to consistent behavior
-          \item is probabilistically complete under very general conditions
-          \item the algorithm is relatively simple, which facilitates performance analysis
+          \item the algorithm is relatively simple
+          \item the distribution of vertices approaches the sampling distribution, leading to consistent behaviour
+          \item is under very general conditions probabilistically complete 
+          \item it can incorporated into a wide variety of planning systems
         \end{itemize}
       \end{frame}
       
-      \begin{frame}{Nice Properties}
-        \begin{itemize}
-          \item it always remains connected, even though the number of edges is minimal
-          \item can be considered as a plat planning module, which can be adapted and incorporated into a wide variety of planning systems
-          \item entire plath planning algorithms can be constructed without requiring the ability to steer the system between two prescibed states, which greatly broadens the applicability of RRTs
-        \end{itemize}
-      \end{frame}
+%      \begin{frame}{Nice Properties}
+%        \begin{itemize}
+%          \item it can incorporated into a wide variety of planning systems
+%          \item it always remains connected, even though the number of edges is minimal
+%          \item can be considered as a plat planning module, which can be adapted and incorporated into a wide variety of planning systems
+%          \item entire path planning algorithms can be constructed without requiring the ability to steer the system between two prescribed states, which greatly broadens the applicability of RRTs
+%        \end{itemize}
+%      \end{frame}
       
-      \begin{frame}{Challanges of our work}
+      \begin{frame}{Challenges of our work}
         \begin{itemize}
           \item implementation from 2D to 6D over 3D
 %          \begin{itemize}
-%            \item we are want direct to the configuration space of the robot and so cloud some difficulties go away
+%            \item we are went straight to the configuration space of the robot and so cloud some difficulties go away
 %          \end{itemize}
           \item determination of the nearest neighbor of an state/point in space to a state in our tree
 %          \begin{itemize}
@@ -254,6 +272,13 @@
 %            \item one way is, we use our available function for the velocity profile and trajectory generation, and test if the path to our goal state is free 
 %          \end{itemize}
         \end{itemize}
+        
+        \begin{figure}[h]
+          \includegraphics[width=0.28\textwidth]{4/determined-challenge-accepted-l.png}
+          \scriptsize\caption{\scriptsize\url{http://cdn.alltheragefaces.com/img/faces/large/determined-challenge-accepted-l.png} (03.02.2015)}
+          \label{fig:/determined-challenge-accepte}
+        \end{figure}
+        
       \end{frame}
       
       \begin{frame}{Notations}
@@ -326,9 +351,9 @@
 		\label{fig:generate state methode}
 	\end{figure}
 	\vspace{-35pt}
-	\begin{itemize}
-		\item bla
-	\end{itemize}
+%	\begin{itemize}
+%		\item bla
+%	\end{itemize}
 \end{frame}
 
 \begin{frame}{Function: generate state}
