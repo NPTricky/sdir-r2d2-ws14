@@ -347,8 +347,10 @@
 			\includegraphics[width=1\textwidth]{4/rrt_nearest_neighbor_2.png}
 			\column[c]{.25\textwidth}
 		\end{columns}
-		\caption{nearest neighbor [2]}
-		\label{fig:generate state methode}
+		\caption{find\_nearest\_neighbor in practice [2]:\newline
+			a) general nearest neighbor search\newline
+			b) nearest vertex in graph by edge interpolation\newline
+			c) final result}
 	\end{figure}
 	\vspace{-35pt}
 %	\begin{itemize}
@@ -357,71 +359,71 @@
 \end{frame}
 
 \begin{frame}{Function: generate state}
-	\begin{itemize}
-		\item checked the path between $q_n$ and $alpha$ of collisions free
-		\item if it collisions, then give back the last state before the collision
-		\item if the time for trajectory larger as $delta\_time$, then give back the state at $delta\_time$
-		\item else give $alpha$ back
-	\end{itemize}
-	
 	\begin{figure}[h]
-		\includegraphics[width=0.8\textwidth]{4/rrt_generate_state.png}
-		\caption{generate state methode [2]}
-		\label{fig:generate state methode}
+		\centering
+		\includegraphics[width=0.8\textwidth]{4/rrt_generate_state_detail.png}
+		\caption{Representation of configuration spaces relevant to the generate\_state method [2]}
 	\end{figure}
 \end{frame}
 
 \begin{frame}{Function: generate state}
+	\begin{itemize}
+		\item check, whether path between $q_n$ and $alpha$ collision-free
+		\item on collision, return the last valid state before the collision
+		\item on timeout (time on trajectory larger than $delta\_time$), return state at $delta\_time$
+		\item else return $alpha$, as a collision-free path exists
+	\end{itemize}
+	
 	\begin{figure}[h]
-		\centering
 		\includegraphics[width=0.8\textwidth]{4/rrt_generate_state.png}
-		\caption{generate state methode [2]}
-		\label{fig:generate state methode}
+		\caption{generate\_state in practice, limiting random state $a(i)$ \newline to $q_{s}$ due to $C_{obs}$ [2]}
 	\end{figure}
 \end{frame}
 
-\begin{frame}{graph buildup}
+\begin{frame}{RRT Buildup - Reference}
 	\begin{figure}[h]
 		\centering
 		\includegraphics[width=0.5\textwidth]{4/rrt_history_top_down.jpg}
-		\caption{todo}
+		\caption{Reference coordinate system for the following slides}
 	\end{figure}
 \end{frame}
 
-\begin{frame}
+\begin{frame}{RRT Buildup}
 	\begin{figure}
 		\centering
-		\includemovie{0.8\textwidth}{0.8\textheight}{4/rrt_history_1200.mp4}
-		\caption{graph aufbau}
+		\includemovie{0.8\textwidth}{0.65\textheight}{4/rrt_history_1200.mp4}
+		\caption{Video of the gradual buildup of the RRT projected into 2D.\newline
+			Large and green circles represent a tool point at high z coordinate.\newline
+			Small and blue represent a low z coordinate.}
 	\end{figure}
 \end{frame}
 
-\begin{frame}
+\begin{frame}{RRT Buildup}
 	\begin{figure}[h]
 		\centering
 		\includegraphics[width=0.5\textwidth]{4/rrt_history_top_down_graph.jpg}
-		\caption{todo}
+		\caption{Still image of the built graph.}
 	\end{figure}
 \end{frame}
 
-\begin{frame}
+\begin{frame}{RRT Buildup}
 	\begin{figure}[h]
 		\centering
 		\includegraphics[width=0.5\textwidth]{4/rrt_history_top_down_fusion.jpg}
-		\caption{todo}
+		\caption{Still image of the built graph inside the reference image.}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{RRT Buildup - OpenRAVE Viewer}
+	\begin{figure}[h]
+		\centering
+		\includegraphics[width=0.6\textwidth]{4/rrt_history_1200.jpg}
+		\caption{Same built graph inside the OpenRAVE Viewer.}
 	\end{figure}
 \end{frame}
 
 \begin{frame}{Live Demo}
 	\centering\Huge{Live Demo}
-\end{frame}
-
-\begin{frame}{huge example}
-	\begin{figure}[h]
-		\centering
-		\includegraphics[width=0.6\textwidth]{4/rrt_history_1200.jpg}
-		\caption{todo}
-	\end{figure}
 \end{frame}
 
 \section{}
